@@ -1,0 +1,100 @@
+{
+  "name": "Meta Lead Ad → Enrichment",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "meta-lead-webhook",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Meta Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const payload = $input.first().json;\n\n// Meta lead ad form data comes as field_data array\nconst fieldData = payload.field_data || [];\nconst getField = (name) => {\n  const field = fieldData.find(f => f.name === name);\n  return field ? field.values?.[0] || field.value : null;\n};\n\n// Determine company_id from ad account or form name\nlet companyId = 1; // Default Grand Park Capital\nconst formName = (payload.form_name || payload.form_id || '').toLowerCase();\nif (formName.includes('brand new now') || formName.includes('bnn')) companyId = 2;\nif (formName.includes('tikkun')) companyId = 4;\n\nconst fullName = getField('full_name') || '';\nconst nameParts = fullName.split(' ');\n\nreturn [{\n  json: {\n    lead: {\n      email: getField('email'),\n      phone: getField('phone_number') || getField('phone'),\n      first_name: getField('first_name') || nameParts[0] || '',\n      last_name: getField('last_name') || nameParts.slice(1).join(' ') || '',\n      company_id: companyId,\n      ad_id: payload.ad_id,\n      form_id: payload.form_id,\n      ghl_contact_id: null\n    }\n  }\n}];"
+      },
+      "id": "extract-lead",
+      "name": "Extract Lead Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.lead.email }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "has-email",
+      "name": "Has Email?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.DASHBOARD_BASE_URL || 'http://localhost:3001' }}/api/enrichment/webhook/meta-ad",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "lead",
+              "value": "={{ $json.lead }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "post-to-dashboard",
+      "name": "POST to Dashboard",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 250]
+    },
+    {
+      "parameters": {
+        "functionCode": "console.log('Meta lead without email — skipping enrichment');\nreturn [$input.first()];"
+      },
+      "id": "skip-no-email",
+      "name": "Skip (No Email)",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [850, 400]
+    }
+  ],
+  "connections": {
+    "Meta Webhook Trigger": {
+      "main": [
+        [{ "node": "Extract Lead Data", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extract Lead Data": {
+      "main": [
+        [{ "node": "Has Email?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Has Email?": {
+      "main": [
+        [{ "node": "POST to Dashboard", "type": "main", "index": 0 }],
+        [{ "node": "Skip (No Email)", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{ "name": "enrichment" }, { "name": "meta-ads" }],
+  "notes": "Receives Meta/Facebook lead ad form submissions and forwards to Master Dashboard enrichment pipeline.\n\nSetup:\n1. In Meta Business Suite → Leads Center → CRM Setup → Webhooks\n2. Point webhook to: {N8N_BASE_URL}/webhook/meta-lead-webhook\n3. Or use Meta's Conversions API with N8N HTTP trigger\n4. Map company_id based on ad account or form name (default: Grand Park Capital = 1)"
+}

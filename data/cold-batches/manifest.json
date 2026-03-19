@@ -1,0 +1,42 @@
+{
+  "created": "2026-03-18T16:09:23.682Z",
+  "total_contacts": 1960,
+  "total_batches": 1,
+  "batch_size": 2000,
+  "removed": {
+    "email_duplicates": 49935,
+    "name_company_duplicates": 10,
+    "junk_first_names": 309,
+    "junk_last_names": 49,
+    "generic_emails": 2458,
+    "invalid_emails": 33,
+    "no_name": 2050,
+    "already_in_db": 2069
+  },
+  "by_segment": {
+    "TAX": 1053,
+    "PREF": 657,
+    "Family Office": 7,
+    "RE": 97,
+    "unknown": 138,
+    "CPA/Accountant": 8
+  },
+  "by_grade": {
+    "B+": 1017,
+    "B": 632,
+    "A+": 7,
+    "ungraded": 256,
+    "A": 48
+  },
+  "by_source_file": {
+    "Verified_Emails.csv": 1461,
+    "FO_RE_Instantly_Upload.csv": 1,
+    "Instantly_Ready_PREF.csv": 292,
+    "Instantly_Ready_TAX.csv": 28,
+    "Instantly_Ready_RE.csv": 33,
+    "National_LP_Master_List.csv": 8,
+    "GFOIS_Enriched_With_Emails.csv": 110,
+    "GFOIS_Miami_2026_Contacts_Enriched.csv": 4,
+    "CSV Sponsor Database.csv": 23
+  }
+}

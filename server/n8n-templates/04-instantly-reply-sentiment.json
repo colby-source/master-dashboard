@@ -1,0 +1,119 @@
+{
+  "name": "Instantly Reply → Sentiment Analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "instantly-reply-webhook",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Instantly Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.event_type }}",
+              "operation": "equals",
+              "value2": "reply"
+            }
+          ]
+        }
+      },
+      "id": "is-reply",
+      "name": "Is Reply?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.DASHBOARD_BASE_URL || 'http://localhost:3001' }}/api/enrichment/webhook/instantly",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "event_type",
+              "value": "={{ $json.event_type }}"
+            },
+            {
+              "name": "lead_email",
+              "value": "={{ $json.lead_email || $json.email }}"
+            },
+            {
+              "name": "reply_text",
+              "value": "={{ $json.reply_text || $json.body || $json.text }}"
+            },
+            {
+              "name": "campaign_id",
+              "value": "={{ $json.campaign_id }}"
+            },
+            {
+              "name": "subject",
+              "value": "={{ $json.subject }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "post-reply",
+      "name": "POST Reply to Dashboard",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [650, 250]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.DASHBOARD_BASE_URL || 'http://localhost:3001' }}/api/enrichment/webhook/instantly",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "event_type",
+              "value": "={{ $json.event_type }}"
+            },
+            {
+              "name": "email",
+              "value": "={{ $json.lead_email || $json.email }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "post-bounce",
+      "name": "POST Bounce to Dashboard",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [650, 400]
+    }
+  ],
+  "connections": {
+    "Instantly Webhook Trigger": {
+      "main": [
+        [{ "node": "Is Reply?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Is Reply?": {
+      "main": [
+        [{ "node": "POST Reply to Dashboard", "type": "main", "index": 0 }],
+        [{ "node": "POST Bounce to Dashboard", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{ "name": "enrichment" }, { "name": "instantly" }],
+  "notes": "Receives reply and bounce webhooks from Instantly cold email campaigns.\nDashboard performs Claude-powered sentiment analysis on replies and routes accordingly.\n\nSentiment outcomes:\n- 'interested' → Creates GHL opportunity, moves to pipeline\n- 'meeting_request' → Flags for immediate attention, creates task\n- 'not_interested' → Updates lead status, removes from campaign\n- 'unsubscribe' → Marks DNE (Do Not Email)\n- 'out_of_office' → Schedules re-send\n- 'question' → Routes to human for response\n\nSetup:\n1. In Instantly → Settings → Webhooks\n2. Add webhook URL: {N8N_BASE_URL}/webhook/instantly-reply-webhook\n3. Select events: reply, bounce"
+}

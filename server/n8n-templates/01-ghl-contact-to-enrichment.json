@@ -1,0 +1,105 @@
+{
+  "name": "GHL Contact → Enrichment",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ghl-contact-webhook",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "GHL Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.type }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "validate-payload",
+      "name": "Validate Payload",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const payload = $input.first().json;\n\n// Extract contact data from GHL webhook\nconst contact = payload.contact || payload;\n\nreturn [{\n  json: {\n    contact: {\n      id: contact.id || contact.contact_id,\n      email: contact.email || contact.email_address,\n      phone: contact.phone || contact.phone_number,\n      firstName: contact.firstName || contact.first_name,\n      lastName: contact.lastName || contact.last_name,\n      locationId: contact.locationId || contact.location_id || payload.locationId,\n      source: 'ghl_webhook'\n    },\n    original_event: payload.type || 'contact.created'\n  }\n}];"
+      },
+      "id": "extract-contact",
+      "name": "Extract Contact Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [650, 250]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.DASHBOARD_BASE_URL || 'http://localhost:3001' }}/api/enrichment/webhook/ghl",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contact",
+              "value": "={{ $json.contact }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "post-to-dashboard",
+      "name": "POST to Dashboard",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 250]
+    },
+    {
+      "parameters": {
+        "functionCode": "const response = $input.first().json;\nconsole.log('Dashboard enrichment response:', JSON.stringify(response));\nreturn [$input.first()];"
+      },
+      "id": "log-result",
+      "name": "Log Result",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1050, 250]
+    }
+  ],
+  "connections": {
+    "GHL Webhook Trigger": {
+      "main": [
+        [{ "node": "Validate Payload", "type": "main", "index": 0 }]
+      ]
+    },
+    "Validate Payload": {
+      "main": [
+        [{ "node": "Extract Contact Data", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Extract Contact Data": {
+      "main": [
+        [{ "node": "POST to Dashboard", "type": "main", "index": 0 }]
+      ]
+    },
+    "POST to Dashboard": {
+      "main": [
+        [{ "node": "Log Result", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{ "name": "enrichment" }],
+  "notes": "Receives GHL contact.created / contact.updated webhooks and forwards to Master Dashboard enrichment pipeline.\n\nSetup:\n1. In GHL → Settings → Webhooks → Add webhook URL: {N8N_BASE_URL}/webhook/ghl-contact-webhook\n2. Select events: contact.created, contact.updated\n3. Set DASHBOARD_BASE_URL environment variable in N8N (default: http://localhost:3001)"
+}

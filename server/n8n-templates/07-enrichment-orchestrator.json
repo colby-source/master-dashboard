@@ -1,0 +1,156 @@
+{
+  "name": "Enrichment Orchestrator (PDL → Hunter → Score)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "enrichment-orchestrate",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Orchestration Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const payload = $input.first().json;\nconst leadId = payload.lead_id;\nconst email = payload.email;\n\nif (!leadId || !email) {\n  throw new Error('Missing lead_id or email');\n}\n\nreturn [{ json: { lead_id: leadId, email, company_id: payload.company_id || 1 } }];"
+      },
+      "id": "validate",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.DASHBOARD_BASE_URL || 'http://localhost:3001' }}/api/enrichment/leads/{{ $json.lead_id }}/enrich",
+        "method": "POST",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "trigger-enrich",
+      "name": "Trigger Enrichment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.success === true || $json.ok === true }}",
+              "operation": "equals",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "enrich-success",
+      "name": "Enrichment OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.DASHBOARD_BASE_URL || 'http://localhost:3001' }}/api/enrichment/leads/{{ $input.first().json.lead_id || $json.lead_id }}/score",
+        "method": "POST",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "trigger-score",
+      "name": "Trigger Scoring",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1050, 250]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.DASHBOARD_BASE_URL || 'http://localhost:3001' }}/api/enrichment/webhook/n8n",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "event_type",
+              "value": "enrichment_orchestration_failed"
+            },
+            {
+              "name": "event_data",
+              "value": "={{ JSON.stringify({ lead_id: $json.lead_id, error: 'Enrichment step failed' }) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "log-failure",
+      "name": "Log Failure",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1050, 400]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.DASHBOARD_BASE_URL || 'http://localhost:3001' }}/api/enrichment/webhook/n8n",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "event_type",
+              "value": "enrichment_orchestration_complete"
+            },
+            {
+              "name": "event_data",
+              "value": "={{ JSON.stringify({ lead_id: $json.lead_id, score: $json.score, label: $json.score_label }) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "log-success",
+      "name": "Log Success",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1250, 250]
+    }
+  ],
+  "connections": {
+    "Orchestration Trigger": {
+      "main": [
+        [{ "node": "Validate Input", "type": "main", "index": 0 }]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [{ "node": "Trigger Enrichment", "type": "main", "index": 0 }]
+      ]
+    },
+    "Trigger Enrichment": {
+      "main": [
+        [{ "node": "Enrichment OK?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Enrichment OK?": {
+      "main": [
+        [{ "node": "Trigger Scoring", "type": "main", "index": 0 }],
+        [{ "node": "Log Failure", "type": "main", "index": 0 }]
+      ]
+    },
+    "Trigger Scoring": {
+      "main": [
+        [{ "node": "Log Success", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{ "name": "enrichment" }, { "name": "orchestration" }],
+  "notes": "Optional orchestration workflow that calls Dashboard enrichment and scoring endpoints sequentially.\n\nThe Dashboard already handles the full pipeline internally via background sync, so this workflow is only needed if you want N8N to control the orchestration externally (e.g., for custom routing logic between steps).\n\nMost setups should rely on the Dashboard's built-in sync cycle instead.\n\nSetup:\n1. POST to: {N8N_BASE_URL}/webhook/enrichment-orchestrate\n2. Body: { lead_id: 123, email: 'john@example.com', company_id: 1 }"
+}

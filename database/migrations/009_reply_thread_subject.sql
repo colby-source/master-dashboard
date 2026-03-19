@@ -1,0 +1,2 @@
+-- Add subject column to reply_threads (already handled in db.ts init)
+-- No-op: column added via ALTER TABLE try/catch in db.ts

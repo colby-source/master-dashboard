@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "strict": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "resolveJsonModule": true,
+    "declaration": true,
+    "skipLibCheck": true
+  },
+  "include": ["server/**/*", "database/**/*"],
+  "exclude": ["node_modules", "client", "dist"]
+}

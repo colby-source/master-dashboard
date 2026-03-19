@@ -1,0 +1,113 @@
+{
+  "name": "RB2B Website Visitor → Enrichment",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "rb2b-visitor-webhook",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "RB2B Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const payload = $input.first().json;\nconst person = payload.person || payload.visitor || payload;\n\n// Determine company_id from the page URL domain\nlet companyId = 1; // Default Grand Park Capital\nconst pageUrl = (person.page_url || payload.page_url || '').toLowerCase();\nif (pageUrl.includes('brandnewnow') || pageUrl.includes('bnn')) companyId = 2;\nif (pageUrl.includes('tikkun')) companyId = 4;\n\nreturn [{\n  json: {\n    person: {\n      email: person.email,\n      first_name: person.first_name || person.firstName,\n      last_name: person.last_name || person.lastName,\n      phone: person.phone || null,\n      company_name: person.company_name || person.company,\n      title: person.title || person.job_title,\n      linkedin_url: person.linkedin_url || person.linkedin,\n      page_url: pageUrl\n    },\n    company_id: companyId\n  }\n}];"
+      },
+      "id": "extract-visitor",
+      "name": "Extract Visitor Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.person.email }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "has-email",
+      "name": "Has Email?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.DASHBOARD_BASE_URL || 'http://localhost:3001' }}/api/enrichment/webhook/rb2b",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-webhook-secret",
+              "value": "={{ $env.RB2B_WEBHOOK_SECRET || '' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "person",
+              "value": "={{ $json.person }}"
+            },
+            {
+              "name": "company_id",
+              "value": "={{ $json.company_id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "post-to-dashboard",
+      "name": "POST to Dashboard",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 250]
+    },
+    {
+      "parameters": {
+        "functionCode": "console.log('RB2B visitor without email — cannot enrich');\nreturn [$input.first()];"
+      },
+      "id": "skip-no-email",
+      "name": "Skip (No Email)",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [850, 400]
+    }
+  ],
+  "connections": {
+    "RB2B Webhook Trigger": {
+      "main": [
+        [{ "node": "Extract Visitor Data", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extract Visitor Data": {
+      "main": [
+        [{ "node": "Has Email?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Has Email?": {
+      "main": [
+        [{ "node": "POST to Dashboard", "type": "main", "index": 0 }],
+        [{ "node": "Skip (No Email)", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{ "name": "enrichment" }, { "name": "rb2b" }],
+  "notes": "Receives de-anonymized website visitors from RB2B and forwards to Master Dashboard enrichment pipeline.\n\nSetup:\n1. In RB2B dashboard → Integrations → Webhooks\n2. Add webhook URL: {N8N_BASE_URL}/webhook/rb2b-visitor-webhook\n3. Set RB2B_WEBHOOK_SECRET in both RB2B and N8N environment variables\n4. Company is auto-detected from the page URL domain"
+}

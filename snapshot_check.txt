@@ -1,0 +1,471 @@
+uid=162_0 RootWebArea "Brand Me Now" url="https://app.gohighlevel.com/location/x8XBOACL6wOFcsQewWPw/page-builder/hwS8uLHSVNLAT5YZMHjI"
+  uid=162_1 Iframe
+    uid=162_2 RootWebArea "Page Builder" url="https://page-builder.leadconnectorhq.com/location/x8XBOACL6wOFcsQewWPw/page-builder/hwS8uLHSVNLAT5YZMHjI"
+      uid=162_3 button "Back"
+      uid=162_4 StaticText "Last saved Mar 17, 9:08 PM"
+      uid=162_5 button
+      uid=162_6 button
+      uid=162_7 button "Publish"
+      uid=162_8 button
+      uid=162_9 button
+      uid=162_10 button
+      uid=162_11 button
+      uid=162_12 button
+      uid=162_13 button
+      uid=162_14 button
+      uid=162_15 button
+      uid=162_16 button
+      uid=162_17 button
+      uid=162_18 button
+      uid=162_19 button
+      uid=162_20 StaticText "Yacht Check In"
+      uid=162_21 button
+      uid=162_22 button
+      uid=162_23 button
+      uid=162_24 button
+      uid=162_25 button disableable disabled
+      uid=162_26 button disableable disabled
+      uid=162_27 button
+      uid=162_28 link "https://granitepark.co/yacht-checkin-page" url="https://granitepark.co/yacht-checkin-page"
+        uid=162_29 StaticText "https://granitepark.co/yacht-checkin-page"
+      uid=162_30 generic
+      uid=162_31 group
+        uid=162_32 group
+          uid=162_33 group
+            uid=162_34 group
+              uid=162_35 StaticText "Custom HTML/Javascript"
+              uid=163_7 StaticText "Custom Code"
+      uid=163_8 StaticText "Custom Code"
+      uid=163_9 StaticText "General"
+      uid=163_10 StaticText "Styles"
+      uid=163_11 StaticText "Element name"
+      uid=163_12 textbox "Element name" value="Custom Code"
+      uid=163_13 button "Open Code Editor"
+      uid=162_37 generic
+      uid=162_38 generic
+      uid=162_39 generic
+      uid=162_40 log atomic live="assertive" relevant="additions"
+      uid=164_0 dialog "UI Modal" modal
+        uid=164_1 StaticText "Custom Javascript/HTML"
+        uid=164_2 button
+        uid=164_3 textbox focusable focused multiline value="<!-- Yacht Check-In Form -->
+<style>
+  .checkin-wrap {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 32px 24px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    color: #1a1a2e;
+  }
+  .checkin-wrap h2 {
+    text-align: center;
+    font-size: 28px;
+    margin-bottom: 4px;
+    color: #0f3460;
+  }
+  .checkin-wrap .subtitle {
+    text-align: center;
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 28px;
+  }
+  .checkin-wrap label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #333;
+  }
+  .checkin-wrap input,
+  .checkin-wrap select {
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+    box-sizing: border-box;
+    background: #fff;
+  }
+  .checkin-wrap input:focus,
+  .checkin-wrap select:focus {
+    outline: none;
+    border-color: #0f3460;
+    box-shadow: 0 0 0 2px rgba(15,52,96,0.15);
+  }
+  .checkin-wrap .row {
+    display: flex;
+    gap: 12px;
+  }
+  .checkin-wrap .row > div {
+    flex: 1;
+  }
+  .checkin-wrap .rules-box {
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 14px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #444;
+  }
+  .checkin-wrap .rules-box strong {
+    display: block;
+    margin-bottom: 6px;
+    color: #0f3460;
+  }
+  .checkin-wrap .checkbox-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .checkin-wrap .checkbox-row input[type="checkbox"] {
+    width: auto;
+    margin: 3px 0 0 0;
+    padding: 0;
+  }
+  .checkin-wrap .checkbox-row label {
+    font-weight: 400;
+    font-size: 14px;
+    margin-bottom: 0;
+  }
+  .checkin-wrap button {
+    width: 100%;
+    padding: 14px;
+    background: #0f3460;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+  }
+  .checkin-wrap button:hover {
+    background: #0a2647;
+  }
+  .checkin-wrap button:disabled {
+    background: #999;
+    cursor: not-allowed;
+  }
+  .checkin-wrap .success-msg {
+    display: none;
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .checkin-wrap .success-msg h3 {
+    font-size: 24px;
+    color: #0f3460;
+    margin-bottom: 8px;
+  }
+  .checkin-wrap .success-msg p {
+    font-size: 16px;
+    color: #555;
+  }
+  .checkin-wrap .error-msg {
+    display: none;
+    background: #fee;
+    color: #c00;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    text-align: center;
+  }
+</style>
+
+<div class="checkin-wrap">
+  <div id="checkin-form-area">
+    <h2>Yacht Event Check-In</h2>
+    <p class="subtitle">Granite Park Capital - Investor Mixer</p>
+    <div id="error-msg" class="error-msg"></div>
+    <form id="checkin-form" onsubmit="return false;">
+      <div class="row">
+        <div>
+          <label for="first_name">First Name *</label>
+          <input type="text" id="first_name" name="first_name" required placeholder="John">
+        </div>
+        <div>
+          <label for="last_name">Last Name *</label>
+          <input type="text" id="last_name" name="last_name" required placeholder="Smith">
+        </div>
+      </div>
+      <label for="email">Email *</label>
+      <input type="email" id="email" name="email" required placeholder="john@example.com">
+      <label for="phone">Phone</label>
+      <input type="tel" id="phone" name="phone" placeholder="+1 (555) 123-4567">
+      <label for="company">Company</label>
+      <input type="text" id="company" name="company" placeholder="Acme Capital">
+      <label for="investor_type">Investor Type</label>
+      <select id="investor_type" name="investor_type">
+        <option value="">- Select -</option>
+        <option value="Accredited Investor">Accredited Investor</option>
+        <option value="Qualified Purchaser">Qualified Purchaser</option>
+        <option value="Family Office">Family Office</option>
+        <option value="Institutional">Institutional</option>
+        <option value="RIA/Financial Advisor">RIA / Financial Advisor</option>
+        <option value="CPA/Attorney">CPA / Attorney</option>
+        <option value="Other">Other</option>
+      </select>
+      <div class="rules-box">
+        <strong>Event Rules and Acknowledgment</strong>
+        By checking in, you acknowledge that this is a private event hosted by Granite Park Capital.
+        Photography and recording may occur. You agree to conduct yourself professionally
+        and understand that investment discussions are informational only, not solicitations.
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="rules_accepted" name="rules_accepted" required>
+        <label for="rules_accepted">I have read and accept the event rules *</label>
+      </div>
+      <button type="button" id="submit-btn" onclick="submitCheckin()">Board and Check In</button>
+    </form>
+  </div>
+  <div id="success-msg" class="success-msg">
+    <h3>Boarding Approved</h3>
+    <p>Welcome aboard! You are checked in.<br>Enjoy the mixer.</p>
+  </div>
+</div>
+
+<script>
+function submitCheckin() {
+  var btn = document.getElementById('submit-btn');
+  var errEl = document.getElementById('error-msg');
+  var firstName = document.getElementById('first_name').value.trim();
+  var lastName = document.getElementById('last_name').value.trim();
+  var email = document.getElementById('email').value.trim();
+  var rulesAccepted = document.getElementById('rules_accepted').checked;
+  if (!firstName || !lastName || !email) {
+    errEl.textContent = 'Please fill in First Name, Last Name, and Email.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (!rulesAccepted) {
+    errEl.textContent = 'Please accept the event rules to check in.';
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Checking in...';
+  var today = new Date();
+  var eventDate = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+  var payload = {
+    first_name: firstName,
+    last_name: lastName,
+    email: email,
+    phone: document.getElementById('phone').value.trim(),
+    company: document.getElementById('company').value.trim(),
+    investor_type: document.getElementById('investor_type').value,
+    rules_accepted: true,
+    event_date: eventDate
+  };
+  fetch('https://services.leadconnectorhq.com/hooks/x8XBOACL6wOFcsQewWPw/webhook-trigger/c032720f-6188-44c6-8d5e-8c22de2ba977', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(function(res) {
+    if (!res.ok) throw new Error('Server error');
+    document.getElementById('checkin-form-area').querySelector('form').style.display = 'none';
+    document.getElementById('checkin-form-area').querySelector('h2').style.display = 'none';
+    document.getElementById('checkin-form-area').querySelector('.subtitle').style.display = 'none';
+    document.getElementById('success-msg').style.display = 'block';
+  })
+  .catch(function() {
+    errEl.textContent = 'Something went wrong. Please try again.';
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Board and Check In';
+  });
+}
+</script>"
+        uid=164_4 generic
+        uid=164_5 generic
+          uid=166_0 StaticText " "
+          uid=166_1 StaticText "    "
+          uid=166_2 StaticText "rules_accepted"
+          uid=166_3 StaticText ": "
+          uid=166_4 StaticText "true"
+          uid=166_5 StaticText ","
+          uid=166_6 StaticText "    "
+          uid=166_7 StaticText "event_date"
+          uid=166_8 StaticText ": "
+          uid=166_9 StaticText "eventDate"
+          uid=166_10 StaticText "  };"
+          uid=166_11 StaticText "​"
+          uid=166_12 StaticText "  "
+          uid=166_13 StaticText "fetch"
+          uid=166_14 StaticText "("
+          uid=166_15 StaticText "'https://services.leadconnectorhq.com/hooks/x8XBOACL6wOFcsQewWPw/webhook-trigger/c032720f-6188-44c6-8d5e-8c22de2ba977'"
+          uid=166_16 StaticText ", {"
+          uid=166_17 StaticText "    "
+          uid=166_18 StaticText "method"
+          uid=166_19 StaticText ": "
+          uid=166_20 StaticText "'POST'"
+          uid=166_21 StaticText ","
+          uid=166_22 StaticText "    "
+          uid=166_23 StaticText "headers"
+          uid=166_24 StaticText ": { "
+          uid=166_25 StaticText "'Content-Type'"
+          uid=166_26 StaticText ": "
+          uid=166_27 StaticText "'application/json'"
+          uid=166_28 StaticText " },"
+          uid=166_29 StaticText "    "
+          uid=166_30 StaticText "body"
+          uid=166_31 StaticText ": "
+          uid=166_32 StaticText "JSON"
+          uid=166_33 StaticText "."
+          uid=166_34 StaticText "stringify"
+          uid=166_35 StaticText "("
+          uid=166_36 StaticText "payload"
+          uid=166_37 StaticText ")"
+          uid=166_38 StaticText "  })"
+          uid=166_39 StaticText "  ."
+          uid=166_40 StaticText "then"
+          uid=166_41 StaticText "("
+          uid=166_42 StaticText "function"
+          uid=166_43 StaticText "("
+          uid=166_44 StaticText "res"
+          uid=166_45 StaticText ") {"
+          uid=166_46 StaticText "    "
+          uid=166_47 StaticText "if"
+          uid=166_48 StaticText " ("
+          uid=166_49 StaticText "!"
+          uid=166_50 StaticText "res"
+          uid=166_51 StaticText "."
+          uid=166_52 StaticText "ok"
+          uid=166_53 StaticText ") "
+          uid=166_54 StaticText "throw"
+          uid=166_55 StaticText " "
+          uid=166_56 StaticText "new"
+          uid=166_57 StaticText " "
+          uid=166_58 StaticText "Error"
+          uid=166_59 StaticText "("
+          uid=166_60 StaticText "'Server error'"
+          uid=166_61 StaticText ");"
+          uid=166_62 StaticText "    "
+          uid=166_63 StaticText "document"
+          uid=166_64 StaticText "."
+          uid=166_65 StaticText "getElementById"
+          uid=166_66 StaticText "("
+          uid=166_67 StaticText "'checkin-form-area'"
+          uid=166_68 StaticText ")."
+          uid=166_69 StaticText "querySelector"
+          uid=166_70 StaticText "("
+          uid=166_71 StaticText "'form'"
+          uid=166_72 StaticText ")."
+          uid=166_73 StaticText "style"
+          uid=166_74 StaticText "."
+          uid=166_75 StaticText "display"
+          uid=166_76 StaticText " "
+          uid=166_77 StaticText "="
+          uid=166_78 StaticText " "
+          uid=166_79 StaticText "'none'"
+          uid=166_80 StaticText ";"
+          uid=166_81 StaticText "    "
+          uid=166_82 StaticText "document"
+          uid=166_83 StaticText "."
+          uid=166_84 StaticText "getElementById"
+          uid=166_85 StaticText "("
+          uid=166_86 StaticText "'checkin-form-area'"
+          uid=166_87 StaticText ")."
+          uid=166_88 StaticText "querySelector"
+          uid=166_89 StaticText "("
+          uid=166_90 StaticText "'h2'"
+          uid=166_91 StaticText ")."
+          uid=166_92 StaticText "style"
+          uid=166_93 StaticText "."
+          uid=166_94 StaticText "display"
+          uid=166_95 StaticText " "
+          uid=166_96 StaticText "="
+          uid=166_97 StaticText " "
+          uid=166_98 StaticText "'none'"
+          uid=166_99 StaticText ";"
+          uid=166_100 StaticText "    "
+          uid=166_101 StaticText "document"
+          uid=166_102 StaticText "."
+          uid=166_103 StaticText "getElementById"
+          uid=166_104 StaticText "("
+          uid=166_105 StaticText "'checkin-form-area'"
+          uid=166_106 StaticText ")."
+          uid=166_107 StaticText "querySelector"
+          uid=166_108 StaticText "("
+          uid=166_109 StaticText "'.subtitle'"
+          uid=166_110 StaticText ")."
+          uid=166_111 StaticText "style"
+          uid=166_112 StaticText "."
+          uid=166_113 StaticText "display"
+          uid=166_114 StaticText " "
+          uid=166_115 StaticText "="
+          uid=166_116 StaticText " "
+          uid=166_117 StaticText "'none'"
+          uid=166_118 StaticText ";"
+          uid=166_119 StaticText "    "
+          uid=166_120 StaticText "document"
+          uid=166_121 StaticText "."
+          uid=166_122 StaticText "getElementById"
+          uid=166_123 StaticText "("
+          uid=166_124 StaticText "'success-msg'"
+          uid=166_125 StaticText ")."
+          uid=166_126 StaticText "style"
+          uid=166_127 StaticText "."
+          uid=166_128 StaticText "display"
+          uid=166_129 StaticText " "
+          uid=166_130 StaticText "="
+          uid=166_131 StaticText " "
+          uid=166_132 StaticText "'block'"
+          uid=166_133 StaticText ";"
+          uid=166_134 StaticText "  })"
+          uid=166_135 StaticText "  ."
+          uid=166_136 StaticText "catch"
+          uid=166_137 StaticText "("
+          uid=166_138 StaticText "function"
+          uid=166_139 StaticText "() {"
+          uid=166_140 StaticText "    "
+          uid=166_141 StaticText "errEl"
+          uid=166_142 StaticText "."
+          uid=166_143 StaticText "textContent"
+          uid=166_144 StaticText " "
+          uid=166_145 StaticText "="
+          uid=166_146 StaticText " "
+          uid=166_147 StaticText "'Something went wrong. Please try again.'"
+          uid=166_148 StaticText ";"
+          uid=166_149 StaticText "    "
+          uid=166_150 StaticText "errEl"
+          uid=166_151 StaticText "."
+          uid=166_152 StaticText "style"
+          uid=166_153 StaticText "."
+          uid=166_154 StaticText "display"
+          uid=166_155 StaticText " "
+          uid=166_156 StaticText "="
+          uid=166_157 StaticText " "
+          uid=166_158 StaticText "'block'"
+          uid=166_159 StaticText ";"
+          uid=166_160 StaticText "    "
+          uid=166_161 StaticText "btn"
+          uid=166_162 StaticText "."
+          uid=166_163 StaticText "disabled"
+          uid=166_164 StaticText " "
+          uid=166_165 StaticText "="
+          uid=166_166 StaticText " "
+          uid=166_167 StaticText "false"
+          uid=166_168 StaticText ";"
+          uid=166_169 StaticText "    "
+          uid=166_170 StaticText "btn"
+          uid=166_171 StaticText "."
+          uid=166_172 StaticText "textContent"
+          uid=166_173 StaticText " "
+          uid=166_174 StaticText "="
+          uid=166_175 StaticText " "
+          uid=166_176 StaticText "'Board & Check In'"
+          uid=166_177 StaticText ";"
+          uid=166_178 StaticText "  });"
+          uid=166_179 StaticText "}"
+          uid=166_180 StaticText "</"
+          uid=166_181 StaticText "script"
+          uid=166_182 StaticText ">"
+          uid=166_183 StaticText "​"
+        uid=164_124 button "Cancel"
+        uid=164_125 button "Save"

@@ -1,0 +1,146 @@
+{
+  "name": "LinkedIn Multi-Channel Enrichment",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "linkedin-import-webhook",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Import Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const items = $input.first().json.leads || [$input.first().json];\n\n// Normalize leads from Apollo/LinkedIn export CSV\nreturn items.map(lead => ({\n  json: {\n    email: lead.email || lead.Email || null,\n    first_name: lead.first_name || lead.firstName || lead['First Name'] || '',\n    last_name: lead.last_name || lead.lastName || lead['Last Name'] || '',\n    company: lead.company || lead.company_name || lead['Company'] || '',\n    title: lead.title || lead.job_title || lead['Title'] || '',\n    linkedin_url: lead.linkedin_url || lead.linkedinUrl || lead['LinkedIn URL'] || lead['Person Linkedin Url'] || '',\n    company_id: lead.company_id || 1,\n    source: 'linkedin'\n  }\n}));"
+      },
+      "id": "normalize-leads",
+      "name": "Normalize Lead Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.email }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "has-email",
+      "name": "Has Email?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.DASHBOARD_BASE_URL || 'http://localhost:3001' }}/api/enrichment/leads",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "email",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "first_name",
+              "value": "={{ $json.first_name }}"
+            },
+            {
+              "name": "last_name",
+              "value": "={{ $json.last_name }}"
+            },
+            {
+              "name": "company_id",
+              "value": "={{ $json.company_id }}"
+            },
+            {
+              "name": "source",
+              "value": "linkedin"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "create-lead-email",
+      "name": "Create Lead (Has Email)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 200]
+    },
+    {
+      "parameters": {
+        "functionCode": "const lead = $input.first().json;\n\n// No email — tag for LinkedIn outreach via GHL\nconsole.log(`LinkedIn-only lead: ${lead.first_name} ${lead.last_name} at ${lead.company}`);\nconsole.log(`LinkedIn: ${lead.linkedin_url}`);\nconsole.log('Action: Tag for LinkedIn DM outreach in GHL');\n\nreturn [{\n  json: {\n    ...lead,\n    action: 'linkedin_outreach',\n    note: 'No email found — route to LinkedIn DM outreach'\n  }\n}];"
+      },
+      "id": "tag-linkedin-only",
+      "name": "Tag for LinkedIn Outreach",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.DASHBOARD_BASE_URL || 'http://localhost:3001' }}/api/enrichment/webhook/n8n",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "event_type",
+              "value": "linkedin_import_no_email"
+            },
+            {
+              "name": "event_data",
+              "value": "={{ JSON.stringify({ name: $json.first_name + ' ' + $json.last_name, company: $json.company, linkedin_url: $json.linkedin_url }) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "log-linkedin-only",
+      "name": "Log LinkedIn-Only Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1050, 400]
+    }
+  ],
+  "connections": {
+    "Import Trigger": {
+      "main": [
+        [{ "node": "Normalize Lead Data", "type": "main", "index": 0 }]
+      ]
+    },
+    "Normalize Lead Data": {
+      "main": [
+        [{ "node": "Has Email?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Has Email?": {
+      "main": [
+        [{ "node": "Create Lead (Has Email)", "type": "main", "index": 0 }],
+        [{ "node": "Tag for LinkedIn Outreach", "type": "main", "index": 0 }]
+      ]
+    },
+    "Tag for LinkedIn Outreach": {
+      "main": [
+        [{ "node": "Log LinkedIn-Only Lead", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{ "name": "enrichment" }, { "name": "linkedin" }],
+  "notes": "Imports leads from Apollo/LinkedIn exports and routes based on email availability.\n\n- Leads WITH email → Create in Dashboard enrichment pipeline → enrich → cold email campaign\n- Leads WITHOUT email → Tag for LinkedIn DM outreach in GHL\n\nSetup:\n1. Export leads from Apollo.io as CSV\n2. POST the leads array to: {N8N_BASE_URL}/webhook/linkedin-import-webhook\n3. Or connect Apollo.io directly via N8N Apollo node\n4. Format: { leads: [{ email, first_name, last_name, company, title, linkedin_url, company_id }] }"
+}

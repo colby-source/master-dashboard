@@ -1,0 +1,3 @@
+-- Initial migration (no-op)
+-- Schema is already applied via database/schema.sql
+-- This migration exists to establish the migration baseline.

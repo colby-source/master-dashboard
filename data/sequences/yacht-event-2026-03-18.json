@@ -1,0 +1,340 @@
+{
+  "config": {
+    "id": "yacht-event-2026-03-18",
+    "name": "Post-Event Follow-Up — VNTR x Granite Park Party (March 18)",
+    "eventDate": "2026-03-18",
+    "startedAt": "2026-03-19T18:30:18.372Z"
+  },
+  "contacts": [
+    {
+      "contactId": "bPBn9XKk1aBhmslRaDga",
+      "firstName": "Margarita",
+      "email": "zeynalova.margo1@mail.ru",
+      "phone": "+79262682862",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "voTzhpIMSIXQPc3K7fut",
+      "firstName": "Elman",
+      "email": "elman_zeynalov36@mail.ru",
+      "phone": "+79185767466",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "HrLXW1RquO4KOaTDmC2l",
+      "firstName": "Iaroslav",
+      "email": "loksmithmiami@proton.me",
+      "phone": "+13055707590",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "J4dK0ZauwhfEEnEAD02P",
+      "firstName": "Mark",
+      "email": "pugachevcs@gmail.com",
+      "phone": "+17866595011",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "zvQeGVnZH30EfZYpwASq",
+      "firstName": "Warren",
+      "email": "warren@oppzo.com",
+      "phone": "+17038617771",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "lRvRFWbY8dIapK6JxgF9",
+      "firstName": "Patrick",
+      "email": "patrick@mangocapital.com",
+      "phone": "+16177518038",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "4UloRMssPJhjoXBjPBfp",
+      "firstName": "Rodolfo",
+      "email": "rnovarini@misescap.com",
+      "phone": "",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "rr5jLAGva16tnb1MJAJB",
+      "firstName": "Michel",
+      "email": "michel.triana@gmail.com",
+      "phone": "+19544154872",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "anGZ4T9uFPxMsMtb6ZeH",
+      "firstName": "Natalia",
+      "email": "nataliadaniel415@gmail.com",
+      "phone": "+14155358872",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "WSUju1Fz43zxsdR3CL1P",
+      "firstName": "oded",
+      "email": "odedpelled@gmail.com",
+      "phone": "+14156949211",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "ksvlYsEuiZwvI6KtK61B",
+      "firstName": "Carlo",
+      "email": "carlo@meetselect.com",
+      "phone": "+18604595232",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "TyOegOSqLstYU4h1a7pB",
+      "firstName": "NANDO",
+      "email": "nando.costa@jpmorgan.com",
+      "phone": "+13059880825",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "LkecDOJbGQdFJx5B38ZF",
+      "firstName": "James",
+      "email": "jameslumorrissey@gmail.com",
+      "phone": "+16467631816",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "AXAirRPHO49EemoPDdaQ",
+      "firstName": "Naomi",
+      "email": "naomi@interalpenllc.com",
+      "phone": "+107494293226",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "Y0nWwhRz5H8vF8QxSksV",
+      "firstName": "Sam",
+      "email": "smeyer@flycraft.com",
+      "phone": "+12019275149",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "M9ezbO0HZdOWngjM1F0o",
+      "firstName": "Val",
+      "email": "vshmidov@hotmail.com",
+      "phone": "+17868347173",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "SdT0R0UPFN2K3vyGgqbS",
+      "firstName": "Marc",
+      "email": "rackup2@gmail.com",
+      "phone": "",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "RLWJ3QJ5KwdGQuMLiJMl",
+      "firstName": "Rob",
+      "email": "robmatzkin@gmail.com",
+      "phone": "+16465992152",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "LIdkPtc3gbXrRAHZwlnE",
+      "firstName": "Eran",
+      "email": "eran.4work@gmail.com",
+      "phone": "+13322838067",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "ZyktN1kzStx3QzCAphO6",
+      "firstName": "Amir",
+      "email": "amir@kimanilife.com",
+      "phone": "+16462353602",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "NwNgrwXseojvfCBIZL8Q",
+      "firstName": "Holly-Mae",
+      "email": "holly-mae@postproj.com",
+      "phone": "+16462406455",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "WyPgjVdRthZ34EjGxlKI",
+      "firstName": "Ed",
+      "email": "em@elisium.city",
+      "phone": "+19545406421",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "ZhirnfWq7OPXzogwHR51",
+      "firstName": "Rafa",
+      "email": "refaelamit@gmail.com",
+      "phone": "",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "6wVwAtJ3UiebXab4Jwye",
+      "firstName": "Yair",
+      "email": "yairclep@gmail.com",
+      "phone": "",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "LkGoBZvKI6WjP1Sw02xZ",
+      "firstName": "Rosalia",
+      "email": "rosaliachann@gmail.com",
+      "phone": "+18563646750",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "oaRci9K7qbcBiUSpjHy4",
+      "firstName": "Darren",
+      "email": "darren@loonsandmatches.com",
+      "phone": "+19178384950",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "5VMIOoyQthPKeWLVFcX7",
+      "firstName": "Stephen R.",
+      "email": "stephencolquitt@icloud.com",
+      "phone": "+17862708017",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "HAPyEf3k1Spx6BPCMqaf",
+      "firstName": "Terrence",
+      "email": "terrence@giggroupinc.com",
+      "phone": "+18034774603",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "Gksy570C80eko0GVglgd",
+      "firstName": "Dr Sahib",
+      "email": "ceo@kingholdings.ai",
+      "phone": "+14046734282",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    },
+    {
+      "contactId": "IoTnR7pCLi6TIsFjGbJR",
+      "firstName": "Rudy",
+      "email": "lordrare@protonmail.com",
+      "phone": "+13054976134",
+      "enrolledAt": "2026-03-18T00:00:00.000Z",
+      "currentStep": 1,
+      "status": "active",
+      "lastSentAt": "2026-03-19T18:36:34.595Z",
+      "lastSentStep": 1
+    }
+  ]
+}

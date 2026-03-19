@@ -1,0 +1,1 @@
+export { EnrichmentPanel } from '../EnrichmentPanel'

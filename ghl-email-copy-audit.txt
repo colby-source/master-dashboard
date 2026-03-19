@@ -1,0 +1,1148 @@
+================================================================================
+GOHIGHLEVEL — COMPLETE OUTBOUND MESSAGE AUDIT
+Grand Park Capital (Location: x8XBOACL6wOFcsQewWPw)
+Generated: 2026-03-13
+Total outbound messages scanned: 2447
+Unique templates identified: 158
+================================================================================
+
+╔══════════════════════════════════════════════════════════════╗
+║                    EMAIL SEQUENCES                          ║
+╚══════════════════════════════════════════════════════════════╝
+
+
+╔══════════════════════════════════════════════════════════════╗
+║                    SMS SEQUENCES                             ║
+╚══════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #1  |  Sent 3x  |  Source: app
+Date: 2025-09-29T23:19:35.666Z
+──────────────────────────────────────────
+Granite Park Investor Yacht Mixer September 18th
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #2  |  Sent 2x  |  Source: app
+Date: 2025-10-30T16:35:04.171Z
+──────────────────────────────────────────
+Granite Park Capital 1-1
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #3  |  Sent 1x  |  Source: app
+Date: 2026-03-12T17:23:56.429Z
+──────────────────────────────────────────
+Chelcie   Brown 
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #4  |  Sent 412x  |  Source: app
+Date: 2026-03-13T04:02:32.287Z
+──────────────────────────────────────────
+Granite Park Investor Yacht Mixer 
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #5  |  Sent 15x  |  Source: app
+Date: 2026-03-13T13:36:41.338Z
+──────────────────────────────────────────
+Todd Warshauer
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #6  |  Sent 1x  |  Source: bulk_actions
+Date: 2025-10-28T00:22:08.000Z
+──────────────────────────────────────────
+You are approved to attend the Granite Park Capital mixer aboard the Tychoon yacht.
+
+Wed Oct 29th
+6:30-9pm 
+Island gardens marina 
+888 MacArthur Cswy
+Miami, FL  33132
+
+Reply with 1 to confirm or 2 if you cannot attend.
+Reply STOP to unsubscribe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #7  |  Sent 20x  |  Source: bulk_actions
+Date: 2025-10-28T18:36:00.000Z
+──────────────────────────────────────────
+You are approved to attend the Granite Park Capital mixer aboard the Tychoon yacht.
+Wed Oct 29th
+6:30-9pm 
+Island gardens marina 
+888 MacArthur Cswy
+Miami, FL  33132
+
+Reply with 1 to confirm or 2 if you cannot attend.
+Reply STOP to unsubscribe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #8  |  Sent 20x  |  Source: bulk_actions
+Date: 2025-10-29T15:25:21.000Z
+──────────────────────────────────────────
+We are excited to host you this evening about The Tychoon yacht for the Granite Park Capital investor mixer.  
+
+Please note we are at capacity and cannot accommodate any +1 guests.  
+
+Location: Island Gardens Marina 
+888 MacArthur Cswy
+Miami, FL  33132
+Time: 6:30-9
+
+See you this evening!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #9  |  Sent 3x  |  Source: app
+Date: 2025-10-29T16:23:10.000Z
+──────────────────────────────────────────
+Hi this is Granite Park, I saw that we just missed your call how can I help?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #10  |  Sent 1x  |  Source: app
+Date: 2025-10-29T21:27:56.000Z
+──────────────────────────────────────────
+It's staying on the dock however we do want everyone on board by 7:30 or before
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #11  |  Sent 1x  |  Source: app
+Date: 2025-10-29T21:57:51.000Z
+──────────────────────────────────────────
+Thank you and see you soon
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #12  |  Sent 1x  |  Source: bulk_actions
+Date: 2025-10-30T16:28:03.000Z
+──────────────────────────────────────────
+Great to meet you at the mixer! We emailed the Investor Deck. Want us to set a quick call to cover strategy, pipeline, and next steps? Text back a good time.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #13  |  Sent 10x  |  Source: bulk_actions
+Date: 2025-10-30T17:51:40.000Z
+──────────────────────────────────────────
+Great to meet you at the yacht mixer last night! We emailed the Investor Deck. Want us to set a quick call to cover strategy, next steps, and answer any questions? Text back a good time.
+Reply STOP to unsubscribe.
+Thanks, Granite Park
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #14  |  Sent 7x  |  Source: bulk_actions
+Date: 2025-10-30T17:51:40.000Z
+──────────────────────────────────────────
+Great to meet you at the yacht mixer last night! We emailed the Investor Deck. Want us to set a quick call to cover strategy, next steps, and answer any questions? Text back a good time.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #15  |  Sent 19x  |  Source: bulk_actions
+Date: 2025-11-06T17:02:25.000Z
+──────────────────────────────────────────
+You’re first in line for our next Granite Park Capital Investor Yacht Mixer 
+
+📅 Wed, Nov 12, 2025 | 6:30–9:00pm
+📍 Tychoon Yacht, Island Gardens Marina, Miami
+
+
+Our last event filled fast — confirm your spot before we open to new guests.
+
+RSVP here: https://api.leadconnectorhq.com/widget/form/HnDlGRwYsFifJ1Lh6bHa
+
+
+— Granite Park Capital Events Team
+Reply STOP to unsubscribe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #16  |  Sent 36x  |  Source: bulk_actions
+Date: 2025-11-06T17:50:42.000Z
+──────────────────────────────────────────
+You’re first in line for our next Granite Park Capital Investor Yacht Mixer!
+
+📅 Wed, Nov 12, 2025 | 6:30–9:00pm
+📍 Tychoon Yacht, Island Gardens Marina, Miami
+
+
+Our last event filled fast — confirm your spot before we open to new guests.
+
+RSVP here: https://api.leadconnectorhq.com/widget/form/HnDlGRwYsFifJ1Lh6bHa
+
+
+— Granite Park Capital Events Team
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #17  |  Sent 1x  |  Source: app
+Date: 2025-11-10T16:28:03.000Z
+──────────────────────────────────────────
+Hi Hernan...It was great meeting you at the Granite Park Capital Yacht mixer — I really appreciated you joining us. I’d love to continue our conversation and understand more about your investing goals.  Are you available this week to schedule a call?  Let me know what works...thx Ryan
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #18  |  Sent 1x  |  Source: app
+Date: 2025-11-10T17:04:46.000Z
+──────────────────────────────────────────
+It was great meeting you at the Granite Park Capital yacht mixer — I really appreciated you joining us. I’d love to continue our conversation and learn more about your investment goals.  How's this week look to schedule a follow up call or meeting?  Please advise - Thx Ryan
+Reply STOP to unsubscribe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #19  |  Sent 1x  |  Source: app
+Date: 2025-11-10T17:07:08.000Z
+──────────────────────────────────────────
+Hi Michael...It was great meeting you at the Granite Park Capital yacht mixer — I really appreciated you joining us. I’d love to continue our conversation and explore if this fund is the right fit for you or your network.  How's this week look to re-connect for a call or meeting?  Please advise - Thx Ryan
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #20  |  Sent 1x  |  Source: app
+Date: 2025-11-10T17:08:50.000Z
+──────────────────────────────────────────
+Hi Sourav, It was great meeting you at the Granite Park Capital yacht mixer a few weeks back — I really appreciated you joining us. I’d love to continue our conversation and understand if our fund and investment strategy is right for you.  Are you free for a call or meeting this week?
+Reply STOP to unsubscribe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #21  |  Sent 1x  |  Source: app
+Date: 2025-11-10T17:10:49.000Z
+──────────────────────────────────────────
+Hi Manuel, It was great meeting you at the Granite Park Capital yacht mixer — I really appreciated you joining us. I’d love to continue our conversation and understand if our fund and investment strategy are the right fit for you.  How's this week look to schedule a call or in person meeting?  Plz advise - Thx Ryan
+Reply STOP to unsubscribe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #22  |  Sent 1x  |  Source: app
+Date: 2025-11-10T17:21:03.000Z
+──────────────────────────────────────────
+Hi Bhavik...It was great meeting you at the Granite Park Capital yacht mixer last month — I really appreciated you joining us. I’d love to continue our conversation and determine if our fund and investment strategy looked interesting to you.  Are you free this week for a call or lunch?  Plz advise - Thx Ryan
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #23  |  Sent 1x  |  Source: app
+Date: 2025-11-10T17:23:20.000Z
+──────────────────────────────────────────
+Hi Samina...It was great meeting you at the Granite Park Capital mixer — I really appreciated you joining us. I’d love to continue our conversation and walk you through how we’re creating immediate value through our rent arbitrage strategy and 15% IRR to our investors.  Are you free for a call or meeting this week?  Plz advise - Thx Ryan
+Reply STOP to unsubscribe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #24  |  Sent 1x  |  Source: app
+Date: 2025-11-10T17:26:42.000Z
+──────────────────────────────────────────
+Hi David...It was great meeting you at the Granite Park Capital yacht mixer — I really appreciated you joining us. I’d love to continue our conversation and understand your thoughts on our investment approach.  Are you free for a call or meeting this week?  Plz advise - Thx Ryan
+Reply STOP to unsubscribe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #25  |  Sent 47x  |  Source: bulk_actions
+Date: 2025-11-11T15:06:35.000Z
+──────────────────────────────────────────
+Hi! A quick reminder to RSVP for the Granite Park Yacht Mixer this Wednesday (11/12). Please confirm today to ensure your attendance.
+
+
+Click here to secure your spot: https://api.leadconnectorhq.com/widget/form/HnDlGRwYsFifJ1Lh6bHa
+
+
+— Granite Park Capital
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #26  |  Sent 26x  |  Source: bulk_actions
+Date: 2025-11-12T18:36:03.000Z
+──────────────────────────────────────────
+We are excited to host you this evening about The Tychoon yacht for the Granite Park Capital investor mixer. Please note we are at capacity and cannot accommodate any +1 guests. 
+
+Location: Island Gardens Marina 888 MacArthur Cswy Miami, FL 33132 
+Time: 6:30-9 
+
+See you this evening!
+Reply STOP to unsubscribe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #27  |  Sent 10x  |  Source: bulk_actions
+Date: 2025-11-13T17:54:30.000Z
+──────────────────────────────────────────
+Great to meet you at the yacht mixer last night! We emailed the Investor Deck. Want us to set a quick call to cover strategy, next steps, and answer any questions? Text back a good time.
+
+Thanks, Granite Park
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #28  |  Sent 2x  |  Source: bulk_actions
+Date: 2025-11-13T17:54:31.000Z
+──────────────────────────────────────────
+Great to meet you at the yacht mixer last night! We emailed the Investor Deck. Want us to set a quick call to cover strategy, next steps, and answer any questions? Text back a good time.
+
+Thanks, Granite Park
+Reply STOP to unsubscribe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #29  |  Sent 54x  |  Source: bulk_actions
+Date: 2025-11-20T17:44:25.000Z
+──────────────────────────────────────────
+You’re first in line for our next Granite Park Capital Investor Yacht Mixer 
+
+📅 Wed, Nov 25, 2025 | 6:30–9:00pm
+📍 Tychoon Yacht, Island Gardens Marina, Miami
+
+Our last event filled fast — confirm your spot before we open to new guests.
+
+RSVP here: https://api.leadconnectorhq.com/widget/form/HnDlGRwYsFifJ1Lh6bHa
+
+— Granite Park Capital Events Team
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #30  |  Sent 51x  |  Source: bulk_actions
+Date: 2025-11-24T17:26:15.000Z
+──────────────────────────────────────────
+Hi! A quick reminder to RSVP for the Granite Park Yacht Mixer this Tuesday (11/25). Please confirm today to ensure your attendance.
+
+Click here to secure your spot: https://api.leadconnectorhq.com/widget/form/HnDlGRwYsFifJ1Lh6bHa
+
+— Granite Park Capital
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #31  |  Sent 31x  |  Source: bulk_actions
+Date: 2025-12-04T17:11:45.000Z
+──────────────────────────────────────────
+Hi! Tomorrow is the Granite Park Yacht Mixer (6:30-9PM). 
+
+URGENT: We are missing your email. Please reply to this SMS with your email address immediately for event verification and post-event info.
+
+Note: Event is at max capacity. Only registered guests will be admitted (no +1s).
+
+Location: Island Gardens Marina 888 MacArthur Cswy Miami, FL 33132
+Reply STOP to unsubscribe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #32  |  Sent 49x  |  Source: bulk_actions
+Date: 2025-12-05T19:50:03.000Z
+──────────────────────────────────────────
+Your Art Basel Yacht Mixer Confirmation: 
+
+READ IMMEDIATELY. CRITICAL: Marina is extremely busy. Expect heavy traffic & plan 1 HOUR extra commute time. ENTRY IS GUEST LIST ONLY. You must be on the list & have received the email to enter. NO exceptions. Look for Granite Park Capital Pop up banners and a crew member from the Tycoon Yacht dock security entrance. They have the list & will check you in. See you soon, The Granite Park Team.
+
+Location: 
+Island Gardens Marina
+888 Mac Arthur Cswy, Miami, FL 33132
+Tycoon Yacht
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #33  |  Sent 21x  |  Source: bulk_actions
+Date: 2025-12-06T16:37:55.000Z
+──────────────────────────────────────────
+Your Art Basel Yacht Mixer Confirmation (Dec 6, 6:30-10PM): 
+
+READ IMMEDIATELY. CRITICAL: Marina is extremely busy. Expect heavy traffic & plan 1 HOUR extra commute time. ENTRY IS GUEST LIST ONLY. You must be on the list & have received the email to enter. NO exceptions. Look for Granite Park Capital Pop up banners and a crew member from the Tycoon Yacht dock security entrance. They have the list & will check you in. 
+
+Location: 
+Island Gardens Marina
+888 Mac Arthur Cswy, Miami, FL 33132
+Tycoon Yacht
+
+See you soon,The Granite Park Team.
+Reply STOP to unsubscribe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #34  |  Sent 36x  |  Source: bulk_actions
+Date: 2025-12-06T17:43:01.000Z
+──────────────────────────────────────────
+Sorry we missed you at our last event! We have another Yacht Mixer tonight at Island Gardens Marina, Tycoon Yacht (6:30–10 PM). RSVP closes at 1 PM today.
+Confirm here: https://api.leadconnectorhq.com/widget/form/HnDlGRwYsFifJ1Lh6bHa
+
+- Granite Park Capital
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #35  |  Sent 29x  |  Source: bulk_actions
+Date: 2025-12-06T22:38:07.000Z
+──────────────────────────────────────────
+Hello...please note we are moving the start time back for the Granite Park Capital Yacht Mixer to 7:30.  We've had some last minute delays.  Sorry for the late notice.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #36  |  Sent 12x  |  Source: bulk_actions
+Date: 2025-12-06T22:38:07.000Z
+──────────────────────────────────────────
+Hello...please note we are moving the start time back for the Granite Park Capital Yacht Mixer to 7:30.  We've had some last minute delays.  Sorry for the late notice.
+Reply STOP to unsubscribe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #37  |  Sent 1x  |  Source: app
+Date: 2025-12-06T22:41:38.000Z
+──────────────────────────────────────────
+Yes what's the name?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #38  |  Sent 3x  |  Source: app
+Date: 2025-12-06T22:57:24.000Z
+──────────────────────────────────────────
+Hi Kieran we moved back the start time for the Granite Park Capital mixer to 7:30 at Island Gardens Marina aboard The Tychoon Yacht.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #39  |  Sent 1x  |  Source: app
+Date: 2025-12-07T01:01:03.000Z
+──────────────────────────────────────────
+We are staying at dock
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #40  |  Sent 32x  |  Source: bulk_actions
+Date: 2025-12-11T16:17:25.000Z
+──────────────────────────────────────────
+Great to meet you at the yacht mixer! We previously emailed the Investor Deck. Review it here: https://drive.google.com/file/d/193bnDFPOgAzk8whQescNRkeSZH_YEYlp/view?usp=sharing
+
+Want us to set a quick call to cover strategy, next steps, and answer any questions? Text back a good time. Thanks, Granite Park
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #41  |  Sent 1x  |  Source: app
+Date: 2025-12-11T16:52:10.000Z
+──────────────────────────────────────────
+Great to meet you at the yacht mixer! We emailed the Investor Deck. Review it here: https://services.msgsndr.com/urls/l/ZA7NYRbvsh
+
+Want us to set a quick call to cover strategy, next steps, and answer any questions? Text back a good time.
+
+
+Thanks, Granite Park
+Reply STOP to unsubscribe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #42  |  Sent 1x  |  Source: bulk_actions
+Date: 2025-12-16T15:33:33.000Z
+──────────────────────────────────────────
+The Yacht Mixer scheduled for Dec 17th is CANCELED. The event has been rescheduled to Wednesday, Jan 14, 2026. We apologize for the cancellation & look forward to hosting you in the New Year!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #43  |  Sent 1x  |  Source: bulk_actions
+Date: 2025-12-16T15:34:20.000Z
+──────────────────────────────────────────
+The Yacht Mixer scheduled for Dec 17th is CANCELED. The event has been rescheduled to Wednesday, Jan 14, 2026. We apologize for the cancellation & look forward to hosting you in the New Year!
+Reply STOP to unsubscribe.
+Thanks, Granite Park
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #44  |  Sent 144x  |  Source: bulk_actions
+Date: 2026-01-06T16:43:49.000Z
+──────────────────────────────────────────
+Happy New Year! Priority registration is now open for the next Granite Park Yacht Mixer (Jan 7th, 8-10PM). Since we missed you in our last event, we’ve reserved a spot for you to reregister here: https://api.leadconnectorhq.com/widget/form/HnDlGRwYsFifJ1Lh6bHa
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #45  |  Sent 9x  |  Source: bulk_actions
+Date: 2026-01-07T18:22:56.000Z
+──────────────────────────────────────────
+We are excited to host you this evening at The Tycoon yacht for the Granite Park Capital investor mixer. Please note we are at capacity and cannot accommodate any +1 guests. 
+
+Location: Island Gardens Marina 888 MacArthur Cswy Miami, FL 33132 
+Time: 8-10 PM 
+
+See you this evening!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #46  |  Sent 37x  |  Source: bulk_actions
+Date: 2026-01-29T18:02:32.000Z
+──────────────────────────────────────────
+We are excited to host you this evening at the Tycoon Yacht for the Granite Park Capital investor mixer. Please note we are at capacity and cannot accommodate any +1 guests. 
+
+Location: Island Gardens Marina 888 MacArthur Cswy Miami, FL 33132 
+Time: 7:00-9 PM
+
+See you this evening!
+Reply STOP to unsubscribe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #47  |  Sent 78x  |  Source: bulk_actions
+Date: 2026-01-29T18:24:17.000Z
+──────────────────────────────────────────
+Thanks for your interest! Tonight’s yacht mixer (Jan 29) is full, but we’ve added another event tomorrow and you have priority access.
+
+Jan 30, 7–9 PM at Island Gardens Marina, Miami
+
+Register here: https://api.leadconnectorhq.com/widget/form/HnDlGRwYsFifJ1Lh6bHa
+
+- Granite Park
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #48  |  Sent 1x  |  Source: app
+Date: 2026-01-29T21:08:27.000Z
+──────────────────────────────────────────
+Hello Sal...Ok I'll move you to tonight's event and Happy Birthday!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #49  |  Sent 204x  |  Source: bulk_actions
+Date: 2026-01-30T16:15:07.000Z
+──────────────────────────────────────────
+Sorry we missed you last time! Join the Granite Park Yacht Mixer TODAY, 7-9 PM @ Island Gardens Marina (Tycoon Yacht). We'd love to host you! Confirm your RSVP here: https://api.leadconnectorhq.com/widget/form/HnDlGRwYsFifJ1Lh6bHa
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #50  |  Sent 12x  |  Source: workflow
+Date: 2026-02-17T01:00:06.000Z
+──────────────────────────────────────────
+Tomorrow is the Granite Park Investor Yacht Mixer. Pls note that only registered guests will be admitted (no plus-ones).
+
+Location: Island Gardens Marina, 888 MacArthur Cswy, Miami
+
+A greeter will be at the dock entrance to check you in and guide you to the yacht. See you onboard!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #51  |  Sent 122x  |  Source: bulk_actions
+Date: 2026-02-20T21:45:34.000Z
+──────────────────────────────────────────
+Hey since you’ve been on Tycoon before, wanted to invite you back.
+
+We’re hosting a few private meetings on the yacht next Thursday + a mixer that night for past guests.
+
+Want me to send times onboard or do a quick call?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #52  |  Sent 1x  |  Source: app
+Date: 2026-02-20T22:09:12.000Z
+──────────────────────────────────────────
+Great, if you would like to meet me on the boat on Thursday at either 2 or 3 I have availability? If not please feel free to book my calendar here: https://calendly.com/colby-granitepark/granite-park-capital-follow-up
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #53  |  Sent 1x  |  Source: app
+Date: 2026-02-20T22:09:56.000Z
+──────────────────────────────────────────
+No problem. Did you still have any interest on partnering on an event? Your network is insane and I think we could put something really cool together - Colby
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #54  |  Sent 1x  |  Source: app
+Date: 2026-02-20T22:11:27.000Z
+──────────────────────────────────────────
+I have both 3 and 4 available on the boat on Thursday. The evening event starts at 7.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #55  |  Sent 1x  |  Source: app
+Date: 2026-02-20T22:11:52.000Z
+──────────────────────────────────────────
+I have 12 or 1 available on the boat on Thursday.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #56  |  Sent 1x  |  Source: app
+Date: 2026-02-20T22:12:15.000Z
+──────────────────────────────────────────
+Miami. If that does not work im happy to have a call https://calendly.com/colby-granitepark/granite-park-capital-follow-up
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #57  |  Sent 1x  |  Source: app
+Date: 2026-02-20T22:13:10.000Z
+──────────────────────────────────────────
+Awesome. Do you want to bring them to the boat for a meeting or just the event at night?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #58  |  Sent 1x  |  Source: app
+Date: 2026-02-20T22:13:58.000Z
+──────────────────────────────────────────
+Hey, Marc will still not be in town but we could alway do a zoom call from the boat if you want ot cruise by?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #59  |  Sent 1x  |  Source: app
+Date: 2026-02-20T22:14:18.000Z
+──────────────────────────────────────────
+https://calendly.com/colby-granitepark/granite-park-capital-follow-up
+
+I can be available any of these times.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #60  |  Sent 1x  |  Source: app
+Date: 2026-02-20T22:14:46.000Z
+──────────────────────────────────────────
+Sawweeet yea this mas text just got 18 replies im pumped. But the event will be at 7. If you want to come work on the boat on Thursday that works as well.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #61  |  Sent 1x  |  Source: app
+Date: 2026-02-20T22:15:03.000Z
+──────────────────────────────────────────
+Bring your people and just grind away its up to you.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #62  |  Sent 1x  |  Source: app
+Date: 2026-02-20T22:24:48.000Z
+──────────────────────────────────────────
+Awesome. I have either 2:30 or 3 on the boat.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #63  |  Sent 1x  |  Source: app
+Date: 2026-02-20T22:26:09.000Z
+──────────────────────────────────────────
+Awesome what time are you available on Thursday?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #64  |  Sent 2x  |  Source: app
+Date: 2026-02-20T22:26:47.000Z
+──────────────────────────────────────────
+Yes would love to. Enjoy LA. Feel free to book a call here in the meatime if that work https://calendly.com/colby-granitepark/granite-park-capital-follow-up
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #65  |  Sent 1x  |  Source: app
+Date: 2026-02-20T22:28:32.000Z
+──────────────────────────────────────────
+Hola!! Can do 11 on the boat if that works?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #66  |  Sent 1x  |  Source: app
+Date: 2026-02-20T22:28:54.000Z
+──────────────────────────────────────────
+I can do 10 or 1 on the boat if that works?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #67  |  Sent 1x  |  Source: app
+Date: 2026-02-20T22:29:45.000Z
+──────────────────────────────────────────
+No Problem. We will be hosting day meeting on Friday if you are interested as well.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #68  |  Sent 1x  |  Source: app
+Date: 2026-02-20T22:30:15.000Z
+──────────────────────────────────────────
+Great, what time on the boat works for you on Thursday?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #69  |  Sent 1x  |  Source: app
+Date: 2026-02-20T22:53:04.000Z
+──────────────────────────────────────────
+So the event is at 7 but I'm happy to do an inperson meeting on the boat anytime on Thursday or Friday
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #70  |  Sent 1x  |  Source: app
+Date: 2026-02-20T22:53:52.000Z
+──────────────────────────────────────────
+The event is at 7 and but we have open meeting anytime after 3 on Thursday.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #71  |  Sent 1x  |  Source: app
+Date: 2026-02-20T22:54:24.000Z
+──────────────────────────────────────────
+Great can you do either 1 or 4 on the boat on Thursday?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #72  |  Sent 1x  |  Source: app
+Date: 2026-02-20T22:54:49.000Z
+──────────────────────────────────────────
+The event is at 7
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #73  |  Sent 1x  |  Source: app
+Date: 2026-02-20T22:56:17.000Z
+──────────────────────────────────────────
+The event is at 7 on Thursday. We are doing in person meetings on the boat anytime after 2 on Thursday.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #74  |  Sent 1x  |  Source: app
+Date: 2026-02-20T22:57:34.000Z
+──────────────────────────────────────────
+We have availability at 12 or 4 on Thursday for in person and the event starts at 7.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #75  |  Sent 1x  |  Source: app
+Date: 2026-02-20T23:04:04.000Z
+──────────────────────────────────────────
+The event is at 7.  We are doing 1 on 1 meetings on the boat anytime after 12. When works for you?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #76  |  Sent 1x  |  Source: app
+Date: 2026-02-20T23:04:12.000Z
+──────────────────────────────────────────
+Can also book a call here: Kalex Velez
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #77  |  Sent 1x  |  Source: app
+Date: 2026-02-20T23:04:41.000Z
+──────────────────────────────────────────
+Please ignore that last text. Link to book a call is here https://calendly.com/colby-granitepark/granite-park-capital-follow-up
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #78  |  Sent 1x  |  Source: app
+Date: 2026-02-20T23:05:34.000Z
+──────────────────────────────────────────
+Great look forward to meeting with you. The boat is at The Deck in Island Gardens and is called Tychoon. Its in the same spot.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #79  |  Sent 1x  |  Source: app
+Date: 2026-02-20T23:08:03.000Z
+──────────────────────────────────────────
+Yes next Thursday at 7 is the event. But if you want to do a 1 on 1 meeting on the boat I can do 12 or 2 on Thursday as well.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #80  |  Sent 1x  |  Source: app
+Date: 2026-02-20T23:08:42.000Z
+──────────────────────────────────────────
+Great. We are hosting one on one meetings from 11-3 on Thursday and the event is at 7.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #81  |  Sent 1x  |  Source: app
+Date: 2026-02-20T23:08:54.000Z
+──────────────────────────────────────────
+No problem. Enjoy!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #82  |  Sent 1x  |  Source: app
+Date: 2026-02-21T00:35:43.000Z
+──────────────────────────────────────────
+Yes no problem. Just let me know which of those times works for you and I wkll block is off.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #83  |  Sent 1x  |  Source: app
+Date: 2026-02-21T00:36:16.000Z
+──────────────────────────────────────────
+We are meeting at the dock at 7 @Island Gardens. The boat is called the Tychoon.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #84  |  Sent 1x  |  Source: app
+Date: 2026-02-21T00:37:05.000Z
+──────────────────────────────────────────
+Sure. I have 12 and 2 still available for 1 on 1 meetings and then the event is at 7
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #85  |  Sent 1x  |  Source: app
+Date: 2026-02-21T00:37:55.000Z
+──────────────────────────────────────────
+It is for Granite Park Capital. For anyone intersted in investing in the fund we are hosting private one on ones and then a mixer at 7.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #86  |  Sent 1x  |  Source: app
+Date: 2026-02-21T00:38:33.000Z
+──────────────────────────────────────────
+So we have 1 on 1s for anyone interested in investing in the fund and then have a mixer for people intersted in investing in the fund as well.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #87  |  Sent 1x  |  Source: app
+Date: 2026-02-22T18:24:16.000Z
+──────────────────────────────────────────
+We are actually going doing 6pm. Please have them whoever you are brining fill this out. https://granitepark.co/
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #88  |  Sent 1x  |  Source: app
+Date: 2026-02-22T18:26:28.000Z
+──────────────────────────────────────────
+For a 1 on 1 to discuss the fund we have from 3-6 available. Just lmk when works from you and I will send an invite.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #89  |  Sent 1x  |  Source: app
+Date: 2026-02-22T18:26:57.000Z
+──────────────────────────────────────────
+I have from 3-6 available on Thursday. LMK when works for you and I will send an invite.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #90  |  Sent 1x  |  Source: app
+Date: 2026-02-22T18:27:23.000Z
+──────────────────────────────────────────
+No problem. Did you want to come for a 1 on 1 meeting on Thursday?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #91  |  Sent 1x  |  Source: app
+Date: 2026-02-22T18:28:17.000Z
+──────────────────────────────────────────
+We are having the mixer for people interested in investing at 6; and are doing one on one meetings prior. Right now I have 3:30 and 4:30 available for one on ones.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #92  |  Sent 1x  |  Source: app
+Date: 2026-02-22T18:29:28.000Z
+──────────────────────────────────────────
+Ok thank you. Is the fund something you or anyone you know would be interested in pursuing, or should I mark as not interested?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #93  |  Sent 1x  |  Source: app
+Date: 2026-02-22T18:30:04.000Z
+──────────────────────────────────────────
+Do you want to book a time on Thursday?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #94  |  Sent 1x  |  Source: app
+Date: 2026-02-22T18:34:35.000Z
+──────────────────────────────────────────
+Soungs good :)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #95  |  Sent 1x  |  Source: app
+Date: 2026-02-23T19:17:15.000Z
+──────────────────────────────────────────
+Sure we can do either 2 or 230 on Thursday?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #96  |  Sent 1x  |  Source: app
+Date: 2026-02-23T19:17:19.000Z
+──────────────────────────────────────────
+Does that work?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #97  |  Sent 1x  |  Source: app
+Date: 2026-02-23T19:17:33.000Z
+──────────────────────────────────────────
+No problem. Thank you.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #98  |  Sent 1x  |  Source: app
+Date: 2026-02-23T19:22:19.000Z
+──────────────────────────────────────────
+Are you intending to invest in the fund?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #99  |  Sent 1x  |  Source: app
+Date: 2026-02-23T19:22:48.000Z
+──────────────────────────────────────────
+If you are intending to invest in the fund, and what the commitment amount is.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #100  |  Sent 1x  |  Source: app
+Date: 2026-02-23T19:25:15.000Z
+──────────────────────────────────────────
+Right, so im saying the time on Thursday would be to get one on one time if you would like to have a more pointed conversation on the fund. On Thursday night it is just a mixer. You have already been to the presentation right?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #101  |  Sent 1x  |  Source: app
+Date: 2026-02-23T19:25:26.000Z
+──────────────────────────────────────────
+ok thank you!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #102  |  Sent 1x  |  Source: app
+Date: 2026-02-23T19:27:12.000Z
+──────────────────────────────────────────
+Hello, I can be available 3-5 anytime to meet with potential investors on Thursday.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #103  |  Sent 93x  |  Source: bulk_actions
+Date: 2026-02-23T21:20:49.000Z
+──────────────────────────────────────────
+Just circling back we’re finalizing Thursday’s schedule on Tycoon. Please book time here: 
+
+https://calendly.com/colby-granitepark/granite-park-1-on-1-on-yacht
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #104  |  Sent 1x  |  Source: app
+Date: 2026-02-24T18:56:29.000Z
+──────────────────────────────────────────
+Sure do you want to give me a call my cell is 508 397 3792
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #105  |  Sent 2x  |  Source: app
+Date: 2026-02-24T19:19:59.000Z
+──────────────────────────────────────────
+No problem. We actually lowered it to 5 years, potentially 4. This is based on Fund 1. We knocked it out of the park and are entertaining an offer to buy the entire portfolio and its only 2 years old. Does that make a difference?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #106  |  Sent 3x  |  Source: app
+Date: 2026-02-24T19:42:25.000Z
+──────────────────────────────────────────
+https://api.leadconnectorhq.com/widget/bookings/in-person-yacht-meeting
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #107  |  Sent 1x  |  Source: app
+Date: 2026-02-24T19:42:33.000Z
+──────────────────────────────────────────
+Please choose a time.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #108  |  Sent 1x  |  Source: app
+Date: 2026-02-24T19:42:51.000Z
+──────────────────────────────────────────
+Oh sorry please ignore that was wrong text.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #109  |  Sent 1x  |  Source: app
+Date: 2026-02-24T19:43:10.000Z
+──────────────────────────────────────────
+Please choose a time
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #110  |  Sent 1x  |  Source: app
+Date: 2026-02-24T19:43:49.000Z
+──────────────────────────────────────────
+Ok no problem. Shoot me a text and Ill personally get you added whenever you can make the next event. My cell is 508 397 3792
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #111  |  Sent 1x  |  Source: app
+Date: 2026-02-24T19:44:09.000Z
+──────────────────────────────────────────
+No problem will keep you in mind for the next one.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #112  |  Sent 1x  |  Source: app
+Date: 2026-02-24T19:45:58.000Z
+──────────────────────────────────────────
+Ahh got it. Are you downh here anytime soon? I can also setup a zoom call if that works better?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #113  |  Sent 87x  |  Source: bulk_actions
+Date: 2026-02-25T17:17:30.000Z
+──────────────────────────────────────────
+Quick check we have a couple spots left for Thursday on Tycoon before we lock the schedule. Please book here: 
+https://api.leadconnectorhq.com/widget/bookings/in-person-yacht-meeting
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #114  |  Sent 1x  |  Source: bulk_actions
+Date: 2026-02-25T17:17:30.000Z
+──────────────────────────────────────────
+Quick check we have a couple spots left for Thursday on Tycoon before we lock the schedule. Please book here: 
+https://api.leadconnectorhq.com/widget/bookings/in-person-yacht-meeting
+Reply STOP to unsubscribe.
+Thanks, Granite Park
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #115  |  Sent 198x  |  Source: bulk_actions
+Date: 2026-02-25T17:33:47.000Z
+──────────────────────────────────────────
+Sorry we missed you last time! Join the Granite Park Yacht Mixer TOMORROW, 6-9 PM @ Island Gardens Marina (Tycoon Yacht). We'd love to host you! Confirm your RSVP here: https://api.leadconnectorhq.com/widget/form/HnDlGRwYsFifJ1Lh6bHa
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #116  |  Sent 1x  |  Source: app
+Date: 2026-02-25T20:42:36.000Z
+──────────────────────────────────────────
+Ok greate would you like to have a meeting on the boat then?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #117  |  Sent 1x  |  Source: app
+Date: 2026-02-25T22:42:36.000Z
+──────────────────────────────────────────
+Hello, we have moved the boat to 730 tomorrow. Did you register the person you are bringing tomorrow?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #118  |  Sent 1x  |  Source: app
+Date: 2026-02-25T22:43:22.000Z
+──────────────────────────────────────────
+ok great. See you then :)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #119  |  Sent 1x  |  Source: app
+Date: 2026-02-25T22:43:35.000Z
+──────────────────────────────────────────
+This has been moved to 730
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #120  |  Sent 1x  |  Source: app
+Date: 2026-02-26T17:43:17.876Z
+──────────────────────────────────────────
+Yes the event starts at 730
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #121  |  Sent 1x  |  Source: app
+Date: 2026-02-26T17:43:37.211Z
+──────────────────────────────────────────
+Yes the yacht is not leaving the harbor. We will see you at 730
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #122  |  Sent 1x  |  Source: app
+Date: 2026-02-26T18:44:53.244Z
+──────────────────────────────────────────
+no it was moved to 730
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #123  |  Sent 45x  |  Source: bulk_actions
+Date: 2026-02-26T19:08:30.757Z
+──────────────────────────────────────────
+We are excited to host you this evening at the Tycoon yacht for the Granite Park Capital investor mixer.  
+
+Location: Island Gardens Marina 888 MacArthur Cswy Miami, FL 33132 
+Updated Time: 7:30-10:00 PM
+
+See you this evening!
+Reply STOP to unsubscribe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #124  |  Sent 1x  |  Source: app
+Date: 2026-02-26T21:10:00.235Z
+──────────────────────────────────────────
+We will have light snacks. I believe we will be having pizza tonight.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #125  |  Sent 14x  |  Source: bulk_actions
+Date: 2026-02-27T18:19:23.136Z
+──────────────────────────────────────────
+Hey — appreciate you joining us aboard Tycoon last night. We’re opening a few private 1:1 sessions to walk through your investment goals, answer follow-up questions, and go deeper on Granite Park opportunities.  Book directly here: 
+https://calendly.com/colby-granitepark/granite-park-1-on-1-on-yacht
+Reply STOP to unsubscribe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #126  |  Sent 12x  |  Source: bulk_actions
+Date: 2026-02-28T18:01:10.373Z
+──────────────────────────────────────────
+Quick follow-up — if a full diligence session isn’t needed yet, we’re also offering 30-min alignment calls to understand your investment criteria and see where Granite Park fits. Grab a time here: 
+https://calendly.com/colby-granitepark/granite-park-capital-follow-up
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #127  |  Sent 1x  |  Source: workflow
+Date: 2026-03-05T23:11:58.987Z
+──────────────────────────────────────────
+Hey — appreciate you joining us aboard Tycoon. We’re opening a few private 1:1 sessions to walk through your investment goals, answer follow-up questions, and go deeper on Granite Park opportunities.
+
+
+Book directly here: https://calendly.com/colby-granitepark/granite-park-1-on-1-on-yacht
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #128  |  Sent 1x  |  Source: workflow
+Date: 2026-03-06T23:12:00.785Z
+──────────────────────────────────────────
+Quick follow-up — if a full diligence session isn’t needed yet, we’re also offering 30-min alignment calls to understand your investment criteria and see where Granite Park fits. Grab a time here: 
+
+https://calendly.com/colby-granitepark/granite-park-capital-follow-up
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #129  |  Sent 1x  |  Source: workflow
+Date: 2026-03-07T23:12:14.015Z
+──────────────────────────────────────────
+Hey Jordan Butler — wanted to share a quick update from our portfolio. Across 444+ units in FL and TX, we're seeing strong occupancy and Q2 distributions hit $320K. Happy to walk you through the numbers anytime. —Colby
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #130  |  Sent 46x  |  Source: bulk_actions
+Date: 2026-03-12T15:34:47.458Z
+──────────────────────────────────────────
+Join the Granite Park Yacht Mixer TODAY, 6:30-9 PM @ Island Gardens Marina (Tycoon Yacht). We'd love to host you! Confirm your RSVP here: 
+https://api.leadconnectorhq.com/widget/form/HnDlGRwYsFifJ1Lh6bHa
+Reply STOP to unsubscribe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #131  |  Sent 214x  |  Source: bulk_actions
+Date: 2026-03-12T15:34:49.032Z
+──────────────────────────────────────────
+Join the Granite Park Yacht Mixer TODAY, 6:30-9 PM @ Island Gardens Marina (Tycoon Yacht). We'd love to host you! Confirm your RSVP here: 
+https://api.leadconnectorhq.com/widget/form/HnDlGRwYsFifJ1Lh6bHa
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #132  |  Sent 1x  |  Source: workflow
+Date: 2026-03-12T15:37:05.094Z
+──────────────────────────────────────────
+Vansh — you're confirmed for the Granite Park Capital mixer aboard TYCOON at Epic Marina, Miami. We'll send you the details closer to the event. Looking forward to meeting you! —Colby Watkins
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #133  |  Sent 1x  |  Source: workflow
+Date: 2026-03-12T15:39:26.436Z
+──────────────────────────────────────────
+Ashley — you're confirmed for the Granite Park Capital mixer aboard TYCOON at Epic Marina, Miami. We'll send you the details closer to the event. Looking forward to meeting you! —Colby Watkins
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #134  |  Sent 1x  |  Source: workflow
+Date: 2026-03-12T15:42:21.323Z
+──────────────────────────────────────────
+Yash — you're confirmed for the Granite Park Capital mixer aboard TYCOON at Epic Marina, Miami. We'll send you the details closer to the event. Looking forward to meeting you! —Colby Watkins
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #135  |  Sent 2x  |  Source: workflow
+Date: 2026-03-12T15:43:00.421Z
+──────────────────────────────────────────
+Harsh — you're confirmed for the Granite Park Capital mixer aboard TYCOON at Epic Marina, Miami. We'll send you the details closer to the event. Looking forward to meeting you! —Colby Watkins
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #136  |  Sent 1x  |  Source: workflow
+Date: 2026-03-12T15:45:15.585Z
+──────────────────────────────────────────
+Stephane — you're confirmed for the Granite Park Capital mixer aboard TYCOON at Epic Marina, Miami. We'll send you the details closer to the event. Looking forward to meeting you! —Colby Watkins
+Reply STOP to unsubscribe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #137  |  Sent 1x  |  Source: workflow
+Date: 2026-03-12T16:03:51.150Z
+──────────────────────────────────────────
+Sonia — you're confirmed for the Granite Park Capital mixer aboard TYCOON at Epic Marina, Miami. We'll send you the details closer to the event. Looking forward to meeting you! —Colby Watkins
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #138  |  Sent 1x  |  Source: workflow
+Date: 2026-03-12T16:20:45.728Z
+──────────────────────────────────────────
+Randee — you're confirmed for the Granite Park Capital mixer aboard TYCOON at Epic Marina, Miami. We'll send you the details closer to the event. Looking forward to meeting you! —Colby Watkins
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #139  |  Sent 1x  |  Source: app
+Date: 2026-03-12T16:25:58.377Z
+──────────────────────────────────────────
+Granite Park Capital
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #140  |  Sent 1x  |  Source: app
+Date: 2026-03-12T16:26:19.047Z
+──────────────────────────────────────────
+Is he an accredited investor?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #141  |  Sent 1x  |  Source: app
+Date: 2026-03-12T16:29:14.778Z
+──────────────────────────────────────────
+Sure. We can have him attended. Just have him fill out the registration and arrive at The Deck @Island Gardens at 6:30
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #142  |  Sent 1x  |  Source: workflow
+Date: 2026-03-12T16:39:51.888Z
+──────────────────────────────────────────
+Rafael — you're confirmed for the Granite Park Capital mixer aboard TYCOON at Epic Marina, Miami. We'll send you the details closer to the event. Looking forward to meeting you! —Colby Watkins
+Reply STOP to unsubscribe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #143  |  Sent 1x  |  Source: workflow
+Date: 2026-03-12T16:39:54.659Z
+──────────────────────────────────────────
+Grace  — you're confirmed for the Granite Park Capital mixer aboard TYCOON at Epic Marina, Miami. We'll send you the details closer to the event. Looking forward to meeting you! —Colby Watkins
+Reply STOP to unsubscribe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #144  |  Sent 1x  |  Source: workflow
+Date: 2026-03-12T16:39:54.701Z
+──────────────────────────────────────────
+Lizbeth — you're confirmed for the Granite Park Capital mixer aboard TYCOON at Epic Marina, Miami. We'll send you the details closer to the event. Looking forward to meeting you! —Colby Watkins
+Reply STOP to unsubscribe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #145  |  Sent 1x  |  Source: workflow
+Date: 2026-03-12T16:39:59.583Z
+──────────────────────────────────────────
+Claudia — you're confirmed for the Granite Park Capital mixer aboard TYCOON at Epic Marina, Miami. We'll send you the details closer to the event. Looking forward to meeting you! —Colby Watkins
+Reply STOP to unsubscribe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #146  |  Sent 1x  |  Source: workflow
+Date: 2026-03-12T16:40:01.964Z
+──────────────────────────────────────────
+Sam — you're confirmed for the Granite Park Capital mixer aboard TYCOON at Epic Marina, Miami. We'll send you the details closer to the event. Looking forward to meeting you! —Colby Watkins
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #147  |  Sent 1x  |  Source: workflow
+Date: 2026-03-12T16:40:05.113Z
+──────────────────────────────────────────
+Daren — you're confirmed for the Granite Park Capital mixer aboard TYCOON at Epic Marina, Miami. We'll send you the details closer to the event. Looking forward to meeting you! —Colby Watkins
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #148  |  Sent 5x  |  Source: app
+Date: 2026-03-12T16:42:50.303Z
+──────────────────────────────────────────
+The is The Deck Island Gardens not Epic Marina.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #149  |  Sent 1x  |  Source: app
+Date: 2026-03-12T19:03:03.959Z
+──────────────────────────────────────────
+Its at The Deck Island Gardens not Epic Miami
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #150  |  Sent 1x  |  Source: app
+Date: 2026-03-12T19:03:36.024Z
+──────────────────────────────────────────
+Its at the Deck Island Gardens
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #151  |  Sent 1x  |  Source: app
+Date: 2026-03-12T19:03:57.725Z
+──────────────────────────────────────────
+The Deck Island Gardens is where we are leaving
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #152  |  Sent 1x  |  Source: workflow
+Date: 2026-03-12T19:33:59.215Z
+──────────────────────────────────────────
+Dixi — you're confirmed for the Granite Park Capital mixer aboard TYCOON at Epic Marina, Miami. We'll send you the details closer to the event. Looking forward to meeting you! —Colby Watkins
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #153  |  Sent 1x  |  Source: workflow
+Date: 2026-03-12T19:34:48.613Z
+──────────────────────────────────────────
+Yenia — you're confirmed for the Granite Park Capital mixer aboard TYCOON at Epic Marina, Miami. We'll send you the details closer to the event. Looking forward to meeting you! —Colby Watkins
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #154  |  Sent 2x  |  Source: workflow
+Date: 2026-03-12T23:09:21.432Z
+──────────────────────────────────────────
+Juan — you're confirmed for the Granite Park Capital mixer aboard TYCOON at Epic Marina, Miami. We'll send you the details closer to the event. Looking forward to meeting you! —Colby Watkins
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #155  |  Sent 1x  |  Source: workflow
+Date: 2026-03-13T04:02:33.263Z
+──────────────────────────────────────────
+Juan Felipe — you're confirmed for the Granite Park Capital mixer aboard TYCOON at Epic Marina, Miami. We'll send you the details closer to the event. Looking forward to meeting you! —Colby Watkins
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #156  |  Sent 19x  |  Source: workflow
+Date: 2026-03-13T04:02:34.798Z
+──────────────────────────────────────────
+You’re confirmed for the Granite Park Yacht Mixer.
+
+Location: Island Gardens Marina, 888 Mac Arthur Cswy, Miami, FL – Tycoon Yacht
+
+Curated networking & fireside discussions. Check-in at dock entrance by the Deck. See you on board!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #157  |  Sent 19x  |  Source: workflow
+Date: 2026-03-13T04:02:35.336Z
+──────────────────────────────────────────
+Quick reminder: tomorrow night's mixer aboard TYCOON at Epic Marina, Miami. Dress is smart casual. We'll have a short presentation on our affordable housing fund followed by open conversation and drinks. Looking forward to seeing you there! —Colby
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SMS #158  |  Sent 19x  |  Source: workflow
+Date: 2026-03-13T04:02:36.371Z
+──────────────────────────────────────────
+We're getting set up on TYCOON now — tonight's going to be a great time. Epic Marina, Miami. See you soon! —Colby
+

@@ -1,0 +1,120 @@
+{
+  "sequences": [
+    {
+      "steps": [
+        {
+          "type": "email",
+          "delay": 0,
+          "variants": [
+            {
+              "subject": "{{companyName}} + government-backed housing fund — quick question",
+              "body": "<div>Hi {{firstName}},</div><div><br /></div><div>{{opener}}</div><div><br /></div><div>I'm reaching out because we're raising <strong>Granite Park Capital Affordable Housing Fund II</strong> — and based on what I see at {{companyName}}, this might be worth 15 minutes of your time.</div><div><br /></div><div>Quick snapshot:</div><div><br /></div><div>• <strong>Fund I delivered 179% return on equity in 2 years</strong> — fully subscribed at $50M<br />• Quarterly distributions backed by government Section 8 contracts — not speculation, not hope-and-pray appreciation<br />• 4th-generation operator managing 17,000+ units across a ~$2B portfolio<br />• Powerful tax strategies: LIHTC credits (dollar-for-dollar), cost segregation, accelerated depreciation<br />• GP co-invests significant capital alongside every LP</div><div><br /></div><div>Fund II targets the same strategy at a larger scale. $250K minimum, accredited investors only.</div><div><br /></div><div>Would you have 15 minutes this week?</div><div><a href=\"https://api.leadconnectorhq.com/widget/bookings/granite-park-capital-1-1\">Book a quick call</a></div><div><br /></div><div>Best,</div><div>Colby Watkins</div><div>Fund Manager | Granite Park Capital</div><div>colby@granitepark.co | granitepark.co</div>"
+            },
+            {
+              "subject": "Congress just increased affordable housing funding to $38.4B — here's why it matters",
+              "body": "<div>Hi {{firstName}},</div><div><br /></div><div>{{opener}}</div><div><br /></div><div>I wanted to reach out because something big just happened in affordable housing that most investors haven't caught yet.</div><div><br /></div><div>Congress rejected $33B in proposed HUD cuts and <strong>increased</strong> Section 8 funding to <strong>$38.4 billion</strong> — the largest increase in years. Total HUD budget: $77.3B. Meanwhile, there are 7.2 million families on waitlists for affordable housing.</div><div><br /></div><div>That's the environment we operate in at <strong>Granite Park Capital</strong>. Our Fund I delivered <strong>179% return on equity in 2 years</strong> — every dollar backed by government-contracted rent.</div><div><br /></div><div>We're now raising Fund II ($50M target) using the same playbook:</div><div><br /></div><div>• Government-guaranteed Section 8 rental income<br />• Quarterly distributions<br />• 4th-generation operator, 17,000+ units, ~$2B portfolio<br />• Tax advantages: LIHTC credits, cost segregation, accelerated depreciation<br />• $250K minimum, accredited investors only</div><div><br /></div><div>15 minutes — happy to walk you through how this fits {{companyName}}'s allocation strategy.</div><div><a href=\"https://api.leadconnectorhq.com/widget/bookings/granite-park-capital-1-1\">Book a quick call</a></div><div><br /></div><div>Best,</div><div>Colby Watkins</div><div>Fund Manager | Granite Park Capital</div><div>colby@granitepark.co | granitepark.co</div>"
+            }
+          ],
+          "delay_unit": "days",
+          "pre_delay_unit": "days"
+        },
+        {
+          "type": "email",
+          "delay": 3,
+          "variants": [
+            {
+              "subject": "Re: {{companyName}} + government-backed housing fund — quick question",
+              "body": "<div>Hi {{firstName}},</div><div><br /></div><div>Just bumping this up in case it got buried. I know your inbox is a warzone.</div><div><br /></div><div>The short version: our Fund I delivered <strong>179% ROE in 2 years</strong>. Fund II uses the same strategy — government-backed Section 8 income, 4th-gen operator with 17,000+ units. We're past 30% subscribed on the $50M raise.</div><div><br /></div><div>Happy to send our investor deck if you'd rather review first, or grab 15 min:</div><div><a href=\"https://api.leadconnectorhq.com/widget/bookings/granite-park-capital-1-1\">Book a quick call</a></div><div><br /></div><div>Best,</div><div>Colby Watkins</div><div>Fund Manager | Granite Park Capital</div>"
+            },
+            {
+              "subject": "Quick tax question for {{companyName}}",
+              "body": "<div>Hi {{firstName}},</div><div><br /></div><div>One thing I didn't mention in my last note — the tax structure on our fund is unusual.</div><div><br /></div><div>We generate <strong>Low Income Housing Tax Credits (LIHTC)</strong> that provide <strong>dollar-for-dollar offsets</strong> against federal tax liability. Not deductions — actual credits. For someone in the 37% bracket, this is a massive return enhancer on top of the cash distributions.</div><div><br /></div><div>That's layered on top of cost segregation, accelerated depreciation, and tax-free cash-out refinances. Fund I investors saw 179% return on equity in 2 years — and kept more of it because of the tax structure.</div><div><br /></div><div>{{pain_point}} — if that resonates, I'd love to show you how the numbers work for your situation specifically.</div><div><br /></div><div><a href=\"https://api.leadconnectorhq.com/widget/bookings/granite-park-capital-1-1\">Book 15 minutes</a></div><div><br /></div><div>Best,</div><div>Colby Watkins</div><div>Fund Manager | Granite Park Capital</div>"
+            }
+          ],
+          "delay_unit": "days",
+          "pre_delay_unit": "days"
+        },
+        {
+          "type": "email",
+          "delay": 4,
+          "variants": [
+            {
+              "subject": "Why Congress is funding our business model",
+              "body": "<div>Hi {{firstName}},</div><div><br /></div><div>I keep getting asked: \"With all the political noise, is affordable housing still safe?\"</div><div><br /></div><div>The answer is yes — and the numbers just got significantly better:</div><div><br /></div><div><strong>Federal Funding (FY2026):</strong><br />• Section 8 budget: $38.4B (+$2.4B increase)<br />• Total HUD budget: $77.3B (+$7.2B over prior year)<br />• 60,000 new Housing Choice Vouchers distributed<br />• Congress rejected $33B in proposed cuts and increased funding instead</div><div><br /></div><div><strong>LIHTC Expansion (now permanent law):</strong><br />• Bond financing threshold cut from 50% to 25% — massive unlock for new deals<br />• Projected to create 1.22 million additional affordable homes over the next decade</div><div><br /></div><div><strong>The demand:</strong><br />• 7.2 million affordable rental home shortage nationwide<br />• Section 8 waitlists run 4-8+ years in major cities</div><div><br /></div><div>This is why our Fund I delivered <strong>179% ROE in 2 years</strong> — and why Fund II is positioned for even more favorable conditions.</div><div><br /></div><div>15 minutes — I'll walk you through exactly how we capture this:</div><div><a href=\"https://api.leadconnectorhq.com/widget/bookings/granite-park-capital-1-1\">Book a quick call</a></div><div><br /></div><div>Best,</div><div>Colby Watkins</div><div>Fund Manager | Granite Park Capital</div>"
+            },
+            {
+              "subject": "179% ROE in 2 years — here's how Fund I did it",
+              "body": "<div>Hi {{firstName}},</div><div><br /></div><div>I wanted to share something concrete rather than just another pitch.</div><div><br /></div><div>Our Fund I just hit a milestone: <strong>179% return on equity in 2 years.</strong> Fully subscribed at $50M. Every projection hit.</div><div><br /></div><div>How we did it:</div><div><br /></div><div>1. Acquired stabilized multifamily communities with government Section 8 contracts<br />2. Government-guaranteed rent — not dependent on market conditions<br />3. Cost segregation studies to accelerate depreciation for tax savings<br />4. Cash-out refinances (tax-free) to return capital while retaining the asset<br />5. Our parent company Apartment Corp (17,000+ units, ~$2B portfolio) operates every property in-house</div><div><br /></div><div>Fund II uses the same playbook. Past 30% subscribed on the $50M raise.</div><div><br /></div><div>If you allocate to alternatives at {{companyName}}, this might be worth a conversation.</div><div><br /></div><div><a href=\"https://api.leadconnectorhq.com/widget/bookings/granite-park-capital-1-1\">Book 15 minutes</a></div><div><br /></div><div>Best,</div><div>Colby Watkins</div><div>Fund Manager | Granite Park Capital</div>"
+            }
+          ],
+          "delay_unit": "days",
+          "pre_delay_unit": "days"
+        },
+        {
+          "type": "email",
+          "delay": 5,
+          "variants": [
+            {
+              "subject": "What makes Granite Park different from every other RE fund",
+              "body": "<div>Hi {{firstName}},</div><div><br /></div><div>There are a lot of real estate funds out there. Here's why ours is different:</div><div><br /></div><div><strong>1. Government-backed income.</strong> Section 8 contracts mean the federal government pays the rent. Not tenants, not the market — the government. That's recession-proof income.</div><div><br /></div><div><strong>2. Dollar-for-dollar tax credits.</strong> LIHTC credits offset your federal tax liability 1:1. For a high-income investor, this alone can represent a significant portion of the return.</div><div><br /></div><div><strong>3. 4th-generation operator.</strong> Our parent company Apartment Corp manages 17,000+ units (~$2B portfolio). This isn't a first-time fund manager — it's a multi-generational real estate family.</div><div><br /></div><div><strong>4. Fund I proved it.</strong> 179% ROE in 2 years. Fully subscribed at $50M. Every quarter, every projection — delivered.</div><div><br /></div><div><strong>5. Skin in the game.</strong> GP commits significant capital alongside every LP.</div><div><br /></div><div>Class B/C affordable housing is outperforming Class A on rent growth, occupancy, and cap rates right now. Happy to show you the data.</div><div><br /></div><div><a href=\"https://api.leadconnectorhq.com/widget/bookings/granite-park-capital-1-1\">Book 15 minutes</a></div><div><br /></div><div>Best,</div><div>Colby Watkins</div><div>Fund Manager | Granite Park Capital</div>"
+            },
+            {
+              "subject": "7.2 million families are waiting — that's our opportunity",
+              "body": "<div>Hi {{firstName}},</div><div><br /></div><div>There are <strong>7.2 million families</strong> on waitlists for affordable housing in the US. Only 35 affordable homes are available for every 100 extremely low-income households. Waitlists in major metros run 4-8+ years.</div><div><br /></div><div>Meanwhile, Congress just increased Section 8 funding to $38.4B and permanently expanded LIHTC credits. The government is spending record amounts trying to close this gap — and it's barely making a dent.</div><div><br /></div><div>That's the environment we invest in at Granite Park Capital. Unlimited demand, government-guaranteed rent, and a 4th-generation operator with 17,000+ units who knows how to execute.</div><div><br /></div><div>Fund I: 179% ROE in 2 years. Fund II: same strategy, larger scale.</div><div><br /></div><div>{{pain_point}} — if that's on your radar, I think this is worth a quick conversation.</div><div><br /></div><div><a href=\"https://api.leadconnectorhq.com/widget/bookings/granite-park-capital-1-1\">Book 15 minutes</a></div><div><br /></div><div>Best,</div><div>Colby Watkins</div><div>Fund Manager | Granite Park Capital</div>"
+            }
+          ],
+          "delay_unit": "days",
+          "pre_delay_unit": "days"
+        },
+        {
+          "type": "email",
+          "delay": 7,
+          "variants": [
+            {
+              "subject": "How our LPs keep more of what they make",
+              "body": "<div>Hi {{firstName}},</div><div><br /></div><div>One thing that surprises most investors about our fund — the tax advantages are built into the structure from day one:</div><div><br /></div><div><strong>LIHTC Tax Credits</strong><br />Dollar-for-dollar offsets against your federal tax liability. Not deductions — actual credits. For someone in the 37% bracket, this is a massive return enhancer.</div><div><br /></div><div><strong>Cost Segregation + Accelerated Depreciation</strong><br />We run cost seg studies on every acquisition to accelerate depreciation — creating significant paper losses that offset taxable income in the early years.</div><div><br /></div><div><strong>Cash-Out Refinance = Tax-Free Access</strong><br />As properties appreciate, we use cash-out refinances to return capital. Refinance proceeds are not a taxable event — you access gains without triggering taxes.</div><div><br /></div><div><strong>1031 Exchange Friendly</strong><br />Sitting on gains from another property? We're structured to accept 1031 exchanges into the fund.</div><div><br /></div><div>Fund I delivered 179% ROE in 2 years using this exact strategy — and investors kept more of it because of the tax structure.</div><div><br /></div><div>Want to see how the numbers work for your situation?</div><div><a href=\"https://api.leadconnectorhq.com/widget/bookings/granite-park-capital-1-1\">Book 15 minutes</a></div><div><br /></div><div>Best,</div><div>Colby Watkins</div><div>Fund Manager | Granite Park Capital</div>"
+            },
+            {
+              "subject": "The full return stack (it's not just the 7% pref)",
+              "body": "<div>Hi {{firstName}},</div><div><br /></div><div>Most people hear \"7% preferred return\" and think that's the whole story. It's not — it's just the floor.</div><div><br /></div><div>Here's the full return stack for Fund II:</div><div><br /></div><div>1. <strong>7% preferred return</strong> — quarterly, from government Section 8 income<br />2. <strong>Appreciation</strong> — on asset repositioning<br />3. <strong>LIHTC tax credits</strong> — dollar-for-dollar federal offsets (not deductions)<br />4. <strong>Cost segregation</strong> — accelerated depreciation for early-year tax savings<br />5. <strong>Cash-out refinances</strong> — tax-free access to gains<br />6. <strong>1031 exchange eligible</strong> — defer and redeploy existing gains</div><div><br /></div><div>That's how Fund I delivered <strong>179% return on equity in 2 years</strong>. The income is the base. The tax structure is what supercharges the total return.</div><div><br /></div><div>If you or your clients are looking for tax-efficient alternatives exposure, I'd love to show you the full picture.</div><div><br /></div><div><a href=\"https://api.leadconnectorhq.com/widget/bookings/granite-park-capital-1-1\">Book 15 minutes</a></div><div><br /></div><div>Best,</div><div>Colby Watkins</div><div>Fund Manager | Granite Park Capital</div>"
+            }
+          ],
+          "delay_unit": "days",
+          "pre_delay_unit": "days"
+        },
+        {
+          "type": "email",
+          "delay": 7,
+          "variants": [
+            {
+              "subject": "15 min this week?",
+              "body": "<div>Hi {{firstName}},</div><div><br /></div><div>I know you're busy — just wanted to see if 15 minutes this week works to walk through the fund.</div><div><br /></div><div>Quick refresher: Granite Park Capital Fund II — $50M affordable housing fund, government-backed Section 8 income, 4th-gen operator with 17,000+ units. Fund I delivered 179% ROE in 2 years.</div><div><br /></div><div>Past 30% subscribed. A few spots opened up on the calendar this week:</div><div><a href=\"https://api.leadconnectorhq.com/widget/bookings/granite-park-capital-1-1\">Book a quick call</a></div><div><br /></div><div>No pressure — if it's not a fit, just say the word.</div><div><br /></div><div>Best,</div><div>Colby Watkins</div><div>Fund Manager | Granite Park Capital</div>"
+            },
+            {
+              "subject": "Investor deck — worth a look?",
+              "body": "<div>Hi {{firstName}},</div><div><br /></div><div>I've reached out a few times so I'll keep this short — would it be easier to just review our investor deck first?</div><div><br /></div><div>It covers the full thesis: Fund I's 179% ROE, the government tailwind ($38.4B Section 8 budget), tax structure (LIHTC + cost seg + 1031), and how Fund II is positioned.</div><div><br /></div><div>Happy to send it over — just reply \"send it\" and I'll get it to you.</div><div><br /></div><div>Or if you'd rather talk through it live:</div><div><a href=\"https://api.leadconnectorhq.com/widget/bookings/granite-park-capital-1-1\">Book 15 minutes</a></div><div><br /></div><div>Best,</div><div>Colby Watkins</div><div>Fund Manager | Granite Park Capital</div>"
+            }
+          ],
+          "delay_unit": "days",
+          "pre_delay_unit": "days"
+        },
+        {
+          "type": "email",
+          "delay": 7,
+          "variants": [
+            {
+              "subject": "Last note from me (unless you say otherwise)",
+              "body": "<div>Hi {{firstName}},</div><div><br /></div><div>I've reached out a few times and I want to be respectful of your time. This will be my last email unless you'd like to continue the conversation.</div><div><br /></div><div>The quick summary:</div><div><br /></div><div>• <strong>Granite Park Capital Fund II</strong> — $50M affordable housing fund (past 30% subscribed)<br />• <strong>179% ROE in 2 years</strong> from Fund I — performing exactly as projected<br />• Quarterly distributions from government Section 8 contracts<br />• Tax advantages: LIHTC credits, cost segregation, depreciation, 1031 eligible<br />• 4th-generation operator, 17,000+ units, ~$2B portfolio<br />• GP co-invests alongside every LP</div><div><br /></div><div>If this interests you — even down the road — I'm always happy to chat:</div><div><a href=\"https://api.leadconnectorhq.com/widget/bookings/granite-park-capital-1-1\">Book a call anytime</a></div><div><br /></div><div>Either way, wishing you the best.</div><div><br /></div><div>Colby Watkins</div><div>Fund Manager | Granite Park Capital</div><div>colby@granitepark.co | granitepark.co</div>"
+            },
+            {
+              "subject": "Closing the loop",
+              "body": "<div>Hi {{firstName}},</div><div><br /></div><div>I'll keep this simple — I've sent a few notes about Granite Park Capital's affordable housing fund and I don't want to overstay my welcome.</div><div><br /></div><div>If you'd ever like to explore it, here's what you'd be looking at:</div><div><br /></div><div>• Government-guaranteed Section 8 income (recession-proof)<br />• Fund I: 179% ROE in 2 years<br />• Dollar-for-dollar LIHTC tax credits + cost segregation<br />• 4th-generation operator with 17,000+ units</div><div><br /></div><div>My calendar is always open: <a href=\"https://api.leadconnectorhq.com/widget/bookings/granite-park-capital-1-1\">Book anytime</a></div><div><br /></div><div>All the best,</div><div>Colby Watkins</div><div>Fund Manager | Granite Park Capital</div><div>colby@granitepark.co | granitepark.co</div>"
+            }
+          ],
+          "delay_unit": "days",
+          "pre_delay_unit": "days"
+        }
+      ]
+    }
+  ]
+}

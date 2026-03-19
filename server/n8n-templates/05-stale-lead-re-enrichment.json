@@ -1,0 +1,82 @@
+{
+  "name": "Stale Lead Re-Enrichment (Weekly Cron)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 3 * * 0"
+            }
+          ]
+        }
+      },
+      "id": "cron-trigger",
+      "name": "Weekly Cron (Sun 3AM)",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.DASHBOARD_BASE_URL || 'http://localhost:3001' }}/api/enrichment/re-enrich-stale",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": []
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "trigger-re-enrich",
+      "name": "Trigger Re-Enrichment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.DASHBOARD_BASE_URL || 'http://localhost:3001' }}/api/enrichment/webhook/n8n",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "event_type",
+              "value": "stale_re_enrichment_complete"
+            },
+            {
+              "name": "event_data",
+              "value": "={{ JSON.stringify({ re_enriched: $json.re_enriched || 0, timestamp: new Date().toISOString() }) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "log-callback",
+      "name": "Log Completion",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [650, 300]
+    }
+  ],
+  "connections": {
+    "Weekly Cron (Sun 3AM)": {
+      "main": [
+        [{ "node": "Trigger Re-Enrichment", "type": "main", "index": 0 }]
+      ]
+    },
+    "Trigger Re-Enrichment": {
+      "main": [
+        [{ "node": "Log Completion", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{ "name": "enrichment" }, { "name": "maintenance" }],
+  "notes": "Weekly cron job that triggers re-enrichment of stale leads.\nLeads older than ENRICHMENT_STALE_DAYS (default 90) are re-processed through the enrichment pipeline to refresh data.\n\nSetup:\n1. Import this workflow into N8N\n2. Activate the workflow\n3. Adjust cron schedule if needed (default: Sunday 3AM)\n4. The dashboard handles rate limiting and batch processing internally"
+}

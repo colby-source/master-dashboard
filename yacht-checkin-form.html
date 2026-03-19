@@ -1,0 +1,258 @@
+<!-- Yacht Check-In Form &mdash; paste into GHL Custom Code element -->
+<style>
+  .checkin-wrap {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 32px 24px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    color: #1a1a2e;
+  }
+  .checkin-wrap h2 {
+    text-align: center;
+    font-size: 28px;
+    margin-bottom: 4px;
+    color: #0f3460;
+  }
+  .checkin-wrap .subtitle {
+    text-align: center;
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 28px;
+  }
+  .checkin-wrap label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #333;
+  }
+  .checkin-wrap input,
+  .checkin-wrap select {
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+    box-sizing: border-box;
+    background: #fff;
+  }
+  .checkin-wrap input:focus,
+  .checkin-wrap select:focus {
+    outline: none;
+    border-color: #0f3460;
+    box-shadow: 0 0 0 2px rgba(15,52,96,0.15);
+  }
+  .checkin-wrap .row {
+    display: flex;
+    gap: 12px;
+  }
+  .checkin-wrap .row > div {
+    flex: 1;
+  }
+  .checkin-wrap .rules-box {
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 14px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #444;
+  }
+  .checkin-wrap .rules-box strong {
+    display: block;
+    margin-bottom: 6px;
+    color: #0f3460;
+  }
+  .checkin-wrap .checkbox-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .checkin-wrap .checkbox-row input[type="checkbox"] {
+    width: auto;
+    margin: 3px 0 0 0;
+    padding: 0;
+  }
+  .checkin-wrap .checkbox-row label {
+    font-weight: 400;
+    font-size: 14px;
+    margin-bottom: 0;
+  }
+  .checkin-wrap button {
+    width: 100%;
+    padding: 14px;
+    background: #0f3460;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+  }
+  .checkin-wrap button:hover {
+    background: #0a2647;
+  }
+  .checkin-wrap button:disabled {
+    background: #999;
+    cursor: not-allowed;
+  }
+  .checkin-wrap .success-msg {
+    display: none;
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .checkin-wrap .success-msg h3 {
+    font-size: 24px;
+    color: #0f3460;
+    margin-bottom: 8px;
+  }
+  .checkin-wrap .success-msg p {
+    font-size: 16px;
+    color: #555;
+  }
+  .checkin-wrap .error-msg {
+    display: none;
+    background: #fee;
+    color: #c00;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    text-align: center;
+  }
+</style>
+
+<div class="checkin-wrap">
+  <div id="checkin-form-area">
+    <h2>Yacht Event Check-In</h2>
+    <p class="subtitle">Granite Park Capital &mdash; Investor Mixer</p>
+
+    <div id="error-msg" class="error-msg"></div>
+
+    <form id="checkin-form" onsubmit="return false;">
+      <div class="row">
+        <div>
+          <label for="first_name">First Name *</label>
+          <input type="text" id="first_name" name="first_name" required placeholder="John">
+        </div>
+        <div>
+          <label for="last_name">Last Name *</label>
+          <input type="text" id="last_name" name="last_name" required placeholder="Smith">
+        </div>
+      </div>
+
+      <label for="email">Email *</label>
+      <input type="email" id="email" name="email" required placeholder="john@example.com">
+
+      <label for="phone">Phone</label>
+      <input type="tel" id="phone" name="phone" placeholder="+1 (555) 123-4567">
+
+      <label for="company">Company</label>
+      <input type="text" id="company" name="company" placeholder="Acme Capital">
+
+      <label for="investor_type">Investor Type</label>
+      <select id="investor_type" name="investor_type">
+        <option value="">&mdash; Select &mdash;</option>
+        <option value="Accredited Investor">Accredited Investor</option>
+        <option value="Qualified Purchaser">Qualified Purchaser</option>
+        <option value="Family Office">Family Office</option>
+        <option value="Institutional">Institutional</option>
+        <option value="RIA/Financial Advisor">RIA / Financial Advisor</option>
+        <option value="CPA/Attorney">CPA / Attorney</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <div class="rules-box">
+        <strong>Event Rules &amp; Acknowledgment</strong>
+        By checking in, you acknowledge and agree to the following:<br><br>
+        &#8226; <b>No shoes on the boat</b> &mdash; please remove all footwear before boarding.<br>
+        &#8226; This is a private event hosted by Granite Park Capital.<br>
+        &#8226; Photography and recording may occur during the event.<br>
+        &#8226; All guests are expected to conduct themselves professionally.<br>
+        &#8226; All investment discussions are informational only and are not solicitations.
+      </div>
+
+      <div class="checkbox-row">
+        <input type="checkbox" id="rules_accepted" name="rules_accepted" required>
+        <label for="rules_accepted">I have read and accept the event rules *</label>
+      </div>
+
+      <button type="button" id="submit-btn" onclick="submitCheckin()">
+        Board &amp; Check In
+      </button>
+    </form>
+  </div>
+
+  <div id="success-msg" class="success-msg">
+    <h3>&#10004; Your Boarding Is Approved</h3>
+    <p>Please check your email for a confirmation email<br>to show the crew at check-in.<br><br>Welcome aboard &mdash; enjoy the mixer!</p>
+  </div>
+</div>
+
+<script>
+function submitCheckin() {
+  var form = document.getElementById('checkin-form');
+  var btn = document.getElementById('submit-btn');
+  var errEl = document.getElementById('error-msg');
+
+  // Validate required fields
+  var firstName = document.getElementById('first_name').value.trim();
+  var lastName = document.getElementById('last_name').value.trim();
+  var email = document.getElementById('email').value.trim();
+  var rulesAccepted = document.getElementById('rules_accepted').checked;
+
+  if (!firstName || !lastName || !email) {
+    errEl.textContent = 'Please fill in First Name, Last Name, and Email.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (!rulesAccepted) {
+    errEl.textContent = 'Please accept the event rules to check in.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Checking in...';
+
+  var today = new Date();
+  var eventDate = today.getFullYear() + '-' +
+    String(today.getMonth() + 1).padStart(2, '0') + '-' +
+    String(today.getDate()).padStart(2, '0');
+
+  var payload = {
+    first_name: firstName,
+    last_name: lastName,
+    email: email,
+    phone: document.getElementById('phone').value.trim(),
+    company: document.getElementById('company').value.trim(),
+    investor_type: document.getElementById('investor_type').value,
+    rules_accepted: true,
+    event_date: eventDate
+  };
+
+  fetch('https://services.leadconnectorhq.com/hooks/x8XBOACL6wOFcsQewWPw/webhook-trigger/c032720f-6188-44c6-8d5e-8c22de2ba977', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(function(res) {
+    if (!res.ok) throw new Error('Server error');
+    document.getElementById('checkin-form-area').querySelector('form').style.display = 'none';
+    document.getElementById('checkin-form-area').querySelector('h2').style.display = 'none';
+    document.getElementById('checkin-form-area').querySelector('.subtitle').style.display = 'none';
+    document.getElementById('success-msg').style.display = 'block';
+  })
+  .catch(function() {
+    errEl.textContent = 'Something went wrong. Please try again.';
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Board & Check In';
+  });
+}
+</script>

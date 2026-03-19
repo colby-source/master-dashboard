@@ -1,0 +1,504 @@
+first_name,last_name,email,company,title,phone,city,state,source,grade,email_status
+Neil,Abraham,nabraham@realtyincome.com,"Realty Income U.S. Core Plus Fund REIT, LLC",Principal,,SAN DIEGO,CA,FO_LP_Master,A+,valid
+David,Adelman,david.adelman@futurestandard.com,"FS Credit Real Estate Income Trust, Inc.",Principal,,Philadelphia,PA,FO_LP_Master,A+,valid
+Richard,Aljian,raljian@merionrealtypartners.com,"Merion Multifamily Fund IV, L.P.",Principal,,Wynnewood,PA,FO_LP_Master,A+,valid
+Will,Andress,wandress@presidiumre.com,"IP Presidium Tech Ridge REIT, LLC",Principal,,Dallas,TX,FO_LP_Master,A+,valid
+George,Antonopoulos,gantonopoulos@hudsonbaycapital.com,Hudson Bay Real Estate Opportunities Fund LP,Principal,,Stamford,CT,FO_LP_Master,A+,valid
+Daniel,Alger,daniela@shearman.com,"Molly Walton Nashville REIT, LLC",Principal,,New York,NY,FO_LP_Master,A+,valid
+Kyle,Asher,kasher@monroecap.com,Monroe Capital Credit Real Estate Income Trust,Principal,,Chicago,IL,FO_LP_Master,A+,valid
+Roy,Astrachan,rastrachan@hudsonbaycapital.com,Hudson Bay Real Estate Opportunities Fund LP,Principal,,Stamford,CT,FO_LP_Master,A+,valid
+Michael,Bachenheimer,michael.bachenheimer@obra.com,"Obra Real Estate Income Fund, LP",Principal,,New York,NY,FO_LP_Master,A+,valid
+Ryan,Bassett,rbassett@investcorp.com,"Investcorp US Real Estate Employee Co-Investment Incentive, L.P.",Principal,,New York,NY,FO_LP_Master,A+,valid
+Mac,Bell,mac.bell@fengate.com,"Fengate Bolden US II REIT, LLC",Principal,,OAKVILLE,A6,FO_LP_Master,A+,valid
+Kim,Bertolini-Bosga,kbertolini@prologis.com,Prologis Keystone BTS Sub REIT 4 LLC,Principal,,Denver,CO,FO_LP_Master,A+,valid
+Ben,Blakney,ben.blakney@mesirow.com,"Mesirow Financial REVF V REIT, LLC",Principal,,Chicago,IL,FO_LP_Master,A+,valid
+Elisha,Blechner,eblechner@safeholdinc.com,Safehold GL Venture REIT II LLC,Principal,,New York,NY,FO_LP_Master,A+,valid
+Robert,Bloom,bloomr@waltonst.com,"Walton Street Real Estate Core-Plus Fund, L.P.",Principal,,CHICAGO,IL,FO_LP_Master,A+,valid
+Thomas,Blackburne,tommy@blackburne.com,Blackburne & Sons Realty Capital Corp,Principal,,Sacramento,CA,FO_LP_Master,A+,valid
+Stuart,Boesky,sboesky@pembrookgroup.com,Pembrook Community Investors I (REIT) LLC,Principal,,New York,NY,FO_LP_Master,A+,valid
+Abbe,Borok,abbe.borok@bgo.com,BGO US Lending II REIT LLC,Principal,,New York,NY,FO_LP_Master,A+,valid
+Mike,Blum,mike.blum@areit.com.ph,AREIT Exchange REIT LLC,Principal,,LOS ANGELES,CA,FO_LP_Master,A+,risky
+Aryeh,Botknecht,aryeh.botknecht@jpmorgan.com,J.P. Morgan REIT MA Holdings LLC,Principal,,New York,NY,FO_LP_Master,A+,valid
+Marc,Brenner,mbrenner@kovitz.com,"KOVITZ DIVERSIFIED REAL ESTATE FUND, LLC",Principal,,Chicago,IL,FO_LP_Master,A+,valid
+Matt,Bronfman,matt.bronfman@jamestownlp.com,"JAMESTOWN Premier Property Fund (OP Feeder), L.P.",Principal,,Atlanta,GA,FO_LP_Master,A+,valid
+Richard,Boynton,rboynton@fairfieldresidential.com,FAIRFIELD CP III REIT I LLC,Principal,,SAN DIEGO,CA,FO_LP_Master,A+,valid
+Natalie,Brown,natalie.brown@mesirow.com,"Mesirow Financial REVF V REIT, LLC",Principal,,Chicago,IL,FO_LP_Master,A+,valid
+Chris,Brust,cbrust@getreba.com,"Real Estate Business Analytics, Inc.",Principal,,LITTLETON,CO,FO_LP_Master,A+,valid
+James,Buckingham,jbuckingham@tarealty.com,"TA Realty Core Property Fund, LP",Principal,,Boston,MA,FO_LP_Master,A+,valid
+Timothy,Burns,tburns@apexoneip.com,"ApexOne Multifamily Strategic Investors Fund V, LP",Principal,,Houston,TX,FO_LP_Master,A+,valid
+Michael,Burns,mburns@bdtmsd.com,"BDT & MSD Real Estate Senior Lending Partners, L.P.",Principal,,NEW YORK,NY,FO_LP_Master,A+,valid
+Michelle,Bushore,mbushore@realtyincome.com,"Realty Income U.S. Core Plus Fund REIT, LLC",Principal,,SAN DIEGO,CA,FO_LP_Master,A+,valid
+Christopher,Cameron,ccameron@rinconpartners.com,"Rincon Multifamily Fund II, LLC",Principal,,Phoenix,AZ,FO_LP_Master,A+,valid
+Michael,Carlson,mcarlson@smftrust.com,Sterling Real Estate Trust,Principal,,Fargo,ND,FO_LP_Master,A+,valid
+Wesley,Carpenter,wcarpenter@stormfieldcapital.com,Stormfield Real Estate Income Fund LP,Principal,,SOUTHPORT,CT,FO_LP_Master,A+,valid
+Alejandro,Canelas Fernandez,alejandro.canelasfernandez@blackstone.com,BXPE Nucleus REITco IV LLC,Principal,,New York,NY,FO_LP_Master,A+,valid
+Jeff,Carron,jeff@momentumrep.com,"Momentum Real Estate Fund V, LP",Principal,,MIAMI,FL,FO_LP_Master,A+,valid
+Daniel,Carr,daniel.carr@alpacarealestate.com,Alpaca Real Estate Fund LP,Principal,,New York,NY,FO_LP_Master,A+,valid
+Daryl,Carter,dcarter@avanath.com,"Avanath Affordable Housing Renaissance Parallel Fund, L.P.",Principal,,Irvine,CA,FO_LP_Master,A+,valid
+Sean,Casterline,seanc@veritas.group,"Veritas Group Multifamily Value-Add Income Fund I, LLC",Principal,,Maitland,FL,FO_LP_Master,A+,valid
+Sara,Cassidy,sara.cassidy@aew.com,"AEW Core Property (U.S.), L.P.",Principal,,Boston,MA,FO_LP_Master,A+,valid
+Dan,Byrnes,dan.byrnes@securityproperties.com,Security Properties Multifamily Fund VII LLC,Principal,,Seattle,WA,FO_LP_Master,A+,risky
+Nathaniel,Chaney,nchaney@provident.com,PROVIDENT MORTGAGE TRUST INC,Principal,,Santa Rosa,CA,FO_LP_Master,A+,valid
+Lori,Chatman,lchatman@enterprisecommunity.org,Enterprise Housing Partners 45 Limited Partnership,Principal,,Columbia,MD,FO_LP_Master,A+,valid
+Nikhil,Chaudhri,nchaudhri@welltower.com,WELL UK SubREIT LLC,Principal,,Toledo,OH,FO_LP_Master,A+,valid
+Michael,Chen,mchen@gemrc.com,"GEM REALTY EVERGREEN FUND, L.P.",Principal,,CHICAGO,IL,FO_LP_Master,A+,valid
+Jeff,Cherner,jcherner@peakline.com,"Cresset Real Estate BTR Fund I, LLC",Principal,,CHICAGO,IL,FO_LP_Master,A+,valid
+Jonathan,Cheng,jcheng@tourmalinecapital.com,Tourmaline Capital Fund IV REIT A LLC,Principal,,SAN DIEGO,CA,FO_LP_Master,A+,valid
+Beth Ann,Coleman,bcoleman@fairfieldresidential.com,FAIRFIELD CP III REIT I LLC,Principal,,SAN DIEGO,CA,FO_LP_Master,A+,valid
+Bryan,Colwell,bcolwell@lcnpartners.com,LCN North American Fund IV REIT,Principal,,New York,NY,FO_LP_Master,A+,valid
+Jeff,Connolly,jconnolly@enterprisecommunity.org,Enterprise Housing Partners 45 Limited Partnership,Principal,,Columbia,MD,FO_LP_Master,A+,valid
+Kevin,Crawley,kcrawley@cinnaire.com,Cinnaire Fund for Housing Limited Partnership 42,Principal,,Lansing,MI,FO_LP_Master,A+,valid
+Spencer,Cullor,spencer@apartmentvestors.com,"ApartmentVestors Echo Fund, LLC",Principal,,Overland Park,KS,FO_LP_Master,A+,valid
+Joseph,Curatolo II,jcuratolo@lmdevpartners.com,LMDP Real Estate Holdings LLC,Principal,,LARCHMONT,NY,FO_LP_Master,A+,valid
+James,Darcey,jdarcey@ullico.com,"Ullico Value-Add Real Estate Fund I, L.P.",Principal,,Silver Spring,MD,FO_LP_Master,A+,valid
+Scott,Dalrymple,dalrymple@tarealty.com,"TA Realty Core Property Fund, LP",Principal,,Boston,MA,FO_LP_Master,A+,valid
+Donald,Davidoff,ddavidoff@getreba.com,"Real Estate Business Analytics, Inc.",Principal,,LITTLETON,CO,FO_LP_Master,A+,valid
+Cindy,Davis,cindy.davis@greystar.com,"Greystar Equity Partners XI NC REIT, LLC",Principal,,Charleston,SC,FO_LP_Master,A+,valid
+David,Decker,ddecker@storagestar.com,Storage Star REIT LLC,Principal,,Sacramento,CA,FO_LP_Master,A+,valid
+Mark,DelCotto,mdelcotto@bcwoodproperties.com,"BC Wood Real Estate Fund IV, L.P.",Principal,,LEXINGTON,KY,FO_LP_Master,A+,valid
+David,Dishy,ddishy@lmdevpartners.com,LMDP Real Estate Holdings LLC,Principal,,LARCHMONT,NY,FO_LP_Master,A+,valid
+David,Doherty,david.doherty@lasalle.com,"LASALLE REAL ESTATE CREDIT STRATEGIES, L.P.",Principal,,CHICAGO,IL,FO_LP_Master,A+,valid
+Kari,Downes,kdownes@enterprisecommunity.org,Enterprise Housing Partners 45 Limited Partnership,Principal,,Columbia,MD,FO_LP_Master,A+,valid
+Dorothy,Denton,dd@secpropres.com,Security Properties Multifamily Fund VII LLC,Principal,,Seattle,WA,FO_LP_Master,A+,valid
+Julie,Driscoll,julie.driscoll@securityproperties.com,Security Properties Multifamily Fund VII LLC,Principal,,Seattle,WA,FO_LP_Master,A+,risky
+Aditya,Dutt,adutt@aeolus.com,Aeolus Property Catastrophe Sphaera Fund Ltd.,Principal,,Hamilton,D0,FO_LP_Master,A+,valid
+David,Edwards,dedwards@enterprisecommunity.org,Enterprise Housing Partners 45 Limited Partnership,Principal,,Columbia,MD,FO_LP_Master,A+,valid
+Matthew,Ela,mela@bixbyland.com,"Bixby IF 2 REIT, LLC",Principal,,Newport Beach,CA,FO_LP_Master,A+,valid
+Eben,Ellertson,eellertson@lmdevpartners.com,LMDP Real Estate Holdings LLC,Principal,,LARCHMONT,NY,FO_LP_Master,A+,valid
+David,Egan,degan@stockbridge.com,Stockbridge Niche Industrial REIT,Principal,,Chicago,IL,FO_LP_Master,A+,valid
+Caleb,Edwards,cedwards@costar.com,"DP Apartments, LLC",Principal,,Grandview,MO,FO_LP_Master,A+,valid
+Lawrence,Ellman,lellman@broadviewrep.com,"Broadview Real Estate Partners Fund II, LP",Principal,,Stamford,CT,FO_LP_Master,A+,valid
+Brianna,Ellis,bellis@ramrealestate.com,Ram Realty Investors VII LLC,Principal,,PALM BEACH GARDENS,FL,FO_LP_Master,A+,valid
+Michael,Elrad,melrad@gemrc.com,"GEM Realty Securities Flagship, L.P.",Principal,,Chicago,IL,FO_LP_Master,A+,valid
+William,Eng,engb@sec.gov,"Molly Walton Nashville REIT, LLC",Principal,,New York,NY,FO_LP_Master,A+,valid
+Mark,Enfield,menfield@truamerica.com,"TruAmerica Workforce Housing Fund II-B, L.P.",Principal,,Los Angeles,CA,FO_LP_Master,A+,valid
+Damian,Esparza,damian@smartproperty.com,"SmartProperty, Inc.",Principal,,San Diego,CA,FO_LP_Master,A+,valid
+Jennifer,Everhart,jeverhart@cinnaire.com,Cinnaire Fund for Housing Limited Partnership 42,Principal,,Lansing,MI,FO_LP_Master,A+,valid
+Dave,Esrig,dave.esrig@jpmorgan.com,"J.P. Morgan Real Estate Income Trust, Inc.",Principal,,New York,NY,FO_LP_Master,A+,valid
+Huey,Falgout,huey.falgout@voya.com,Voya Mortgage Investment Master Fund,Principal,,New York,NY,FO_LP_Master,A+,valid
+Bryan,Fair,fbryan@apmortgage.com,AP Mortgage LLC,Principal,,Duluth,GA,FO_LP_Master,A+,valid
+Ryan,Farris,ryan.farris@meadowsandohly.com,"M&O Healthcare Real Estate Fund I, LP",Principal,,Alpharetta,GA,FO_LP_Master,A+,valid
+Paul,Feinstein,pfeinstein@audentgam.com,Audent Hospitality Real Estate Fund I L.P.,Principal,,West Hollywood,CA,FO_LP_Master,A+,valid
+Hossein,Fateh,hfateh@cldcap.com,Cloud Capital Fund I Master REIT LLC,Principal,,Washington,DC,FO_LP_Master,A+,valid
+Rocco,Ferrera,rocco.ferrera@stiles.com,"Stiles Las Olas Capital Southeast Property Fund I, LP",Principal,,Fort Lauderdale,FL,FO_LP_Master,A+,valid
+Daniel,Fetner,daniel.fetner@alpacarealestate.com,Alpaca Real Estate Fund LP,Principal,,New York,NY,FO_LP_Master,A+,valid
+Danion,Fielding,dfielding@storagestar.com,Storage Star REIT LLC,Principal,,Sacramento,CA,FO_LP_Master,A+,valid
+Frank,Fischer,ffischer@aeolus.com,Aeolus Property Catastrophe Sphaera Fund Ltd.,Principal,,Hamilton,D0,FO_LP_Master,A+,valid
+Patrick,Fisher,fisher@tarealty.com,"TA Realty Core Property Fund, LP",Principal,,Boston,MA,FO_LP_Master,A+,valid
+Daniel,Fishman,daniel@gaia-us.com,"GAIA REIT, Inc.",Principal,,New York,NY,FO_LP_Master,A+,valid
+Matthew,Follett,mfollett@storagestar.com,Storage Star REIT LLC,Principal,,Sacramento,CA,FO_LP_Master,A+,valid
+Michael,Forman,michael.forman@futurestandard.com,"FS Credit Real Estate Income Trust, Inc.",Principal,,Philadelphia,PA,FO_LP_Master,A+,valid
+Mark,Forbes,mforbes@crosswindfinancial.com,"Crosswind Mortgage REIT, L.P.",Principal,,Glendale,CA,FO_LP_Master,A+,valid
+Eric,Flohr,eric@cairnre.com,"Cairn Ancillary Holdings Mortgage Colorado, LLC",Principal,,Plano,TX,FO_LP_Master,A+,valid
+Katherine,Forth,kforth@cinnaire.com,Cinnaire Fund for Housing Limited Partnership 42,Principal,,Lansing,MI,FO_LP_Master,A+,valid
+Susan,Frank,sfrank@cinnaire.com,Cinnaire Fund for Housing Limited Partnership 42,Principal,,Wilmington,DE,FO_LP_Master,A+,valid
+Ryan,Freedman,ryan.freedman@alpacarealestate.com,Alpaca Real Estate Fund LP,Principal,,New York,NY,FO_LP_Master,A+,valid
+Patrick,Freer,patrick.freer@fengate.com,"Fengate Bolden US II REIT, LLC",Principal,,OAKVILLE,A6,FO_LP_Master,A+,valid
+Joe,Fusco,jfusco@enterprisecommunity.org,Enterprise Housing Partners 45 Limited Partnership,Principal,,Columbia,MD,FO_LP_Master,A+,valid
+Paul,Galiano,pgaliano@tishmanspeyer.com,"Tishman Speyer Real Estate Credit Strategies REIT, L.L.C.",Principal,,New York,NY,FO_LP_Master,A+,valid
+Matthew,Garibaldi,matt@storagestar.com,Storage Star REIT LLC,Principal,,Sacramento,CA,FO_LP_Master,A+,valid
+Karen,Geller,kgeller@ramrealestate.com,Ram Realty Investors VII LLC,Principal,,PALM BEACH GARDENS,FL,FO_LP_Master,A+,valid
+Norman,Geller,ngeller@gemrc.com,"GEM Realty Securities Flagship, L.P.",Principal,,Chicago,IL,FO_LP_Master,A+,valid
+Sander,Gerber,sgerber@hudsonbaycapital.com,Hudson Bay Real Estate Opportunities Fund LP,Principal,,Stamford,CT,FO_LP_Master,A+,valid
+Michael,Gershenson,mgershenson@ridgerep.com,"Ridge Real Estate Partners Fund II, LP",Principal,,New York,NY,FO_LP_Master,A+,valid
+Momtaz,Gilani,momtaz.gilani@jamestownlp.com,"JAMESTOWN Premier Property Fund (OP Feeder), L.P.",Principal,,Atlanta,GA,FO_LP_Master,A+,valid
+Rob,Gillis,rgillis@realtyincome.com,"Realty Income U.S. Core Plus Fund REIT, LLC",Principal,,SAN DIEGO,CA,FO_LP_Master,A+,valid
+Brian,Gold,brian.gold@futurestandard.com,"FS Credit Real Estate Income Trust, Inc.",Principal,,Philadelphia,PA,FO_LP_Master,A+,valid
+William,Golden,william.golden@voya.com,Voya Mortgage Investment Fund SP,Principal,,Grand Cayman,E9,FO_LP_Master,A+,valid
+Rich,Gomel,rich@northwoodinvestors.com,Northwood REIT LLC,Principal,,New York,NY,FO_LP_Master,A+,valid
+Lisa,Gomez,lgomez@lmdevpartners.com,LMDP Real Estate Holdings LLC,Principal,,LARCHMONT,NY,FO_LP_Master,A+,valid
+Larry,Goodfield, Jr.,lg@jpmorgan.com,J.P. Morgan REIT MA Holdings LLC,Principal,,New York,NY,FO_LP_Master,A+,valid
+Lawrence,Goodfield,lg@jpmorgan.com,"J.P. Morgan Real Estate Income Trust, Inc.",Principal,,New York,NY,FO_LP_Master,A+,valid
+Stephen,Gordon,sgordon@harrisonst.com,"Harrison Street Canada Alternative Real Estate Fund, L.P.",Principal,,Chicago,IL,FO_LP_Master,A+,valid
+William,Green,bgreen@ginkgomail.com,Ginkgo REIT Inc.,Principal,,Charlotte,NC,FO_LP_Master,A+,valid
+Morley,Greene,morleyg@trezcapital.com,Trez Capital Private Real Estate Fund US Investments Limited Partnership,Principal,,Vancouver,A1,FO_LP_Master,A+,valid
+Jason,Grossman,jgrossman@broadviewrep.com,"Broadview Real Estate Partners Fund II, LP",Principal,,Stamford,CT,FO_LP_Master,A+,valid
+Eduardo,Gruener,eduardo@momentumrep.com,"Momentum Real Estate Fund V, LP",Principal,,MIAMI,FL,FO_LP_Master,A+,valid
+Mauricio,Gruener,mauricio@momentumrep.com,"Momentum Real Estate Fund V, LP",Principal,,MIAMI,FL,FO_LP_Master,A+,valid
+Jeffrey,Gregor,jgregor@capitalsq.com,"Capital Square Apartment Operating Partnership, L.P.",Principal,,Glen Allen,VA,FO_LP_Master,A+,valid
+Ellen,Guccione,eguccione@avanath.com,"Avanath Affordable Housing Renaissance Parallel Fund, L.P.",Principal,,Irvine,CA,FO_LP_Master,A+,valid
+John,Griggs,jgriggs@presidiumre.com,"IP Presidium Tech Ridge REIT, LLC",Principal,,Dallas,TX,FO_LP_Master,A+,valid
+Benjamin,Haefele,bhaefele@mandrakecapital.com,"Mandrake Capital Real Estate Fund II, LP",Principal,,New York,NY,FO_LP_Master,A+,valid
+Joe,Guerriero,jguerriero@radius-dc.com,"Radius REIT III-B, LLC",Principal,,Denver,CO,FO_LP_Master,A+,valid
+Mark,Hagan,mhagan@realtyincome.com,"Realty Income U.S. Core Plus Fund REIT, LLC",Principal,,SAN DIEGO,CA,FO_LP_Master,A+,valid
+Michael,Haggerty,mhaggerty@tarealty.com,"TA Realty Core Property Fund, LP",Principal,,Boston,MA,FO_LP_Master,A+,valid
+Kevin,Hanford,kevin@hanfordinvestments.com,"Hanford Multifamily Fund I, LP",Principal,,Eagle,ID,FO_LP_Master,A+,valid
+Kathryn,Hall,kathryn.hall@galvanizeclimate.com,"Galvanize Real Estate Fund I Feeder, LP",Principal,,SAN FRANCISCO,CA,FO_LP_Master,A+,risky
+Clayton,Hanson,chanson@bluebridgeig.com,"BLUE BRIDGE MULTIFAMILY FUND, LP",Principal,,CHICAGO,IL,FO_LP_Master,A+,valid
+Jason,Harris,jharris@higrealty.com,HIG REAL ESTATE III LLC,Principal,,Provo,UT,FO_LP_Master,A+,valid
+Timothy,Haugen,thaugen@sretrust.com,Sterling Real Estate Trust,Principal,,Fargo,ND,FO_LP_Master,A+,valid
+Michael,Harmon,mharmon@cepmultifamily.com,CEP MULTIFAMILY FUND II LLC,Principal,,EVERETT,WA,FO_LP_Master,A+,valid
+James,Hearn,jhearn@apexoneip.com,"ApexOne Multifamily Strategic Investors Fund V, LP",Principal,,Houston,TX,FO_LP_Master,A+,valid
+Adam,Hellegers,ahellegers@lmdevpartners.com,LMDP Real Estate Holdings LLC,Principal,,LARCHMONT,NY,FO_LP_Master,A+,valid
+Robert,Hart,rhart@truamerica.com,"TruAmerica Workforce Housing Fund II-B, L.P.",Principal,,Los Angeles,CA,FO_LP_Master,A+,valid
+Joe,Herzog,joe.herzog@bgo.com,BGO US Lending II REIT LLC,Principal,,New York,NY,FO_LP_Master,A+,valid
+Aaron,Hill,ahill@bixbyland.com,"Bixby IF 2 REIT, LLC",Principal,,Newport Beach,CA,FO_LP_Master,A+,valid
+Jennifer,Higbee,jennifer.higbee@ginkgomail.com,Ginkgo REIT Inc.,Principal,,Charlotte,NC,FO_LP_Master,A+,valid
+Thomas,Hoban, Jr.,tom.hoban@cepmultifamily.com,CEP MULTIFAMILY FUND II LLC,Principal,,EVERETT,WA,FO_LP_Master,A+,valid
+Shawn,Hoban,shawn.hoban@cepmultifamily.com,CEP MULTIFAMILY FUND II LLC,Principal,,EVERETT,WA,FO_LP_Master,A+,valid
+Skylar,Hochberg,shochberg@ridgerep.com,"Ridge Real Estate Partners Fund II, LP",Principal,,New York,NY,FO_LP_Master,A+,valid
+Ronald,Holinsky,rholinsky@monroecap.com,Monroe Capital Credit Real Estate Income Trust,Principal,,Chicago,IL,FO_LP_Master,A+,valid
+Noah,Hochman,nhochman@truamerica.com,"TruAmerica Workforce Housing Fund II-B, L.P.",Principal,,Los Angeles,CA,FO_LP_Master,A+,valid
+Whitson,Huffman,whuffman@capitalsq.com,"Capital Square Apartment Operating Partnership, L.P.",Principal,,Glen Allen,VA,FO_LP_Master,A+,valid
+Timothy,Hunt,thunt@smftrust.com,Sterling Real Estate Trust,Principal,,Fargo,ND,FO_LP_Master,A+,valid
+Grant,Humphreys,grant@humphreyscapital.com,"Humphreys Real Estate Income Fund, LLC",Principal,,OKLAHOMA CITY,OK,FO_LP_Master,A+,valid
+Kirk,Humphreys,kirk@humphreyscapital.com,"Humphreys Real Estate Income Fund, LLC",Principal,,OKLAHOMA CITY,OK,FO_LP_Master,A+,valid
+Jeung,Hyun,jhyun@adelante.com,Adelante Global Property Securities Fund LP,Principal,,Alameda,CA,FO_LP_Master,A+,valid
+John,Hyjer,jhyjer@falconseniorhousing.com,"Falcon Senior Housing Fund I, LP",Principal,,Orinda,CA,FO_LP_Master,A+,valid
+Matthew,Jackson,matthew.jackson@cushwake.com,"Keystone Real Estate Lending Fund, LLC",Principal,,Salt Lake City,UT,FO_LP_Master,A+,valid
+Joshua,Jansen,jjansen@cepmultifamily.com,CEP MULTIFAMILY FUND II LLC,Principal,,EVERETT,WA,FO_LP_Master,A+,valid
+Matthew,Jerry,mjerry@stockbridge.com,Stockbridge Niche Industrial REIT,Principal,,SAN FRANCISCO,CA,FO_LP_Master,A+,valid
+Anita,Joarder,ajoarder@prologis.com,Prologis Keystone BTS Sub REIT 4 LLC,Principal,,Denver,CO,FO_LP_Master,A+,valid
+Megan,Johnson,meganj@veritas.group,"Veritas Group Multifamily Value-Add Income Fund I, LLC",Principal,,Maitland,FL,FO_LP_Master,A+,valid
+Barclay,Jones,bjones@shearman.com,CNLI ICHMN REIT LLC,Principal,,New York,NY,FO_LP_Master,A+,valid
+Josh,Kahn,josh.kahn@rpmliving.com,"RPM Multifamily GP Fund I, LLC",Principal,,Austin,TX,FO_LP_Master,A+,valid
+Sam,Judd,sjudd@asanapartners.com,"Asana Partners Fund III REIT 24, LLC",Principal,,Charlotte,NC,FO_LP_Master,A+,valid
+Lily,Kao,lily.kao@aew.com,"AEW Core Property (U.S.), L.P.",Principal,,Boston,MA,FO_LP_Master,A+,valid
+Christoph,Kahl,christoph.kahl@jamestown.de,"JAMESTOWN Premier Property Fund (OP Feeder), L.P.",Principal,,Atlanta,GA,FO_LP_Master,A+,valid
+Michael,Kavourias,mkavourias@mandrakecapital.com,"Mandrake Capital Real Estate Fund II, LP",Principal,,New York,NY,FO_LP_Master,A+,valid
+Jesse,Karasik,jkarasik@bluebridgeig.com,"BLUE BRIDGE MULTIFAMILY FUND, LP",Principal,,CHICAGO,IL,FO_LP_Master,A+,valid
+Benjamin,Kayden,bkayden@cloudcapital.com,Cloud Capital Fund I Master REIT LLC,Principal,,Washington,DC,FO_LP_Master,A+,valid
+Matthew,Keefer,mkeefer@cantor.com,Cantor Hunt Real Estate Opportunity Partners LP,Principal,,New York,NY,FO_LP_Master,A+,valid
+Shannon,Kehle,skehle@realtyincome.com,"Realty Income U.S. Core Plus Fund REIT, LLC",Principal,,SAN DIEGO,CA,FO_LP_Master,A+,valid
+Jesse,Keig,jesse.keig@mesirow.com,"Mesirow Financial REVF V REIT, LLC",Principal,,Chicago,IL,FO_LP_Master,A+,valid
+Jas,Khaira,jas.khaira@blackstone.com,BXPE Nucleus REITco IV LLC,Principal,,New York,NY,FO_LP_Master,A+,valid
+Dean,Kirkham,deank@trezcapital.com,Trez Capital Private Real Estate Fund US Investments Limited Partnership,Principal,,Vancouver,A1,FO_LP_Master,A+,valid
+Michael,Kennedy,michael@echo.com,"ECHO US Early Learning Real Estate Fund, LLC",Principal,,Denver,CO,FO_LP_Master,A+,valid
+David,Klepser,dklepser@ramrealestate.com,Ram Realty VII REIT,Principal,,Palm Beach Gardens,FL,FO_LP_Master,A+,valid
+Christopher,Kopecky,ckopecky@jamestownlp.com,"JAMESTOWN Premier Property Fund (OP Feeder), L.P.",Principal,,Atlanta,GA,FO_LP_Master,A+,valid
+Robert,Koenigsberger,rkoenigsberger@gramercy.com,Gramercy China Property Recovery Fund,Principal,,Greenwich,CT,FO_LP_Master,A+,valid
+Shant,Koumriqian,skoumriqian@fairfieldresidential.com,FAIRFIELD CP III REIT I LLC,Principal,,SAN DIEGO,CA,FO_LP_Master,A+,valid
+Mitchell,Kovitz,mkovitz@kovitz.com,"KOVITZ DIVERSIFIED REAL ESTATE FUND, LLC",Principal,,Chicago,IL,FO_LP_Master,A+,valid
+Kristofer,Kwait,kristoferkwait@commonfund.org,"Commonfund OCIO Core Real Estate Fund, LLC",Principal,,Wilton,CT,FO_LP_Master,A+,valid
+Richard,Kwait,rkwait@merionrealtypartners.com,"Merion Multifamily Fund IV, L.P.",Principal,,Wynnewood,PA,FO_LP_Master,A+,valid
+Mike,Krza,mkrza@radius-dc.com,"Radius REIT III-B, LLC",Principal,,Denver,CO,FO_LP_Master,A+,valid
+Edward,LaPuma,elapuma@lcnpartners.com,LCN North American Fund IV REIT,Principal,,New York,NY,FO_LP_Master,A+,valid
+Joseph,Lansing,jlansing@harrisonst.com,"Harrison Street Canada Alternative Real Estate Fund, L.P.",Principal,,Chicago,IL,FO_LP_Master,A+,valid
+Shane,LaFave,shane@roers.com,Roers Ramsey Apartments I LLC,Principal,,Plymouth,MN,FO_LP_Master,A+,valid
+Scott,Larson,scott.larson@obra.com,"Obra Real Estate Income Fund, LP",Principal,,New York,NY,FO_LP_Master,A+,valid
+Chris,Laurent,claurent@cinnaire.com,Cinnaire Fund for Housing Limited Partnership 42,Principal,,Lansing,MI,FO_LP_Master,A+,valid
+William,Landman,wlandman@merionrealtypartners.com,"Merion Multifamily Fund IV, L.P.",Principal,,Wynnewood,PA,FO_LP_Master,A+,valid
+Austin,Lee,alee@safeholdinc.com,Safehold GL Venture REIT II LLC,Principal,,New York,NY,FO_LP_Master,A+,valid
+Brandon,Lewis,blewis@storagestar.com,Storage Star REIT LLC,Principal,,Sacramento,CA,FO_LP_Master,A+,valid
+Michael,Linn,michael.linn@merithillcapital.com,"Merit Hill SS VI REIT A, LLC",Principal,,Brooklyn,NY,FO_LP_Master,A+,valid
+James,Logue III,jlogue@cinnaire.com,Cinnaire Fund for Housing Limited Partnership 42,Principal,,Lansing,MI,FO_LP_Master,A+,valid
+Angie,Long,angie@palmersquarecap.com,Palmer Square Real Estate Development I L.P.,Principal,,Mission Woods,KS,FO_LP_Master,A+,valid
+Christopher,Long,chris@palmersquarecap.com,Palmer Square Real Estate Development I L.P.,Principal,,Mission Woods,KS,FO_LP_Master,A+,valid
+Yosefa,Lunzer,ylunzer@safeholdinc.com,Safehold GL Venture REIT II LLC,Principal,,New York,NY,FO_LP_Master,A+,valid
+Howard,Lutnick,hlutnick@cantor.com,Cantor Hunt Real Estate Opportunity Partners LP,Principal,,New York,NY,FO_LP_Master,A+,valid
+Douglas,Lyons,dlyons@pearlmark.com,"Pearlmark Mezzanine Realty Partners REIT VI, L.L.C.",Principal,,CHICAGO,IL,FO_LP_Master,A+,valid
+Scott,MacLaren,scott.maclaren@stiles.com,"Stiles Las Olas Capital Southeast Property Fund I, LP",Principal,,Fort Lauderdale,FL,FO_LP_Master,A+,valid
+Christopher,MacNaughton,cmacnaughton@greystar.com,"Greystar BFR II REIT, LLC",Principal,,Charleston,SC,FO_LP_Master,A+,valid
+Barry,Malkin,bmalkin@gemrc.com,"GEM Realty Securities Flagship, L.P.",Principal,,Chicago,IL,FO_LP_Master,A+,valid
+John,Malysa,jmalysa@pembrookgroup.com,Pembrook Community Investors I (REIT) LLC,Principal,,New York,NY,FO_LP_Master,A+,valid
+Jacob,Maliel,maliel@tarealty.com,"TA Realty Core Property Fund, LP",Principal,,Boston,MA,FO_LP_Master,A+,valid
+Ryan,Mallery,ryan@big-river.com,"Big River Real Estate Fund V, LLC",Principal,,St. Louis Park,MN,FO_LP_Master,A+,valid
+Anthony,Marcello,anthony.marcello@voya.com,Voya Mortgage Investment Master Fund,Principal,,Grand Cayman,E9,FO_LP_Master,A+,valid
+Linda,Manley,lmanley@enterprisecommunity.com,Enterprise Housing Partners 45 Limited Partnership,Principal,,Columbia,MD,FO_LP_Master,A+,valid
+Bianca,Martinez,bmartinez@realtyincome.com,"Realty Income U.S. Core Plus Fund REIT, LLC",Principal,,SAN DIEGO,CA,FO_LP_Master,A+,valid
+Mark,McDaniel,mmcdaniel@cinnaire.com,Cinnaire Fund for Housing Limited Partnership 42,Principal,,Lansing,MI,FO_LP_Master,A+,valid
+Brian,McGlynn,bmcglynn@rinconpartners.com,"Rincon Multifamily Fund II, LLC",Principal,,Phoenix,AZ,FO_LP_Master,A+,valid
+Joseph,McDonnell,jmcdonnell@cirrusrep.com,"Cirrus Workforce Housing Fund I, LP",Principal,,New York,NY,FO_LP_Master,A+,valid
+Ryan,McLaughlin,ryan.mclaughlin@matterhorncp.com,Matterhorn Capital Partners REIT LLC,Principal,,West Conshohocken,PA,FO_LP_Master,A+,valid
+Ethan,Mcclure,ethan.mcclure@lasalle.com,"LASALLE REAL ESTATE CREDIT STRATEGIES, L.P.",Principal,,CHICAGO,IL,FO_LP_Master,A+,valid
+Jason,McKinley,jason.mckinley@securityproperties.com,Security Properties Multifamily Fund VII LLC,Principal,,Seattle,WA,FO_LP_Master,A+,risky
+Jules,Melhado,jules.melhado@lasalle.com,"LASALLE REAL ESTATE CREDIT STRATEGIES, L.P.",Principal,,CHICAGO,IL,FO_LP_Master,A+,valid
+Mark,Mercado,mmercado@capitalsq.com,"Capital Square Apartment Operating Partnership, L.P.",Principal,,Glen Allen,VA,FO_LP_Master,A+,valid
+Matt,Mercier,mattm@digitalrealty.com,"DIGITAL REALTY DC PARTNERS NA FUND-A, LP",Principal,,DALLAS,TX,FO_LP_Master,A+,valid
+Michael,Miller,mmiller@peakline.com,"Cresset Real Estate BTR Fund I, LLC",Principal,,CHICAGO,IL,FO_LP_Master,A+,valid
+Michael,Michalov,michaelmichalov@communecapital.com,"Commune RESOP REIT, LLC",Principal,,Westlake Village,CA,FO_LP_Master,A+,valid
+Christopher,Milner,cmilner@cantor.com,Cantor Hunt Real Estate Opportunity Partners LP,Principal,,New York,NY,FO_LP_Master,A+,valid
+Eric,Mogentale,mogentale@waltonst.com,"Walton Street Real Estate Core-Plus Fund, L.P.",Principal,,CHICAGO,IL,FO_LP_Master,A+,valid
+Michael,Moriarty,mmoriarty@investcorp.com,"Investcorp US Real Estate Employee Co-Investment Incentive, L.P.",Principal,,New York,NY,FO_LP_Master,A+,valid
+Amber,Murray,amber.murray@jamestownlp.com,"JAMESTOWN Premier Property Fund (OP Feeder), L.P.",Principal,,Atlanta,GA,FO_LP_Master,A+,valid
+Herbert,Myers,hmyers@investcorp.com,"Investcorp US Real Estate Employee Co-Investment Incentive, L.P.",Principal,,New York,NY,FO_LP_Master,A+,valid
+Max,Myers,max@humphreyscapital.com,"Humphreys Real Estate Income Fund, LLC",Principal,,OKLAHOMA CITY,OK,FO_LP_Master,A+,valid
+Stefan,Neudorff,sneudorff@asanapartners.com,"Asana Partners Fund III REIT 24, LLC",Principal,,Charlotte,NC,FO_LP_Master,A+,valid
+Daniel,Newman,dnewman@stockbridge.com,Stockbridge Niche Industrial REIT,Principal,,SAN FRANCISCO,CA,FO_LP_Master,A+,valid
+Eddie,Ni,eddie@acrefundusa.com,ASIAN CENTER REAL ESTATE FUND SERIES LLC,Principal,,Las Vegas,NV,FO_LP_Master,A+,valid
+Judy,Ni,judy@acrefundusa.com,ASIAN CENTER REAL ESTATE FUND SERIES LLC,Principal,,Aurora,IL,FO_LP_Master,A+,valid
+Matthew,Neyland,matt@hanfordinvestments.com,"Hanford Multifamily Fund I, LP",Principal,,Eagle,ID,FO_LP_Master,A+,valid
+William,Nicholson,william.nicholson@blackstone.com,BXPE Nucleus REITco IV LLC,Principal,,New York,NY,FO_LP_Master,A+,valid
+Brandon,Nielson,nb@cushwake.com,"Keystone Real Estate Lending Fund, LLC",Principal,,Salt Lake City,UT,FO_LP_Master,A+,valid
+Joseph,O'Connor,joconnor@mandrakecapital.com,"Mandrake Capital Real Estate Fund II, LP",Principal,,New York,NY,FO_LP_Master,A+,valid
+William,Offutt,woffutt@bcwoodproperties.com,"BC Wood Real Estate Fund IV, L.P.",Principal,,LEXINGTON,KY,FO_LP_Master,A+,valid
+Jay,Olander,jolander@capitalsq.com,"Capital Square Apartment Operating Partnership, L.P.",Principal,,Glen Allen,VA,FO_LP_Master,A+,valid
+Craig,Oram,craig.oram@lasalle.com,"LASALLE REAL ESTATE CREDIT STRATEGIES, L.P.",Principal,,CHICAGO,IL,FO_LP_Master,A+,valid
+Roger,Osborn,rosborn@falconseniorhousing.com,"Falcon Senior Housing Fund I, LP",Principal,,Hoffman Estates,IL,FO_LP_Master,A+,valid
+Brett,Oumedian,boumedian@cinnaire.com,Cinnaire Fund for Housing Limited Partnership 42,Principal,,Lansing,MI,FO_LP_Master,A+,valid
+Stella,Pappas,spappas@truamerica.com,"TruAmerica Workforce Housing Fund II-B, L.P.",Principal,,Chicago,IL,FO_LP_Master,A+,valid
+Drew,Pandolfo,ap@costar.com,D42 Apartments LLC,Principal,,Edina,MN,FO_LP_Master,A+,valid
+Aaron,Peck,apeck@monroecap.com,Monroe Capital Credit Real Estate Income Trust,Principal,,Chicago,IL,FO_LP_Master,A+,valid
+Philip,Payne,philip.payne@ginkgomail.com,Ginkgo REIT Inc.,Principal,,Charlotte,NC,FO_LP_Master,A+,valid
+Walter,Payne,walter@vantexmortgage.com,VANTEX MORTGAGE FUND LLC,Principal,,Carlsbad,CA,FO_LP_Master,A+,valid
+Taylor,Paul,taylor.paul@areit.com.ph,AREIT Exchange REIT LLC,Principal,,LOS ANGELES,CA,FO_LP_Master,A+,risky
+Santiago,Peredo,santiago@momentumrep.com,"Momentum Real Estate Fund V, LP",Principal,,MIAMI,FL,FO_LP_Master,A+,valid
+Blake,Peeper,blake.peeper@bridgeig.com,"Bridge Seniors Housing Feeder, LP",Principal,,Orlando,FL,FO_LP_Master,A+,valid
+David,Perkins,dperkins@smftrust.com,Sterling Real Estate Trust,Principal,,Fargo,ND,FO_LP_Master,A+,valid
+Laurence,Penn,lpenn@ellington.com,"Ellington Strategic Mortgage Fund, L.P.",Principal,,Old Greenwich,CT,FO_LP_Master,A+,valid
+Igor,Pesotskiy,ip@armitagestreet.com,Armitage REIT LLC,Principal,,Chicago,IL,FO_LP_Master,A+,valid
+Yan,Pesotskiy,yp@armitagestreet.com,Armitage REIT LLC,Principal,,Chicago,IL,FO_LP_Master,A+,valid
+Michael,Phillips,phillips.michael@jamestownlp.com,"JAMESTOWN Premier Property Fund (OP Feeder), L.P.",Principal,,Atlanta,GA,FO_LP_Master,A+,valid
+Paul,Pion,ppion@cantor.com,Cantor Hunt Real Estate Opportunity Partners LP,Principal,,New York,NY,FO_LP_Master,A+,valid
+Joseph,Pistone,joseph.pistone@greystar.com,"Greystar Equity Partners XI NC REIT, LLC",Principal,,Charleston,SC,FO_LP_Master,A+,valid
+Peter,Polanskyj,peter.polanskyj@obra.com,"Obra Real Estate Income Fund, LP",Principal,,New York,NY,FO_LP_Master,A+,valid
+John,Pons,jpons@rinconpartners.com,"Rincon Multifamily Fund II, LLC",Principal,,Phoenix,AZ,FO_LP_Master,A+,valid
+Jonathan,Pong,jpong@realtyincome.com,"Realty Income U.S. Core Plus Fund REIT, LLC",Principal,,SAN DIEGO,CA,FO_LP_Master,A+,valid
+David,Puchi,dave@echo.com,"ECHO US Early Learning Real Estate Fund, LLC",Principal,,Denver,CO,FO_LP_Master,A+,valid
+Stephen,Quazzo,squazzo@pearlmark.com,"Pearlmark Mezzanine Realty Partners REIT VI, L.L.C.",Principal,,CHICAGO,IL,FO_LP_Master,A+,valid
+Demetri,Rackos,demetri.rackos@lasalle.com,"LaSalle Real Estate Credit Strategies REIT I, L.L.C.",Principal,,Chicgao,IL,FO_LP_Master,A+,valid
+James,Raisides,jraisides@tarealty.com,"TA Realty Core Property Fund, LP",Principal,,Boston,MA,FO_LP_Master,A+,valid
+Jeffrey,Quicksilver,jq@waltonst.com,"Walton Street Real Estate Core-Plus Fund, L.P.",Principal,,CHICAGO,IL,FO_LP_Master,A+,valid
+Allison,Ramirez,allison.ramirez@bridgeig.com,"Bridge Seniors Housing Feeder, LP",Principal,,Orlando,FL,FO_LP_Master,A+,valid
+Richard,Ratke,ratker@waltonst.com,"Walton Street Real Estate Core-Plus Fund, L.P.",Principal,,CHICAGO,IL,FO_LP_Master,A+,valid
+Kenneth,Regan,kregan@smftrust.com,Sterling Real Estate Trust,Principal,,Fargo,ND,FO_LP_Master,A+,valid
+Christopher,Reece,chris.reece@mj-reit.com,MJ Real Estate Investment Trust,Principal,,Media,PA,FO_LP_Master,A+,valid
+Robert,Reich,robert@archicom.pl,"ECHO US Early Learning Real Estate Fund, LLC",Principal,,Denver,CO,FO_LP_Master,A+,valid
+Gordon,Repp,gordon.repp@lasalle.com,"LASALLE REAL ESTATE CREDIT STRATEGIES, L.P.",Principal,,CHICAGO,IL,FO_LP_Master,A+,valid
+Jennifer,Rindge,jrindge@stockbridge.com,Stockbridge Niche Industrial REIT,Principal,,SAN FRANCISCO,CA,FO_LP_Master,A+,valid
+Brian,Roberts,broberts@ridgerep.com,"Ridge Real Estate Partners Fund II, LP",Principal,,New York,NY,FO_LP_Master,A+,valid
+Stephen,Robie,stephen@wearenoyack.com,"NOYACK Logistics Income REIT, Inc.",Principal,,New York,NY,FO_LP_Master,A+,valid
+Ryan,Robinson,rrobinson@cinnaire.com,Cinnaire Fund for Housing Limited Partnership 42,Principal,,Lansing,MI,FO_LP_Master,A+,valid
+Brian,Roers,brian@roers.com,Roers Ramsey Apartments I LLC,Principal,,Plymouth,MN,FO_LP_Master,A+,valid
+Matthew,Roesler,matthew.roesler@obra.com,"Obra Real Estate Income Fund, LP",Principal,,New York,NY,FO_LP_Master,A+,valid
+Kent,Roers,roers@roers.com,Roers Ramsey Apartments I LLC,Principal,,Plymouth,MN,FO_LP_Master,A+,valid
+Louis,Rogers,lrogers@capitalsq.com,"Capital Square Apartment Operating Partnership, L.P.",Principal,,Glen Allen,VA,FO_LP_Master,A+,valid
+Donna,Rodney,drodney@enterprisecommunity.com,Enterprise Housing Partners 45 Limited Partnership,Principal,,Columbia,MD,FO_LP_Master,A+,valid
+Jacqueline,Rogers,jrogers@capitalsq.com,"Capital Square Apartment Operating Partnership, L.P.",Principal,,Glen Allen,VA,FO_LP_Master,A+,valid
+Kevin,Rohnstock,kevin.rohnstock@kslcapital.com,"KSL Capital Partners TO II REIT, LLC",Principal,,Denver,CO,FO_LP_Master,A+,valid
+Brian,Roland,broland@ramrealestate.com,Ram Realty Investors VII LLC,Principal,,PALM BEACH GARDENS,FL,FO_LP_Master,A+,valid
+Yoav,Roth,yroth@hudsonbaycapital.com,Hudson Bay Real Estate Opportunities Fund LP,Principal,,Stamford,CT,FO_LP_Master,A+,valid
+Sumit,Roy,sroy@realtyincome.com,"Realty Income U.S. Core Plus Fund REIT, LLC",Principal,,SAN DIEGO,CA,FO_LP_Master,A+,valid
+Eric,Rohm,eric.rohm@ginkgomail.com,Ginkgo REIT Inc.,Principal,,Charlotte,NC,FO_LP_Master,A+,valid
+Lisa,Rowe,lisa@slateam.com,Slate US Cold Storage REIT LLC,Principal,,CHICAGO,IL,FO_LP_Master,A+,valid
+Ali,Rundlett,ali@blackstone.com,"LS-B REIT, LLC",Principal,,Boston,MA,FO_LP_Master,A+,valid
+Jun,Sakumoto,jsakumoto@avanath.com,"Avanath Affordable Housing Renaissance Parallel Fund, L.P.",Principal,,Irvine,CA,FO_LP_Master,A+,valid
+Gregory,Sandler,greg@usahousingfund.com,USA Housing Fund LLC,Principal,,Reno,NV,FO_LP_Master,A+,valid
+Jerry,Sanada,jerry@communecapital.com,"Commune RESOP REIT, LLC",Principal,,Westlake Village,CA,FO_LP_Master,A+,valid
+Megan,Schreiner,mschreiner@sretrust.com,Sterling Real Estate Trust,Principal,,Fargo,ND,FO_LP_Master,A+,valid
+Justin,Schmidt,justin@usahousingfund.com,USA Housing Fund LLC,Principal,,New Braunfels,TX,FO_LP_Master,A+,valid
+Peter,Schreck,schreck@tarealty.com,"TA Realty Core Property Fund, LP",Principal,,Boston,MA,FO_LP_Master,A+,valid
+Chip,Sellers,chip.sellers@lasalle.com,"LASALLE REAL ESTATE CREDIT STRATEGIES, L.P.",Principal,,CHICAGO,IL,FO_LP_Master,A+,valid
+Jeff,Shafir,jshafir@pembrookgroup.com,Pembrook Community Investors I (REIT) LLC,Principal,,New York,NY,FO_LP_Master,A+,valid
+Ketan,Shah,ketan.shah@mesirow.com,"Mesirow Financial REVF V REIT, LLC",Principal,,Chicago,IL,FO_LP_Master,A+,valid
+Brian,Shatz,brian@madisonrealtycapital.com,Madison Realty Capital Debt MA IV LP,Principal,,New York,NY,FO_LP_Master,A+,valid
+Timothy,Siegman,tsiegman@truamerica.com,"TruAmerica Workforce Housing Fund II-B, L.P.",Principal,,Los Angeles,CA,FO_LP_Master,A+,valid
+Russell,Simon,rsimon@welltower.com,WELL UK SubREIT LLC,Principal,,Toledo,OH,FO_LP_Master,A+,valid
+Jonathan,Slager,jonathan.slager@bridgeig.com,"Bridge Seniors Housing Feeder, LP",Principal,,Salt Lake City,UT,FO_LP_Master,A+,valid
+Stephen,Sotoloff,sotoloffs@waltonst.com,"Walton Street Real Estate Core-Plus Fund, L.P.",Principal,,CHICAGO,IL,FO_LP_Master,A+,valid
+Elaine,Stageberg,elaine@blackswanteam.com,Black Swan Real Estate Secure Freedom Fund LLC,Principal,,Rochester,MN,FO_LP_Master,A+,valid
+Nicholas,Stageberg,nick@blackswanteam.com,Black Swan Real Estate Secure Freedom Fund LLC,Principal,,Rochester,MN,FO_LP_Master,A+,valid
+Breanna,Staggs,bstaggs@stockbridge.com,Stockbridge Niche Industrial REIT,Principal,,SAN FRANCISCO,CA,FO_LP_Master,A+,valid
+Mark,Spidell,mark@defiancecapitalco.com,"Defiance Capital SubREIT, LLC",Principal,,Glenwood Springs,CO,FO_LP_Master,A+,valid
+Jonathan,Slusher,slusher@northwind-group.com,Northwind Healthcare Debt Fund II REIT LP,Principal,,New York,NY,FO_LP_Master,A+,valid
+Greg,Stark,greg.stark@accordantinvestments.com,Accordant Real Estate Growth Fund,Principal,,Scottsdale,AZ,FO_LP_Master,A+,valid
+Eric,Stamp,eric.stamp@ginkgomail.com,Ginkgo REIT Inc.,Principal,,Charlotte,NC,FO_LP_Master,A+,valid
+David,Steele,dsteele@apexoneip.com,"ApexOne Multifamily Strategic Investors Fund V, LP",Principal,,Houston,TX,FO_LP_Master,A+,valid
+William,Starn,williams@stockbridge.com,Stockbridge Niche Industrial REIT,Principal,,SAN FRANCISCO,CA,FO_LP_Master,A+,valid
+Kenneth,Stiles,kenneth.stiles@stiles.com,"Stiles Las Olas Capital Southeast Property Fund I, LP",Principal,,Fort Lauderdale,FL,FO_LP_Master,A+,valid
+James,Stine,jstine@ramrealestate.com,Ram Realty VII REIT,Principal,,Palm Beach Gardens,FL,FO_LP_Master,A+,valid
+Jon,Strinden,jon@edgewoodreit.com,Edgewood Real Estate Investment Trust,Principal,,Fargo,ND,FO_LP_Master,A+,valid
+Thomas,Steyer,tom.steyer@galvanizeclimate.com,"GALVANIZE REAL ESTATE FUND I-E, LP",Principal,,SAN FRANCISCO,CA,FO_LP_Master,A+,valid
+Henry,Steinberg,henry.steinberg@eqtpartners.com,"EQT Exeter Industrial VI REIT III, LLC",Principal,,RADNOR,PA,FO_LP_Master,A+,valid
+Jennifer,Stull,jstull@ramrealestate.com,Ram Realty VII REIT,Principal,,Palm Beach Gardens,FL,FO_LP_Master,A+,valid
+Meg,Sullivan,meg.sullivan@voya.com,Voya Mortgage Investment Master Fund,Principal,,Grand Cayman,E9,FO_LP_Master,A+,valid
+Luke,Swenson,lswenson@sretrust.com,Sterling Real Estate Trust,Principal,,Fargo,ND,FO_LP_Master,A+,valid
+Stephen,Sypherd,stephen.sypherd@futurestandard.com,"FS Credit Real Estate Income Trust, Inc.",Principal,,Philadelphia,PA,FO_LP_Master,A+,valid
+Joseph,Sumberg,joseph.sumberg@galvanizeclimate.com,"Galvanize Real Estate Fund I Feeder, LP",Principal,,SAN FRANCISCO,CA,FO_LP_Master,A+,valid
+Chris,Taylor,chris.taylor@bgo.com,BGO US Lending II REIT LLC,Principal,,New York,NY,FO_LP_Master,A+,valid
+Michael,Taylor,mtaylor@communecapital.com,"Commune RESOP REIT, LLC",Principal,,Westlake Village,CA,FO_LP_Master,A+,valid
+Nolen,Taylor,nolen.taylor@kslcapital.com,"KSL Capital Partners TO II REIT, LLC",Principal,,Denver,CO,FO_LP_Master,A+,valid
+Jodi,Tanner,jodi.tanner@lasolascap.com,"Las Olas Capital-Real Estate fund III, LLC",Principal,,Fort Lauderdale,FL,FO_LP_Master,A+,valid
+Jake,Thibeault,jthibeault@prologis.com,Prologis Keystone BTS Sub REIT 4 LLC,Principal,,Denver,CO,FO_LP_Master,A+,valid
+Paul,Thrift,pthrift@thompsonthrift.com,"Thompson Thrift 2026 Multifamily Development, LP",Principal,,Indianapolis,IN,FO_LP_Master,A+,valid
+John,Thompson,jthompson@thompsonthrift.com,"Thompson Thrift 2026 Multifamily Development, LP",Principal,,Indianapolis,IN,FO_LP_Master,A+,valid
+Deb,Toby,dtoby@cinnaire.com,Cinnaire Fund for Housing Limited Partnership 42,Principal,,Lansing,MI,FO_LP_Master,A+,valid
+Matthew,Topley,mtopley@lansingadv.com,Lansing Street Real Estate Fund LLC - Series AX,Principal,,Ambler,PA,FO_LP_Master,A+,valid
+Michael,Torres,mtorres@adelante.com,Adelante Global Property Securities Fund LP,Principal,,Alameda,CA,FO_LP_Master,A+,valid
+Chad,Tredway,chad.tredway@jpmorgan.com,"J.P. Morgan Real Estate Income Trust, Inc.",Principal,,New York,NY,FO_LP_Master,A+,valid
+Jonathan,Turnbull,jturnbull@harrisonst.com,"Harrison Street Canada Alternative Real Estate Fund, L.P.",Principal,,Toronto,A6,FO_LP_Master,A+,valid
+Carrie,Van Syckel,cvan@lmdevpartners.com,LMDP Real Estate Holdings LLC,Principal,,LARCHMONT,NY,FO_LP_Master,A+,valid
+Gregory,Tyler,greg@gtrealestateholdings.com,GT Real Estate Holdings,Principal,,Mission Viejo,CA,FO_LP_Master,A+,valid
+Lucius,Vassar,lvassar@cinnaire.com,Cinnaire Fund for Housing Limited Partnership 42,Principal,,Detroit,MI,FO_LP_Master,A+,valid
+James,Volk,jim.volk@futurestandard.com,"FS Credit Real Estate Income Trust, Inc.",Principal,,Philadelphia,PA,FO_LP_Master,A+,valid
+William,Van Tassel,william@agri-mortgage.com,"AgriMortgage Fund, LLC",Principal,,Oakdale,CA,FO_LP_Master,A+,risky
+Warren,Wachsberger,warren.wachsberger@aecom.com,"AECOM Capital Real Estate Fund II-A, LP",Principal,,Los Angeles,CA,FO_LP_Master,A+,valid
+Michael,Vranos,mvranos@ellington.com,"Ellington Strategic Mortgage Fund, L.P.",Principal,,Old Greenwich,CT,FO_LP_Master,A+,valid
+Blair,Wallace,blair.wallace@obra.com,"Obra Real Estate Income Fund, LP",Principal,,New York,NY,FO_LP_Master,A+,valid
+Ahron,Walter,ahron.walter@edgewoodreit.com,Edgewood Real Estate Investment Trust,Principal,,Fargo,ND,FO_LP_Master,A+,valid
+Thomas,Voutsos,tvoutsos@ladderuphousing.com,LadderUp Housing Inc.,Principal,,Toledo,OH,FO_LP_Master,A+,valid
+David,Wallace,david.wallace@shearman.com,TRX RESILIENT REAL ESTATE FUND LP,Principal,,Miami,FL,FO_LP_Master,A+,valid
+Sherry,Wang,sherry.wang@shearman.com,"Molly Walton Nashville REIT, LLC",Principal,,New York,NY,FO_LP_Master,A+,valid
+Blair,Welch,blair@slateam.com,Slate US Cold Storage REIT LLC,Principal,,CHICAGO,IL,FO_LP_Master,A+,valid
+Brady,Welch,brady@slateam.com,Slate US Cold Storage REIT LLC,Principal,,CHICAGO,IL,FO_LP_Master,A+,valid
+Aaron,Wessner,aaron.wessner@cantor.com,Cantor Hunt Real Estate Opportunity Partners LP,Principal,,New York,NY,FO_LP_Master,A+,valid
+Adam,Whitmire,adam.whitmire@arabellacapital.com,"Arabella Real Estate Fund, LLC",Principal,,Buford,GA,FO_LP_Master,A+,valid
+Gregory,Whyte,gwhyte@realtyincome.com,"Realty Income U.S. Core Plus Fund REIT, LLC",Principal,,SAN DIEGO,CA,FO_LP_Master,A+,valid
+Andrew,White,awhite@shearman.com,"Molly Walton Nashville REIT, LLC",Principal,,New York,NY,FO_LP_Master,A+,valid
+Brian,Williams,bwilliams@bdtmsd.com,"BDT & MSD RSLP (G) REIT I, LLC",Principal,,NEW YORK,NY,FO_LP_Master,A+,valid
+John,Williams,jwilliams@avanath.com,"Avanath Affordable Housing Renaissance Parallel Fund, L.P.",Principal,,Irvine,CA,FO_LP_Master,A+,valid
+Careina,Williams,careina@caroinvestors.com,"Caro Real Estate Credit Fund REIT, LLC",Principal,,CHEVY CHASE,MD,FO_LP_Master,A+,valid
+Michael,Watts,michael.watts@shearman.com,"Molly Walton Nashville REIT, LLC",Principal,,New York,NY,FO_LP_Master,A+,valid
+Wesley,Wilson,wwilson@avanath.com,"Avanath Affordable Housing Renaissance Parallel Fund, L.P.",Principal,,Irvine,CA,FO_LP_Master,A+,valid
+Joshua,Widoff,joshua.widoff@areit.com.ph,AREIT Exchange REIT LLC,Principal,,LOS ANGELES,CA,FO_LP_Master,A+,risky
+Charles,Winkler,cwinkler@hudsonbaycapital.com,Hudson Bay Real Estate Opportunities Fund LP,Principal,,Stamford,CT,FO_LP_Master,A+,valid
+Sarah,Wiseman,swiseman@fairfieldresidential.com,FAIRFIELD CP III REIT I LLC,Principal,,SAN DIEGO,CA,FO_LP_Master,A+,valid
+Brian,Wood,bwood@bcwoodproperties.com,"BC Wood Real Estate Fund IV, L.P.",Principal,,LEXINGTON,KY,FO_LP_Master,A+,valid
+Jenna,Woods,jwoods@fairfieldresidential.com,FAIRFIELD CP III REIT I LLC,Principal,,SAN DIEGO,CA,FO_LP_Master,A+,valid
+Stewart,Wilson,swilson@sjsrealestatepartners.com,"SJS Real Estate Partners VII, LLC",Principal,,Westlake Village,CA,FO_LP_Master,A+,valid
+Christie,Wootton,christie.wootton@greystar.com,"Greystar BFR II REIT, LLC",Principal,,Charleston,SC,FO_LP_Master,A+,valid
+Melody,Zaghi,melody.zaghi@lasalle.com,"LASALLE REAL ESTATE CREDIT STRATEGIES, L.P.",Principal,,CHICAGO,IL,FO_LP_Master,A+,valid
+Joshua,Zegen,jzegen@madisonrealtycapital.com,Madison Realty Capital Debt MA IV LP,Principal,,New York,NY,FO_LP_Master,A+,valid
+Lorrie,Allegra,lorrie.allegra@btfamilyoffice.com,"BT FAMILY OFFICE, LLC",BT Family Office 404.341.5803 [email protected],4043415800,ATLANTA,GA,FO_LP_Master,A,valid
+Emily,Ackerman,eackerman@btcpa.net,"BT FAMILY OFFICE, LLC",BT Family Office 469.766.4654 [email protected],4043415800,ATLANTA,GA,FO_LP_Master,A,valid
+Jay,Alexander,jay.alexander@sagardrealestate.com,SAGARD REAL ESTATE ADVISORS,"er Chief Investment Officer, Senior Advisor, and Sagard Partner Mark Biga",3039862222,DENVER,CO,FO_LP_Master,A,valid
+Bryan,Barrett,bbarrett@aracapital.com,AMERICAN REALTY ADVISORS,"ce President, Portfolio Operations and Analytics Los Angeles, CA",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Adam,Bell,abell@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","ll Managing Director, Chief Marketing Officer View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Darrell,Zurovec,darrell.zurovec@threalty.net,TH REALTY - BROWNSVILLE LLC,Principal,,San Antonio,TX,FO_LP_Master,A+,risky
+Lauren,Beuerlein,lauren.beuerlein@penwoodre.com,"PENWOOD REAL ESTATE INVESTMENT MANAGEMENT, LLC",ce President of Asset Management,8602186530,WEST HARTFORD,CT,FO_LP_Master,A,valid
+John,Buck,jbuck@gemrc.com,GEM REALTY CAPITAL,"ce President, Acquisitions",3129152900,CHICAGO,IL,FO_LP_Master,A,valid
+Jay,Butterfield,jbutterfield@aracapital.com,AMERICAN REALTY ADVISORS,"ve Managing Director, Head of Business Development Los Angeles, CA",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Eric,Cannon,ecannon@aracapital.com,AMERICAN REALTY ADVISORS,"ty Portfolio Manager Philadelphia, PA",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Josh,Brodsky,jbrodsky@aracapital.com,AMERICAN REALTY ADVISORS,"ce President, Portfolio Management Los Angeles, CA",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Brett,Birkeland,brett.birkeland@sagardrealestate.com,SAGARD REAL ESTATE ADVISORS,"nd Managing Director, Acquisitions Central",3039862222,DENVER,CO,FO_LP_Master,A,valid
+Mark,Bigarel,mark.bigarel@sagardrealestate.com,SAGARD REAL ESTATE ADVISORS,el President and Sagard Partner,3039862222,DENVER,CO,FO_LP_Master,A,valid
+Paul,Carbone,pcarbone@pritzker-pas.com,PRITZKER ALTERNATIVE STRATEGIES,"r, President, & Head of the PAS Investment Committee",3124476087,CHICAGO,IL,FO_LP_Master,A,valid
+Mastor,Chief,cmastor@pcpre.com,"PCIM REALTY ADVISORS, LLC",& Chief Investment Officer,9728667577,ADDISON,TX,FO_LP_Master,A,valid
+Amr,Ceran,amr.ceran@sagardrealestate.com,SAGARD REAL ESTATE ADVISORS,"an Managing Director, Asset Management Southwest",3039862222,DENVER,CO,FO_LP_Master,A,valid
+Lindsay,Cherashore,lcherashore@circlewm.com,"CIRCLE WEALTH MANAGEMENT, LLC",re Managing Director Family Office Services Trust & Estate Services Inves,9082061306,SUMMIT,NJ,FO_LP_Master,A,valid
+Trevor,Condren,trevor.condren@penwoodre.com,"PENWOOD REAL ESTATE INVESTMENT MANAGEMENT, LLC",en Portfolio Manager,8602186530,WEST HARTFORD,CT,FO_LP_Master,A,valid
+William,Connolly,wconnolly@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","ce President, Special Counsel View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Richelle,Cook,rcook@aracapital.com,AMERICAN REALTY ADVISORS,"ce President, Investor Relations Orlando, FL",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Jonathan,Copeland,jcopeland@gemrc.com,GEM REALTY CAPITAL,"ce President, Asset Management",3129152900,CHICAGO,IL,FO_LP_Master,A,valid
+Greg,Cotton,gcotton@aracapital.com,AMERICAN REALTY ADVISORS,"ce President, Asset Management Chicago, IL",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Paul,Czachorowski,pczachorowski@aracapital.com,AMERICAN REALTY ADVISORS,"ce President, Investor Relations Los Angeles, CA",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+John,Cummings,john.cummings@btfamilyoffice.com,"BT FAMILY OFFICE, LLC",BT Family Office 678.302.1427 [email protected],4043415800,ATLANTA,GA,FO_LP_Master,A,valid
+John,Daher,jdaher@aracapital.com,AMERICAN REALTY ADVISORS,"ce President, Development and Construction Los Angeles, CA",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Assistant,Controller,assistant.controller@starrpep.com,"STARR PRIVATE EQUITY PARTNERS, LLC",ce President at SS&C Technologies and an assurance auditor at Pricewaterh,6466485507,NEW YORK,NY,FO_LP_Master,A,risky
+Sean,Daly,sdaly@aracapital.com,AMERICAN REALTY ADVISORS,"ce President, Asset Management Chicago, IL",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Scott,Darling,sdarling@aracapital.com,AMERICAN REALTY ADVISORS,"ve Managing Director, Portfolio Management Los Angeles, CA",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Tracy,Dennis,tdennis@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","is Managing Director, General Counsel, Agency and Arbor Private Label Vie",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Daniel,Dershowitz,ddershowitz@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","tz Managing Director, Transactions View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Matthew,Downs,mdowns@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","ns Managing Director, Product Specialist, Non-Agency Loan Production & Sy",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Alexandra,Coppet,alexandra.coppet@starrpep.com,"STARR PRIVATE EQUITY PARTNERS, LLC",a Managing Director at Starr Private Equity Partners. She is responsible,6466485507,NEW YORK,NY,FO_LP_Master,A,valid
+Maria,Elefante,melefante@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","te Managing Director, Treasury View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Paul,Elenio,pelenio@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","ce President, Chief Financial Officer View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Shannon,Elliotte,shannon.elliotte@colonyfamilyoffices.com,"COLONY FAMILY OFFICES, LLC",.M Wealth Advisor Bio,7042857300,CHARLOTTE,NC,FO_LP_Master,A,valid
+Will,Estes,will@biltmorefamilyoffice.com,"BILTMORE FAMILY OFFICE, LLC",es Portfolio Manager,7042485230,CHARLOTTE,NC,FO_LP_Master,A,valid
+Jack,Farr,jfarr@pritzker-pas.com,PRITZKER ALTERNATIVE STRATEGIES,rr Principal Investments,3124476087,CHICAGO,IL,FO_LP_Master,A,valid
+Gladys,Falcon,gfalcon@gemrc.com,GEM REALTY CAPITAL,"ce President, Compliance",3129152900,CHICAGO,IL,FO_LP_Master,A,valid
+Ken,Fazio,kfazio@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","io Managing Director, Sales Management View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Susan,Feeley,sfeeley@circlewm.com,"CIRCLE WEALTH MANAGEMENT, LLC",or Family Office Services,9082061306,SUMMIT,NJ,FO_LP_Master,A,valid
+Matt,Farrell,matt.farrell@wefamilyoffices.com,WE FAMILY OFFICES,ty CIO,3058252225,CORAL GABLES,FL,FO_LP_Master,A,valid
+Leah,Fisher,lfisher@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","er Managing Director, Special Projects, Governance and Risk View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Richard,Feliciano,rfeliciano@aracapital.com,AMERICAN REALTY ADVISORS,"ce President, Graphic Design Los Angeles, CA",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Zack,Flynn,zack.flynn@penwoodre.com,"PENWOOD REAL ESTATE INVESTMENT MANAGEMENT, LLC",nn Managing Director and Head of Acquisitions,8602186530,WEST HARTFORD,CT,FO_LP_Master,A,valid
+William,Foster,bfoster@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","er Managing Director, Tax and Strategic Planning View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Jeremy,Franklin,jfranklin@gemrc.com,GEM REALTY CAPITAL,"or Managing Director, Investments & Strategy",3129152900,CHICAGO,IL,FO_LP_Master,A,valid
+Steve,Ford,sford@gqg.com,GQG PRIVATE CAPITAL SOLUTIONS LLC,"rd Managing Director, Global Distribution",7542185500,TACOMA,WA,FO_LP_Master,A,valid
+James,Futrell,james.futrell@bmo.com,"BMO FAMILY OFFICE, LLC",nd Head of Investments with BMO Fami… James Futrell is a Managing Directo,6502105042,CHICAGO,IL,FO_LP_Master,A,valid
+Ken,Fujita,ken.fujita@bmo.com,"BMO FAMILY OFFICE, LLC",or Managing Director and the Head of Banking and Lendi… Ken Fujita is a S,6502105042,CHICAGO,IL,FO_LP_Master,A,valid
+Michael,Gearheart,mgearheart@aracapital.com,AMERICAN REALTY ADVISORS,"ce President and Senior Fund Controller Los Angeles, CA",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Kelly,Gaitens,kelly@biltmorefamilyoffice.com,"BILTMORE FAMILY OFFICE, LLC",T​ Wealth Advisor,7042485230,CHARLOTTE,NC,FO_LP_Master,A,valid
+Michael,Goldberg,michael.goldberg@bmo.com,"BMO FAMILY OFFICE, LLC",rg Managing Director BMO Wealth Management Michael Goldberg is a Managing,6502105042,CHICAGO,IL,FO_LP_Master,A,valid
+Yoni,Goodman,ygoodman@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","ce President, Chief Operating Officer View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Brian,Greene,bgreene@aracapital.com,AMERICAN REALTY ADVISORS,"ce President, Investor Relations Philadelphia, PA",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Rael,Gorelick,rael@biltmorefamilyoffice.com,"BILTMORE FAMILY OFFICE, LLC",& Head of Investments,7042485230,CHARLOTTE,NC,FO_LP_Master,A,valid
+Jack,Ginter,jginter@callanfo.com,"CALLAN FAMILY OFFICE, LLC","MA Chief Investment Officer Partner Britt Whitfield, CFA Executive Managi",8775067990,RADNOR,PA,FO_LP_Master,A,valid
+Amy,Hale,amy.hale@bmo.com,"BMO FAMILY OFFICE, LLC",al President  - Southern & Central Regions BMO Wealth Management U.S. and,6502105042,CHICAGO,IL,FO_LP_Master,A,valid
+Matthew,Harrington,mharrington@aracapital.com,AMERICAN REALTY ADVISORS,"ce President, Investor Relations Boston, MA",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Dane,Harris,dane.harris@btfamilyoffice.com,"BT FAMILY OFFICE, LLC",BT Family Office 770.635.5045 [email protected],4043415800,ATLANTA,GA,FO_LP_Master,A,valid
+Kelsey,Hageman,kelsey@biltmorefamilyoffice.com,"BILTMORE FAMILY OFFICE, LLC",an Portfolio Manager,7042485230,CHARLOTTE,NC,FO_LP_Master,A,valid
+Kirk,Helgeson,khelgeson@aracapital.com,AMERICAN REALTY ADVISORS,"nd Chief Investment Officer Los Angeles, CA",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Simon,Holmes,simon.holmes@bgo.com,BGO US REAL ESTATE LP,an Chief Investment Officer,2123597800,NEW YORK,NY,FO_LP_Master,A,valid
+Ivy,Holz,iholz@aracapital.com,AMERICAN REALTY ADVISORS,"ce President, Investor Relations Los Angeles, CA",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Camila,Grello,camila.grello@sagardrealestate.com,SAGARD REAL ESTATE ADVISORS,"lo Managing Director, Asset Management Northeast",3039862222,DENVER,CO,FO_LP_Master,A,valid
+Ryan,Hunten,rhunten@pcpre.com,"PCIM REALTY ADVISORS, LLC",en Managing Director Construction Management,9728667577,ADDISON,TX,FO_LP_Master,A,valid
+Mark,Hoopes,mhoopes@sagardholdings.com,SAGARD REAL ESTATE ADVISORS,"es Managing Director, Chief Compliance Officer",3039862222,DENVER,CO,FO_LP_Master,A,valid
+Gary,Hunter,ghunter@aracapital.com,AMERICAN REALTY ADVISORS,"ce President, Asset Management Chicago, IL",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+John,Hurley,john.hurley@penwoodre.com,"PENWOOD REAL ESTATE INVESTMENT MANAGEMENT, LLC",– Chief Investment Officer,8602186530,WEST HARTFORD,CT,FO_LP_Master,A,valid
+Garrett,Johnson,garrett.johnson@bmo.com,"BMO FAMILY OFFICE, LLC",on Managing Director and Head of Ultra High Net Worth and Alternatives Ba,6502105042,CHICAGO,IL,FO_LP_Master,A,valid
+Steven,Katz,skatz@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","t, Chief Investment Officer, Residential Financing View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Ivan,Kaufman,ikaufman@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","| President Ivan Kaufman is the Chairman, CEO and President of Arbor Rea",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Gene,Kilgore,gkilgore@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","ce President, Structured Securitization View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+James,Kresl,jkresl@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","sl Managing Director, SFR Underwriting View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Christine,Kubas,christine.kubas@penwoodre.com,"PENWOOD REAL ESTATE INVESTMENT MANAGEMENT, LLC",as Managing Director and Head of Asset Management,8602186530,WEST HARTFORD,CT,FO_LP_Master,A,valid
+Mel,Lagomasino,mel.lagomasino@wefamilyoffices.com,WE FAMILY OFFICES,& Managing Partner Santiago Ulloa Founder & Managing Partner Michael Zeu,3058252225,CORAL GABLES,FL,FO_LP_Master,A,valid
+Jeff,Lee,jlee@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","ce President, Head of Agency Lending View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Howard,Leiner,hleiner@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","ce President, Chief Technology Officer View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Tom,Karbowski,tom.karbowski@sagardrealestate.com,SAGARD REAL ESTATE ADVISORS,"or Managing Director, Capital Markets",3039862222,DENVER,CO,FO_LP_Master,A,valid
+Eli,Macanian,emacanian@aracapital.com,AMERICAN REALTY ADVISORS,"ce President, Asset Management Los Angeles, CA",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Charles,Marino,cmarino@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","no Managing Director, Servicing & Agency Asset Management View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Julianne,Marrie,julianne@biltmorefamilyoffice.com,"BILTMORE FAMILY OFFICE, LLC",P® Wealth Advisor,7042485230,CHARLOTTE,NC,FO_LP_Master,A,valid
+Anthony,Mastrogiacomo,anthony@biltmorefamilyoffice.com,"BILTMORE FAMILY OFFICE, LLC",P® Wealth Advisor,7042485230,CHARLOTTE,NC,FO_LP_Master,A,valid
+Garb,Mechigian,garb.mechigian@bmo.com,"BMO FAMILY OFFICE, LLC",is principall…,6502105042,CHICAGO,IL,FO_LP_Master,A,valid
+Victoria,Michael,vmichael@aracapital.com,AMERICAN REALTY ADVISORS,"ce President, Portfolio Management Chicago, IL",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Michael,Miranda,michael.miranda@bmo.com,"BMO FAMILY OFFICE, LLC","A® President, BMO Family Office and Head of Investments, Wealth Michael M",6502105042,CHICAGO,IL,FO_LP_Master,A,valid
+Daniella,Muller,dmuller@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","ce President, Human Resources and Associate General Counsel View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Brian,Murphy,bmurphy@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","hy Managing Director, Residential View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Chad,Messer,chad.messer@sagardrealestate.com,SAGARD REAL ESTATE ADVISORS,"ty CIO, and Sagard Partner",3039862222,DENVER,CO,FO_LP_Master,A,valid
+Closed,Loop,closed@nestle.com,CLOSED LOOP CAPITAL MANAGEMENT,nd family offices.,6464750201,NEW YORK,NY,FO_LP_Master,A,valid
+John,Natalone,jnatalone@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","ce President, Arbor Realty Trust View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Ryan,Nichols,rnichols@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","ls Managing Director, Chief Underwriter, Agency Lending View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Karen,Nista,karen.nista@penwoodre.com,"PENWOOD REAL ESTATE INVESTMENT MANAGEMENT, LLC",ta Principal – Chief Operating Officer,8602186530,WEST HARTFORD,CT,FO_LP_Master,A,valid
+Patrick,Nista,patrick.nista@penwoodre.com,"PENWOOD REAL ESTATE INVESTMENT MANAGEMENT, LLC",ce President of Acquisitions,8602186530,WEST HARTFORD,CT,FO_LP_Master,A,valid
+Ram,Odedra,ram.odedra@penwoodre.com,"PENWOOD REAL ESTATE INVESTMENT MANAGEMENT, LLC",ce President of Acquisitions,8602186530,WEST HARTFORD,CT,FO_LP_Master,A,valid
+Brendan,Orient,borient@pcpre.com,"PCIM REALTY ADVISORS, LLC",nt Managing Director Acquisitions,9728667577,ADDISON,TX,FO_LP_Master,A,valid
+Francesco,Ostuni,francesco.ostuni@bgo.com,BGO US REAL ESTATE LP,an Chief Investment Officer,2123597800,NEW YORK,NY,FO_LP_Master,A,valid
+Rocio,Ortega,rocio.ortega@wefamilyoffices.com,WE FAMILY OFFICES,"Rocio Ortega, CFP® Partner",3058252225,CORAL GABLES,FL,FO_LP_Master,A,valid
+Brad,Natale,brad.natale@sagardrealestate.com,SAGARD REAL ESTATE ADVISORS,"le Managing Director, Portfolio Management",3039862222,DENVER,CO,FO_LP_Master,A,valid
+Gianni,Ottaviano,gottaviano@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","ce President, Structured Finance Production View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Don,Pecano,dpecano@aracapital.com,AMERICAN REALTY ADVISORS,"ce President, Investment Risk Mitigation Los Angeles, CA",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Chris,Perkins,cperkins@biltmorefamilyoffice.com,"BILTMORE FAMILY OFFICE, LLC",FA Wealth Advisor,7042485230,CHARLOTTE,NC,FO_LP_Master,A,valid
+Dustin,Pevear,dpevear@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","ar Managing Director, Director of Screening View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Toby,Phelps,toby.phelps@bgo.com,BGO US REAL ESTATE LP,Co-President,2123597800,NEW YORK,NY,FO_LP_Master,A,valid
+Amy,Price,amy.price@bgo.com,BGO US REAL ESTATE LP,Co-President,2123597800,NEW YORK,NY,FO_LP_Master,A,valid
+Matt,Pomeroy,matt.pomeroy@sagardrealestate.com,SAGARD REAL ESTATE ADVISORS,"oy Managing Director, Valuations",3039862222,DENVER,CO,FO_LP_Master,A,valid
+Giulio,Rana,grana@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","na Managing Director, Structured Finance View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Traci,Proffitt,tproffitt@aracapital.com,AMERICAN REALTY ADVISORS,"ce President, Marketing and Communications Los Angeles, CA",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Barbara,Reinhard,barbara.reinhard@voya.com,VOYA ALTERNATIVE ASSET MANAGEMENT LLC,"FA CIO, Multi-Asset Strategies and Solutions Biography",2123098200,NEW YORK,NY,FO_LP_Master,A,valid
+Steve,Reents,steve.reents@bgo.com,BGO US REAL ESTATE LP,S. Chief Investment Officer,2123597800,NEW YORK,NY,FO_LP_Master,A,valid
+Peter,Reisert,preisert@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","rt Managing Director, Capital Markets, Agency Lending View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Edward,Roca,eroca@turtlecreekwealth.com,"TURTLE CREEK WEALTH ADVISORS, LLC",ca Family Office Manager,2142143110,DALLAS,TX,FO_LP_Master,A,valid
+Thomas,Ridings,tridings@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","gs Managing Director, Chief Accounting Officer View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Matthew,Robertson,mrobertson@callanfo.com,"CALLAN FAMILY OFFICE, LLC",FA President Partner,8775067990,RADNOR,PA,FO_LP_Master,A,valid
+Kelly,Russo,krusso@circlewm.com,"CIRCLE WEALTH MANAGEMENT, LLC",er Family Office Services,9082061306,SUMMIT,NJ,FO_LP_Master,A,valid
+Ana,Sacio,ana.sacio@wefamilyoffices.com,WE FAMILY OFFICES,Sacio Quality Control Specialist,3058252225,CORAL GABLES,FL,FO_LP_Master,A,valid
+Phillip,Sable,psable@pcpre.com,"PCIM REALTY ADVISORS, LLC",le Managing Director Acquisitions,9728667577,ADDISON,TX,FO_LP_Master,A,valid
+Drew,Russell,drew@biltmorefamilyoffice.com,"BILTMORE FAMILY OFFICE, LLC",FA Portfolio Manager,7042485230,CHARLOTTE,NC,FO_LP_Master,A,valid
+Louis,Sarube,lsarube@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","be Managing Director, Structured Asset Management View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Andrew,Scott,ascott@pcpre.com,"PCIM REALTY ADVISORS, LLC",tt President & Senior Managing Director Acquisitions & Asset Management,9728667577,ADDISON,TX,FO_LP_Master,A,valid
+Diane,Scott,dscott@aracapital.com,AMERICAN REALTY ADVISORS,"ce President, Asset Management Chicago, IL",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Frank,Schornagle,frank@biltmorefamilyoffice.com,"BILTMORE FAMILY OFFICE, LLC",or Portfolio Manager,7042485230,CHARLOTTE,NC,FO_LP_Master,A,valid
+Martha,Shelley,mshelley@aracapital.com,AMERICAN REALTY ADVISORS,"Co-Portfolio Manager Los Angeles, CA",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Kyle,Shaw,kshaw@milestonegp.com,"THE MILESTONE REAL ESTATE GROUP, LP",ce President of Asset Management Kyle Shaw Vice President of Asset Manage,2144428150,DALLAS,TX,FO_LP_Master,A,valid
+Matt,Sledz,msledz@aracapital.com,AMERICAN REALTY ADVISORS,"ce President, Development and Construction Chicago, IL",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Linor,Shohet,lshohet@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","et Managing Director, Associate General Counsel View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Eric,Stein,eric.stein@voya.com,VOYA ALTERNATIVE ASSET MANAGEMENT LLC,FA Chief Investment Officer Biography,2123098200,NEW YORK,NY,FO_LP_Master,A,valid
+Alexander,Stangle,astangle@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","le Managing Director, Screening and Portfolio Retention View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Nancy,Stark,nstark@aracapital.com,AMERICAN REALTY ADVISORS,"ce President, Strategic Planning Los Angeles, CA",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Chuck,Stetson,cstetson@peifunds.com,"PRIVATE EQUITY INVESTORS, INC.",Co-Founder & Managing… Chuck Stetson: Co-Founder & Managing Director Mr.,2127501228,NEW YORK,NY,FO_LP_Master,A,valid
+Doug,Sullivan,douglas.sullivan@bmo.com,"BMO FAMILY OFFICE, LLC",an Managing Director BMO Family Office Douglas Sullivan is a Managing Dir,6502105042,CHICAGO,IL,FO_LP_Master,A,valid
+Andy,Syang,asyang@aracapital.com,AMERICAN REALTY ADVISORS,"ce President, Asset Management Los Angeles, CA",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Cooper,Stuart,cstuart@pcpre.com,"PCIM REALTY ADVISORS, LLC",rt Managing Director Investor Relations,9728667577,ADDISON,TX,FO_LP_Master,A,valid
+Tom,Stover,tom.stover@sagardrealestate.com,SAGARD REAL ESTATE ADVISORS,"er Managing Director, Acquisitions Pacific Northwest",3039862222,DENVER,CO,FO_LP_Master,A,valid
+Sabrina,Unger,sunger@aracapital.com,AMERICAN REALTY ADVISORS,"er Managing Director, Research and Strategy Orlando, FL",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Robin,Tucker,rtucker@pcpre.com,"PCIM REALTY ADVISORS, LLC",he Managing Partner Robin Tucker is the Executive Assistant and Office Ma,9728667577,ADDISON,TX,FO_LP_Master,A,valid
+Santiago,Ulloa,santiago.ulloa@wefamilyoffices.com,WE FAMILY OFFICES,& Managing Partner,3058252225,CORAL GABLES,FL,FO_LP_Master,A,valid
+Maysa,Vahidi,mvahidi@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","ce President, General Counsel View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Zack,Vertsman,zack.vertsman@starrpep.com,"STARR PRIVATE EQUITY PARTNERS, LLC",a Principal at TZP Group. He started his career in investment banking at,6466485507,NEW YORK,NY,FO_LP_Master,A,valid
+Vijay,Vaswani,vvaswani@btcpa.net,"BT FAMILY OFFICE, LLC",BT Family Office 678.990.2855 [email protected],4043415800,ATLANTA,GA,FO_LP_Master,A,valid
+Sara,Vilutis,sarav@pcpre.com,"PCIM REALTY ADVISORS, LLC",is Managing Director Asset Management,9728667577,ADDISON,TX,FO_LP_Master,A,valid
+Kevin,Wachter,kwachter@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","ce President, Asset Finance and Treasury View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Ramandeep,Walia,rwalia@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC","ia Managing Director, Solutions Delivery View Profile",18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Fred,Weber,fweber@arbor.com,"ARBOR REALTY COLLATERAL MANAGEMENT, LLC",nd Principal Transactions View Profile,18008785160,UNIONDALE,NY,FO_LP_Master,A,valid
+Mark,Wetmore,mark.wetmore@penwoodre.com,"PENWOOD REAL ESTATE INVESTMENT MANAGEMENT, LLC",ce President of Asset Management,8602186530,WEST HARTFORD,CT,FO_LP_Master,A,valid
+Britt,Whitfield,bwhitfield@callanfo.com,"CALLAN FAMILY OFFICE, LLC",ve Managing Director Partner,8775067990,RADNOR,PA,FO_LP_Master,A,valid
+Beth,Warchol,bwarchol@btcpa.net,"BT FAMILY OFFICE, LLC",BT Family Office 770.790.6571 [email protected],4043415800,ATLANTA,GA,FO_LP_Master,A,valid
+Dillon,Wong,dwong@aracapital.com,AMERICAN REALTY ADVISORS,"ce President, Portfolio Operations and Analytics Los Angeles, CA",2132335700,LOS ANGELES,CA,FO_LP_Master,A,valid
+Tyler,Williams,tyler.williams@sagardrealestate.com,SAGARD REAL ESTATE ADVISORS,"ms Managing Director, Portfolio Management, and Sagard Partner Southeast",3039862222,DENVER,CO,FO_LP_Master,A,valid
+Kathryn,Wright,kwright@milestonegp.com,"THE MILESTONE REAL ESTATE GROUP, LP",ce President of Investor Relations Kathryn Wright Vice President of Inves,2144428150,DALLAS,TX,FO_LP_Master,A,valid
+Meeta,Yadava,meeta.yadava@bmo.com,"BMO FAMILY OFFICE, LLC",t… Managing Director BMO Family Office Meeta Yadava is a Managing Directo,6502105042,CHICAGO,IL,FO_LP_Master,A,valid
+Michael,Zeuner,michael.zeuner@wefamilyoffices.com,WE FAMILY OFFICES,er Managing Partner,3058252225,CORAL GABLES,FL,FO_LP_Master,A,valid
+Brian,Wood,brian.wood@sagardrealestate.com,SAGARD REAL ESTATE ADVISORS,"od Managing Director, Head of Development",3039862222,DENVER,CO,FO_LP_Master,A,valid
+Anthony,Xu,anthony.xu@starrpep.com,"STARR PRIVATE EQUITY PARTNERS, LLC",a Managing Director at Starr Private Equity Partners.  He is responsible,6466485507,NEW YORK,NY,FO_LP_Master,A,valid
