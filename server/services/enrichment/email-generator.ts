@@ -222,6 +222,10 @@ export async function generateEmailSequence(
   const valuePropList = safeParseJson(playbook.value_propositions, []);
   const doNotMention = safeParseJson(playbook.do_not_mention, []);
   const conversationGoals = safeParseJson(playbook.conversation_goals, []);
+  const complianceRules = safeParseJson(playbook.compliance_rules, []);
+  const complianceRulesBlock = complianceRules.length > 0
+    ? `COMPLIANCE RULES (MANDATORY):\n${complianceRules.map((r: string) => `- ${r}`).join('\n')}`
+    : '';
 
   // Load performance insights for self-optimization
   const performanceInsights = loadPerformanceInsights(companyId);
@@ -237,11 +241,12 @@ export async function generateEmailSequence(
   };
 
   const prospectProfile = buildProspectProfile(ctx);
-  const senderName = ctx.scoreLabel === 'hot' ? 'Colby' : 'Colby';
+  const senderName = playbook.sender_name || 'the team';
+  const companyName = playbook.company_name || 'our company';
 
   const prompt = `You are the world's best cold email copywriter. You write emails that read like they were personally written by a human who deeply researched the recipient. Every email is unique — no templates, no generic lines, no filler.
 
-SENDER: ${senderName} from Granite Park Capital
+SENDER: ${senderName} from ${companyName}
 COMPANY:
 ${playbook.company_description}
 
@@ -266,19 +271,14 @@ ${doNotMention.map((t: string) => `- ${t}`).join('\n')}
 CONVERSATION GOALS (advance toward these across the sequence):
 ${conversationGoals.map((g: string) => `- ${g}`).join('\n')}
 
-SEC COMPLIANCE RULES (MANDATORY):
-- NEVER guarantee specific returns. Use "targeting" or "projected"
-- NEVER provide tax, legal, or specific financial advice
-- NEVER discuss specific investor information
-- Use "past performance is not indicative of future results" if referencing Fund I
-- If mentioning Fund I performance, say "179% return on equity" not "179% IRR"
+${complianceRulesBlock}
 
 GENERATE a 4-step personalized cold email sequence for this prospect.
 
 STEP GUIDELINES:
 1. **Opening email** (send immediately): Pattern-interrupt opener that references something SPECIFIC about them. 3-5 sentences max. Spark curiosity. NO pitch — just hook them. The subject line must be ultra-personal (their name, company, or something only relevant to them).
 2. **Value add** (3 days later): Share a specific insight relevant to their role/industry. Position yourself as knowledgeable. Mention one key value prop naturally. 3-4 sentences.
-3. **Social proof + soft ask** (5 days later): Reference Fund I track record or a relevant proof point. Include a low-friction CTA (deck, quick call). 3-4 sentences.
+3. **Social proof + soft ask** (5 days later): Reference a relevant proof point or track record. Include a low-friction CTA (deck, quick call, demo). 3-4 sentences.
 4. **Breakup email** (7 days later): Casual, short last touch. Make them feel like they're missing out, not being sold to. 2-3 sentences max. Final CTA.
 
 CRITICAL RULES:

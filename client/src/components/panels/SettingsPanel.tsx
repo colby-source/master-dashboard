@@ -106,7 +106,7 @@ function IntegrationsTab() {
 
   const serviceSlug: Record<string, string> = {
     'Instantly': 'instantly',
-    'GoHighLevel — Grand Park Capital': 'ghl',
+    'GoHighLevel — Granite Park Capital': 'ghl',
     'Meta Ads': 'meta-ads',
     'Anthropic (Claude AI)': 'anthropic',
     'People Data Labs': 'pdl',

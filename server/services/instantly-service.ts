@@ -135,10 +135,13 @@ class InstantlyService {
   // ── Accounts (email sending accounts) ─────────────────────
   async listAccounts(opts?: { limit?: number; search?: string; starting_after?: string }): Promise<any> {
     try {
-      const { data } = await this.client.get('/accounts', { params: { limit: opts?.limit ?? 100, ...opts } });
+      const params: Record<string, any> = { limit: opts?.limit ?? 100 };
+      if (opts?.search) params.search = opts.search;
+      if (opts?.starting_after) params.starting_after = opts.starting_after;
+      const { data } = await this.client.get('/accounts', { params });
       return data;
     } catch (err: any) {
-      console.error('[Instantly] listAccounts error:', err.message);
+      console.error('[Instantly] listAccounts error:', err.message, err.response?.status, JSON.stringify(err.response?.data)?.slice(0, 300));
       return { items: [] };
     }
   }
@@ -266,13 +269,9 @@ class InstantlyService {
   }
 
   async getWarmupAnalytics(opts?: { account_id?: string; limit?: number }): Promise<any> {
-    try {
-      const { data } = await this.client.get('/accounts/warmup-analytics', { params: opts });
-      return data;
-    } catch (err: any) {
-      console.error('[Instantly] warmupAnalytics error:', err.message);
-      return null;
-    }
+    // /accounts/warmup-analytics does not exist in Instantly v2 API
+    // Warmup data is available per-account via getAccount() / listAccountsWithWarmup()
+    return null;
   }
 
   async getAccountCampaignMapping(email: string): Promise<any> {
@@ -288,7 +287,11 @@ class InstantlyService {
   // ── Leads ─────────────────────────────────────────────────
   async listLeads(opts: { campaign_id?: string; list_id?: string; limit?: number; starting_after?: string; search?: string }): Promise<any> {
     try {
-      const { data } = await this.client.get('/leads', { params: { limit: opts.limit ?? 100, ...opts } });
+      // Instantly v2 POST /leads/list uses 'campaign' not 'campaign_id'
+      const { campaign_id, ...rest } = opts;
+      const body: any = { limit: opts.limit ?? 100, ...rest };
+      if (campaign_id) body.campaign = campaign_id;
+      const { data } = await this.client.post('/leads/list', body);
       return data;
     } catch (err: any) {
       console.error('[Instantly] listLeads error:', err.message);
@@ -418,10 +421,22 @@ class InstantlyService {
     eaccount?: string; lead?: string;
   }): Promise<any> {
     try {
-      const { data } = await this.client.get('/emails', { params: { limit: opts?.limit ?? 50, ...opts } });
+      const params: Record<string, any> = { limit: opts?.limit ?? 50 };
+      if (opts?.starting_after) params.starting_after = opts.starting_after;
+      if (opts?.search) params.search = opts.search;
+      if (opts?.campaign_id) params.campaign_id = opts.campaign_id;
+      if (opts?.is_unread !== undefined) params.is_unread = opts.is_unread;
+      if (opts?.preview_only !== undefined) params.preview_only = opts.preview_only;
+      // v2 API uses 'received'/'sent' not 'reply'
+      if (opts?.email_type) params.email_type = opts.email_type === 'reply' ? 'received' : opts.email_type;
+      if (opts?.sort_order) params.sort_order = opts.sort_order;
+      if (opts?.i_status !== undefined) params.i_status = opts.i_status;
+      if (opts?.eaccount) params.eaccount = opts.eaccount;
+      if (opts?.lead) params.lead = opts.lead;
+      const { data } = await this.client.get('/emails', { params });
       return data;
     } catch (err: any) {
-      console.error('[Instantly] listEmails error:', err.message);
+      console.error('[Instantly] listEmails error:', err.message, err.response?.status, JSON.stringify(err.response?.data)?.slice(0, 300));
       return { items: [] };
     }
   }

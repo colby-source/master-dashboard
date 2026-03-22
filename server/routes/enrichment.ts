@@ -1203,6 +1203,22 @@ router.get('/optimization-insights/:companyId', (req, res) => {
   } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
+// ── Campaign Migration (re-personalize and move leads) ────────
+router.post('/migrate-campaign', async (req, res) => {
+  try {
+    const { fromCampaignId, toCampaignId, companyId, batchSize, delayMs } = req.body;
+    if (!fromCampaignId || !toCampaignId || !companyId) {
+      return res.status(400).json({ error: 'fromCampaignId, toCampaignId, and companyId are required' });
+    }
+    const { migrateCampaignWithPersonalization } = await import('../services/enrichment/pipeline');
+    // Run async — don't block the HTTP response (this takes a long time for 2000+ leads)
+    migrateCampaignWithPersonalization(fromCampaignId, toCampaignId, companyId, { batchSize, delayMs })
+      .then(result => console.log('[Migration] Finished:', result))
+      .catch(err => console.error('[Migration] Fatal error:', err.message));
+    res.json({ status: 'started', message: 'Migration running in background. Watch WebSocket for progress.' });
+  } catch (err: any) { res.status(500).json({ error: err.message }); }
+});
+
 // ── Instantly Campaign Template Configuration ─────────────────
 router.post('/configure-campaign-templates/:campaignId', async (req, res) => {
   try {

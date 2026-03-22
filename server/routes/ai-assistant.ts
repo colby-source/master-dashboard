@@ -17,7 +17,7 @@ const tools: Anthropic.Tool[] = [
         status: { type: 'string', description: 'Filter by status: new, enriched, scored, pushed, excluded' },
         score_label: { type: 'string', description: 'Filter by score: hot, warm, cold, disqualified' },
         source: { type: 'string', description: 'Filter by source: meta_ad, rb2b, manual, import, linkedin, instagram' },
-        company_id: { type: 'number', description: 'Filter by company ID (1=Grand Park Capital, 2=Brand Me Now, 4=Tikkun)' },
+        company_id: { type: 'number', description: 'Filter by company ID (1=Granite Park Capital, 2=Brand Me Now, 4=Tikkun)' },
         limit: { type: 'number', description: 'Max results (default 20)' },
       },
       required: [],
@@ -43,7 +43,7 @@ const tools: Anthropic.Tool[] = [
         email: { type: 'string', description: 'Email address (required)' },
         first_name: { type: 'string', description: 'First name' },
         last_name: { type: 'string', description: 'Last name' },
-        company_id: { type: 'number', description: 'Company ID (1=Grand Park Capital, 2=Brand Me Now, 4=Tikkun)' },
+        company_id: { type: 'number', description: 'Company ID (1=Granite Park Capital, 2=Brand Me Now, 4=Tikkun)' },
         source: { type: 'string', description: 'Lead source (manual, import, meta_ad, rb2b, linkedin, instagram)' },
         phone: { type: 'string', description: 'Phone number' },
       },
@@ -1056,35 +1056,28 @@ router.post('/chat', async (req, res) => {
       { role: 'user', content: message },
     ];
 
+    // Load company playbooks for dynamic context instead of hardcoding
+    const companyPlaybooks = queryAll('SELECT company_id, company_name, company_description, target_icp FROM company_playbooks');
+    const companyDescriptions = companyPlaybooks.map((p: any) =>
+      `- ${p.company_name} (ID: ${p.company_id}) — ${p.company_description}`
+    ).join('\n');
+
     const systemPrompt = `You are the AI Command Center assistant for a multi-company sales operations dashboard. You can execute real actions on the dashboard using the tools provided.
 
 COMPANIES:
-- Granite Park Capital (ID: 1) — Affordable Housing Fund II, L.P. ($50M target, $100M hard cap, 7% pref, $250K min, accredited investors only, nationwide Section 8 / LIHTC, Fund I: 179% ROE in 2 years)
-- Brand Me Now (ID: 2) — AI-powered brand creation platform for influencers/creators
-- Tikkun (ID: 4) — Construction technology, prefabricated housing with Core Spine System
+${companyDescriptions || '- Granite Park Capital (ID: 1)\n- Brand Me Now (ID: 2)'}
 
-GRANITE PARK CAPITAL — KEY FACTS (use these EXACTLY):
-- Fund: Granite Park Capital Affordable Housing Fund II, L.P.
-- GP: Marc Menowitz — 3rd-generation multifamily operator, 20+ years experience
-- Platform: Apartment Corp — 17,000+ units (~$2B portfolio), 5,500 units with Section 8 contracts
-- Fund I: Fully subscribed at $50M (use for credibility)
-- Fund II target: $50M ($100M hard cap)
-- Returns: 7% preferred return (NOT 8%), quarterly distributions. Do NOT mention specific IRR targets in outreach copy.
-- Fund I Performance: 179% return on equity in 2 years — use this as social proof for Fund II
-- Tax Strategy: LIHTC tax credits (dollar-for-dollar federal tax offsets) + cost segregation + depreciation — stress tax benefits heavily
-- Government-Backed Rents: Section 8 HAP contracts provide stable, recession-resistant income guaranteed by the federal government
-- Minimum: $250K, accredited investors only
-- Strategy: Section 8 + LIHTC affordable & workforce housing, NATIONWIDE
-- NEVER say "Florida and Texas" or name specific states for Fund II — it is nationwide
-- NEVER state a target number of units for Fund II — no properties are established yet
-- Portfolio track record is "17,000+ units" (Apartment Corp's existing portfolio)
+IMPORTANT — COMPANY ISOLATION:
+- Each company has its own leads, pipelines, campaigns, and playbooks. NEVER mix company data.
+- When a user asks about leads, campaigns, or pipeline data, always clarify or determine which company they mean.
+- Granite Park Capital (GPC) is an investment fund — its leads are investors. Do NOT reference GPC fund details, yacht events, accredited investor requirements, or investment terms when working with any other company.
+- Brand Me Now (BMN) is a brand creation platform — its leads are influencers, creators, and agencies. Do NOT reference BMN creator funnels or brand-building when working with GPC.
 
-COMPLIANCE GUARDRAILS (MANDATORY):
+COMPLIANCE GUARDRAILS (GPC ONLY — do NOT apply to other companies):
 - NEVER guarantee specific returns. Use "targeting" or "projected" — never "will earn" or "guaranteed returns"
 - NEVER provide legal, tax, or financial advice. Escalate to Marc or appropriate professional.
 - ALWAYS confirm accredited investor status before sharing detailed fund materials
 - NEVER share PPM, subscription docs, or specific investor information via AI — escalate to Marc
-- NEVER mention competitor fund names, specific return guarantees as promises, or unverified performance claims
 - If a prospect asks about risks, be transparent: real estate investments carry risks including illiquidity, market risk, and potential loss of principal
 - All outbound communications must include or reference: "This is not an offer to sell or solicitation to buy. For accredited investors only."
 - If unsure about compliance, ALWAYS escalate rather than guess

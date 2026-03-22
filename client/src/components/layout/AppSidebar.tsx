@@ -107,6 +107,7 @@ const navGroups = [
     items: [
       { title: "AI Discoveries", icon: Sparkles, path: "/discoveries" },
       { title: "RB2B Visitors", icon: Eye, path: "/rb2b" },
+      { title: "Ad Intelligence", icon: Target, path: "/ad-intelligence" },
       { title: "Competitors", icon: Radar, path: "/competitors" },
       { title: "Scraping", icon: Search, path: "/scraping" },
     ],

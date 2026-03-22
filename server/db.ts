@@ -21,11 +21,12 @@ export async function getDb(): Promise<Database> {
 
   db.run('PRAGMA foreign_keys = ON');
 
-  // Run schema
+  // Run schema (creates any new tables added since last DB save)
   const schemaPath = path.join(__dirname, '../database/schema.sql');
   if (fs.existsSync(schemaPath)) {
     const schema = fs.readFileSync(schemaPath, 'utf-8');
     db.run(schema);
+    saveDb();
   }
 
   // Seed default companies if empty
@@ -34,8 +35,8 @@ export async function getDb(): Promise<Database> {
   const companyCount = (stmt.getAsObject() as any).count;
   stmt.free();
   if (companyCount === 0) {
-    db.run(`INSERT INTO companies (name, type, color, ghl_location_id) VALUES ('Grand Park Capital', 'client', '#3b82f6', 'x8XBOACL6wOFcsQewWPw')`);
-    db.run(`INSERT INTO companies (name, type, color, ghl_location_id) VALUES ('Brand New Now', 'client', '#8b5cf6', 'xK1e5YGQ7gK6NjoyhyRI')`);
+    db.run(`INSERT INTO companies (name, type, color, ghl_location_id) VALUES ('Granite Park Capital', 'client', '#3b82f6', 'x8XBOACL6wOFcsQewWPw')`);
+    db.run(`INSERT INTO companies (name, type, color, ghl_location_id) VALUES ('Brand Me Now', 'client', '#8b5cf6', 'xK1e5YGQ7gK6NjoyhyRI')`);
     db.run(`INSERT INTO companies (name, type, color, ghl_location_id) VALUES ('Tikkun', 'personal', '#10b981', 'EC0ziFgLtYbHvpLv1ymi')`);
     console.log('[DB] Seeded default companies');
   } else {
@@ -139,14 +140,21 @@ export async function getDb(): Promise<Database> {
   )`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_campaign_snapshots_campaign ON campaign_snapshots(campaign_id, captured_at)`);
 
+  // Add new playbook columns for company-aware messaging
+  try { db.run(`ALTER TABLE company_playbooks ADD COLUMN company_name TEXT NOT NULL DEFAULT ''`); } catch { /* already exists */ }
+  try { db.run(`ALTER TABLE company_playbooks ADD COLUMN sender_name TEXT NOT NULL DEFAULT ''`); } catch { /* already exists */ }
+  try { db.run(`ALTER TABLE company_playbooks ADD COLUMN compliance_rules TEXT`); } catch { /* already exists */ }
+
   // Seed company playbooks if empty
   const pbStmt = db.prepare('SELECT COUNT(*) as count FROM company_playbooks');
   pbStmt.step();
   const pbCount = (pbStmt.getAsObject() as any).count;
   pbStmt.free();
   if (pbCount === 0) {
-    // Grand Park Capital (companyId: 1)
-    db.run(`INSERT INTO company_playbooks (company_id, company_description, value_propositions, target_icp, tone, objection_handlers, conversation_goals, escalation_triggers, do_not_mention, booking_url, max_auto_replies) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+    // Granite Park Capital (companyId: 1)
+    db.run(`INSERT INTO company_playbooks (company_id, company_name, sender_name, company_description, value_propositions, target_icp, tone, objection_handlers, conversation_goals, escalation_triggers, do_not_mention, compliance_rules, booking_url, max_auto_replies) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+      'Granite Park Capital',
+      'Colby',
       'Granite Park Capital Affordable Housing Fund II, L.P. — a 4th-generation real estate fund ($50M target, $100M hard cap). We acquire and operate Section 8 and LIHTC multifamily affordable and workforce housing NATIONWIDE. GP: Marc Menowitz, 4th-generation multifamily operator, 20+ years experience. Apartment Corp manages 17,000+ units (~$2B portfolio), including 5,500 units with Section 8 contracts. Fund I delivered 179% return on equity in just 2 years. Fund II terms: 7% preferred return, quarterly distributions, $250K minimum, accredited investors only. Government-backed rents through Section 8 HAP contracts. Powerful tax strategies: LIHTC credits (dollar-for-dollar federal tax offsets), cost segregation, and accelerated depreciation.',
       JSON.stringify([
         'Fund I delivered 179% return on equity in just 2 years — Fund II builds on that proven performance',
@@ -172,12 +180,23 @@ export async function getDb(): Promise<Database> {
       JSON.stringify(['book_call_with_marc', 'send_fund_deck', 'qualify_accredited_status', 'get_phone_number', 'schedule_yacht_event']),
       JSON.stringify(['specific_legal_questions', 'tax_advice_requests', 'specific_date_time_meeting', 'complaint_or_threat', 'request_for_ppm_or_subscription_docs']),
       JSON.stringify(['specific_return_guarantees_as_promises', 'competitor_fund_names', 'individual_investor_information', 'unverified_performance_claims', 'fund_I_specific_unit_counts_or_properties', 'any_specific_state_names_for_fund_II_properties']),
+      JSON.stringify([
+        'NEVER guarantee specific returns. Use "targeting" or "projected" — never "will earn", "guaranteed", or "you\'ll get"',
+        'NEVER provide tax advice, legal advice, or specific financial advice — always recommend consulting their CPA/attorney',
+        'NEVER discuss specific investor information or other LPs',
+        'NEVER make forward-looking guarantees about fund performance',
+        'If the prospect asks about risks, be transparent: real estate carries risks including illiquidity and potential loss of principal',
+        'If the prospect asks for PPM, subscription docs, or detailed fund legal terms — escalate to human',
+        'Use "past performance is not indicative of future results" if referencing Fund I track record',
+      ]),
       null,
       3
     ]);
 
     // Brand Me Now (companyId: 2)
-    db.run(`INSERT INTO company_playbooks (company_id, company_description, value_propositions, target_icp, tone, objection_handlers, conversation_goals, escalation_triggers, do_not_mention, booking_url, max_auto_replies) VALUES (2, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+    db.run(`INSERT INTO company_playbooks (company_id, company_name, sender_name, company_description, value_propositions, target_icp, tone, objection_handlers, conversation_goals, escalation_triggers, do_not_mention, compliance_rules, booking_url, max_auto_replies) VALUES (2, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+      'Brand Me Now',
+      'Ryan',
       'Brand Me Now is an AI-powered brand creation platform for influencers and creators. We handle everything — product development, manufacturing, fulfillment, and brand design. Creators get their own branded product line with zero inventory risk and earn 20% royalty on every sale.',
       JSON.stringify([
         'Zero inventory risk — we handle manufacturing and fulfillment',
@@ -199,12 +218,15 @@ export async function getDb(): Promise<Database> {
       JSON.stringify(['schedule_platform_demo', 'get_creator_social_handles', 'qualify_audience_size', 'send_case_studies']),
       JSON.stringify(['specific_contract_terms', 'legal_questions', 'specific_date_time_meeting', 'complaint_or_threat']),
       JSON.stringify(['specific_revenue_guarantees', 'other_creator_earnings', 'internal_margins']),
+      null, // no compliance rules for BMN
       null,
       3
     ]);
 
     // Tikkun (companyId: 4)
-    db.run(`INSERT INTO company_playbooks (company_id, company_description, value_propositions, target_icp, tone, objection_handlers, conversation_goals, escalation_triggers, do_not_mention, booking_url, max_auto_replies) VALUES (4, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+    db.run(`INSERT INTO company_playbooks (company_id, company_name, sender_name, company_description, value_propositions, target_icp, tone, objection_handlers, conversation_goals, escalation_triggers, do_not_mention, compliance_rules, booking_url, max_auto_replies) VALUES (4, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+      'Tikkun',
+      'Colby',
       'Tikkun is a construction technology company specializing in prefabricated housing using our patented Core Spine System. We are acquiring ONX Homes/Resia Manufacturing ($48M facility). Our system produces homes at $35K per unit, enabling 960-2000 homes per year from a single microfactory.',
       JSON.stringify([
         '$35K per unit production cost vs $150K+ traditional construction',
@@ -226,11 +248,92 @@ export async function getDb(): Promise<Database> {
       JSON.stringify(['schedule_core_spine_demo', 'send_technical_specs', 'qualify_project_pipeline', 'get_phone_number']),
       JSON.stringify(['specific_pricing_negotiations', 'legal_contract_terms', 'specific_date_time_meeting', 'complaint_or_threat']),
       JSON.stringify(['acquisition_price_details', 'internal_financials', 'competitor_comparisons']),
+      null, // no compliance rules for Tikkun
       null,
       3
     ]);
 
     console.log('[DB] Seeded company playbooks');
+  }
+
+  // Seed BMN enrichment_config: enable auto-reply for creator pipeline
+  const bmnConfig = db.prepare('SELECT auto_reply_enabled FROM enrichment_config WHERE company_id = 2');
+  if (bmnConfig.step()) {
+    const row = bmnConfig.getAsObject() as any;
+    if (!row.auto_reply_enabled) {
+      db.run(
+        `UPDATE enrichment_config SET auto_reply_enabled = 1, auto_reply_sentiments = ?, target_instantly_campaign_id = ?, updated_at = datetime('now') WHERE company_id = 2`,
+        [
+          JSON.stringify(['interested', 'question', 'meeting_request', 'positive']),
+          '542243a5-f75a-441a-b311-f5ff0dbf8e3e', // BMN Influencers campaign
+        ]
+      );
+      console.log('[DB] Enabled auto-reply for BMN (company_id=2)');
+    }
+  } else {
+    // Create config row if it doesn't exist
+    db.run(
+      `INSERT INTO enrichment_config (company_id, enabled, auto_enrich, auto_push_ghl, auto_reply_enabled, auto_reply_sentiments, target_instantly_campaign_id) VALUES (2, 1, 1, 1, 1, ?, ?)`,
+      [
+        JSON.stringify(['interested', 'question', 'meeting_request', 'positive']),
+        '542243a5-f75a-441a-b311-f5ff0dbf8e3e',
+      ]
+    );
+    console.log('[DB] Created enrichment_config for BMN (company_id=2) with auto-reply enabled');
+  }
+  bmnConfig.free();
+
+  // Seed BMN company_pipelines (Creator Investment Funnel + Agency Partner Funnel)
+  const bmnPipelineCount = db.prepare('SELECT COUNT(*) as count FROM company_pipelines WHERE company_id = 2');
+  bmnPipelineCount.step();
+  const pipelineCount = (bmnPipelineCount.getAsObject() as any).count;
+  bmnPipelineCount.free();
+
+  if (pipelineCount === 0) {
+    // Creator Investment Funnel — mapped to Influencers Instantly campaign (default)
+    db.run(
+      `INSERT INTO company_pipelines (company_id, pipeline_name, ghl_pipeline_id, instantly_campaign_id, stage_map, monetary_value, is_default) VALUES (2, ?, ?, ?, ?, ?, 1)`,
+      [
+        'Creator Investment Funnel',
+        'By4LcF6zNdTaxAC1O8Ad',
+        '542243a5-f75a-441a-b311-f5ff0dbf8e3e', // Influencers campaign
+        JSON.stringify({
+          positive_reply: '75c0a71b-bba7-45fe-abdb-b751317afa30',
+          appt_booked: '6f44609d-7bf2-426e-ad37-50b83e0a0ac4',
+          application_received: '87f935a4-485d-4f00-800e-14ff73494459',
+          brand_builder_started: '353d6b67-e8fb-4872-87ed-5a5dc827b864',
+          brand_builder_finished: '94938168-7775-48f7-8030-049e8c2c693b',
+          manual_review: 'babecf3c-b51a-4174-9c75-65344266d732',
+          approved: 'e4710b8c-ba21-4043-97fd-9ed6ef85a95e',
+          rejected: '3c5e2aaf-1896-405f-a49e-0736a17ecef1',
+        }),
+        0,
+      ]
+    );
+
+    // Agency Partner Funnel — mapped to Agencies Instantly campaign
+    db.run(
+      `INSERT INTO company_pipelines (company_id, pipeline_name, ghl_pipeline_id, instantly_campaign_id, stage_map, monetary_value, is_default) VALUES (2, ?, ?, ?, ?, ?, 0)`,
+      [
+        'Agency Partner Funnel',
+        'ChG0j1v34xGZDI7bp9Km',
+        '3f481ba8-ea1f-48af-afa7-2e2179cb78bd', // Agencies campaign
+        JSON.stringify({
+          positive_reply: 'dd276576-8047-4550-b905-5317e90d5b70',
+          engaged: '723b2fcd-5cc2-442a-9220-ecd07ec3837a',
+          discovery_scheduled: '8082abbd-1dd0-4501-9795-84c5ed772682',
+          discovery_completed: '76b5e9a1-5492-4624-863f-11d4d5ed4000',
+          proposal_sent: '8a7a862e-e5b8-4e2f-ac32-153e07fec4bc',
+          negotiation: '30c99e6c-f53e-4d8f-942f-1ea8e5ea71ba',
+          agreement_signed: '08c066f7-2d15-4ad1-860d-fb328167d8c8',
+          onboarding: '6a708619-b7f5-4c23-a818-e371a58fd2e6',
+          lost: 'd0f2429f-fd5f-4fb6-955a-3f800ec6a4fe',
+        }),
+        0,
+      ]
+    );
+
+    console.log('[DB] Seeded BMN company_pipelines (Creator Investment + Agency Partner funnels)');
   }
 
   saveDb(db);

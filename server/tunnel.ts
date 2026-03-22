@@ -1,5 +1,7 @@
 import { spawn } from 'child_process';
 
+// GPC-ONLY: This tunnel serves Granite Park Capital's yacht event check-in page.
+// If BMN needs a tunnel, add a separate tunnel config keyed by company_id.
 const TUNNEL_NAME = 'yacht-checkin';
 const TUNNEL_URL = 'https://checkin.graiteparkcapitalfund.com';
 

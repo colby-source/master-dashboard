@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brand Me Now — Lead Pipeline Flow</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0D0D0D;
+      color: #E8E8E8;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .header {
+      text-align: center;
+      padding: 48px 20px 28px;
+    }
+
+    .header h1 {
+      font-size: 2.6rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #016F74 0%, #0A9396 40%, #1AE7F6 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -0.5px;
+    }
+
+    .header .subtitle {
+      color: #94D2BD;
+      font-size: 1.05rem;
+      margin-top: 8px;
+      font-weight: 400;
+    }
+
+    .header .company-badge {
+      display: inline-block;
+      margin-top: 14px;
+      padding: 5px 18px;
+      border: 1px solid #1AE7F6;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      color: #1AE7F6;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .pipeline {
+      max-width: 780px;
+      margin: 40px auto;
+      padding: 0 20px 60px;
+      position: relative;
+    }
+
+    /* Vertical connector line */
+    .pipeline::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 60px;
+      width: 2px;
+      background: linear-gradient(180deg, #1AE7F6 0%, #0A9396 30%, #016F74 70%, transparent 100%);
+      transform: translateX(-50%);
+      z-index: 0;
+    }
+
+    .phase {
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .phase-label {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .phase-label span {
+      display: inline-block;
+      padding: 6px 22px;
+      background: #016F74;
+      color: #fff;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .step {
+      background: #1A1A1A;
+      border: 1px solid #2A2A2A;
+      border-radius: 14px;
+      padding: 22px 26px;
+      margin: 0 auto 12px;
+      max-width: 620px;
+      position: relative;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .step:hover {
+      border-color: #0A9396;
+      box-shadow: 0 0 24px rgba(26, 231, 246, 0.08);
+    }
+
+    .step-number {
+      position: absolute;
+      top: -10px;
+      left: 22px;
+      width: 26px;
+      height: 26px;
+      background: #1AE7F6;
+      color: #0D0D0D;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .step-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .step-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .step-desc {
+      font-size: 0.85rem;
+      color: #999;
+      line-height: 1.6;
+      margin-left: 52px;
+    }
+
+    .step-desc strong {
+      color: #ccc;
+    }
+
+    .step-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+      margin-left: 52px;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 3px 11px;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .tag-instantly { background: #1a3a4a; color: #1AE7F6; }
+    .tag-ai { background: #2a1a3a; color: #C084FC; }
+    .tag-action { background: #1a3a2a; color: #86EFAC; }
+    .tag-ghl { background: #3a2a1a; color: #FCD34D; }
+    .tag-alert { background: #3a1a1a; color: #FCA5A5; }
+
+    .arrow-down {
+      text-align: center;
+      color: #0A9396;
+      font-size: 1.4rem;
+      margin: 6px 0;
+      position: relative;
+      z-index: 2;
+    }
+
+    .connector-dot {
+      width: 14px;
+      height: 14px;
+      background: #1AE7F6;
+      border-radius: 50%;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+    }
+
+    .decision-box {
+      background: #1A1A1A;
+      border: 2px solid #FCD34D;
+      border-radius: 14px;
+      padding: 16px 24px;
+      max-width: 480px;
+      margin: 8px auto 12px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .decision-box .label {
+      font-size: 0.7rem;
+      color: #FCD34D;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .decision-box .question {
+      font-size: 0.88rem;
+      color: #E8E8E8;
+    }
+
+    .branch-container {
+      display: flex;
+      gap: 14px;
+      max-width: 620px;
+      margin: 0 auto 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .branch {
+      flex: 1;
+      background: #1A1A1A;
+      border: 1px solid #2A2A2A;
+      border-radius: 12px;
+      padding: 16px 16px;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+
+    .branch:hover {
+      border-color: #0A9396;
+    }
+
+    .branch-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .branch-label.positive { color: #86EFAC; }
+    .branch-label.negative { color: #FCA5A5; }
+
+    .branch-desc {
+      font-size: 0.8rem;
+      color: #999;
+      line-height: 1.5;
+    }
+
+    .isolation-banner {
+      max-width: 620px;
+      margin: 0 auto 24px;
+      padding: 14px 22px;
+      background: linear-gradient(90deg, rgba(26, 231, 246, 0.04), rgba(10, 147, 150, 0.08), rgba(26, 231, 246, 0.04));
+      border: 1px solid #0A9396;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 0.82rem;
+      color: #94D2BD;
+    }
+
+    .isolation-banner strong { color: #1AE7F6; }
+
+    .footer {
+      text-align: center;
+      padding: 30px 20px;
+      border-top: 1px solid #1A1A1A;
+      color: #555;
+      font-size: 0.75rem;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px;
+      max-width: 620px;
+      margin: 30px auto 0;
+      padding: 16px;
+      background: #1A1A1A;
+      border-radius: 10px;
+      border: 1px solid #2A2A2A;
+      position: relative;
+      z-index: 1;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: #888;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+    }
+
+    @media (max-width: 640px) {
+      .branch-container { flex-direction: column; }
+      .header h1 { font-size: 1.8rem; }
+      .step { margin-left: 10px; margin-right: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Brand Me Now</h1>
+  <p class="subtitle">Cold Email &rarr; Warm Lead Pipeline</p>
+  <div class="company-badge">company_id = 2 &middot; fully isolated from GPC</div>
+</div>
+
+<div class="pipeline">
+
+  <div class="isolation-banner">
+    <strong>Zero Cross-Contamination:</strong> BMN operates on its own GHL sub-account, its own Instantly campaigns, and its own Claude playbook. No enrichment pipeline. No lead scoring. No GPC fund content.
+  </div>
+
+  <!-- ═══════ STEP 1: COLD DATA UPLOAD ═══════ -->
+  <div class="phase">
+    <div class="phase-label"><span>Step 1 &mdash; Cold Data Upload</span></div>
+
+    <div class="step">
+      <div class="step-number">1</div>
+      <div class="step-header">
+        <div class="step-icon" style="background: #1a3a4a;">&#x1F4E4;</div>
+        <div class="step-title">Upload Cold Data to Instantly</div>
+      </div>
+      <div class="step-desc">
+        Cold lead lists (influencers, agencies, creators) are uploaded directly into Instantly campaigns. Two campaign types: <strong>Influencer outreach</strong> and <strong>Agency outreach</strong>. No enrichment or scoring needed &mdash; data goes straight to Instantly.
+      </div>
+      <div class="step-tags">
+        <span class="tag tag-instantly">Instantly Upload</span>
+        <span class="tag tag-instantly">Influencer Campaign</span>
+        <span class="tag tag-instantly">Agency Campaign</span>
+      </div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+    <div class="connector-dot"></div>
+  </div>
+
+  <!-- ═══════ STEP 2: EMAIL SEQUENCES ═══════ -->
+  <div class="phase">
+    <div class="phase-label"><span>Step 2 &mdash; Email Sequence Execution</span></div>
+
+    <div class="step">
+      <div class="step-number">2</div>
+      <div class="step-header">
+        <div class="step-icon" style="background: #1a3a4a;">&#x1F4E7;</div>
+        <div class="step-title">Pre-Built Instantly Sequences Run</div>
+      </div>
+      <div class="step-desc">
+        Instantly executes the pre-built 5-step email sequences automatically. Each step has its own timing, subject lines, and copy tailored to BMN's brand-building pitch. Subsequences fire if specific conditions are met.
+      </div>
+      <div class="step-tags">
+        <span class="tag tag-instantly">5-Step Sequence</span>
+        <span class="tag tag-instantly">Auto-Send</span>
+        <span class="tag tag-instantly">Subsequences</span>
+      </div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+    <div class="connector-dot"></div>
+  </div>
+
+  <!-- ═══════ STEP 3: REPLY DETECTION ═══════ -->
+  <div class="phase">
+    <div class="phase-label"><span>Step 3 &mdash; Reply Detection</span></div>
+
+    <div class="step">
+      <div class="step-number">3</div>
+      <div class="step-header">
+        <div class="step-icon" style="background: #1a3a4a;">&#x1F4EC;</div>
+        <div class="step-title">Instantly Reply Webhook</div>
+      </div>
+      <div class="step-desc">
+        When a prospect replies to the sequence, Instantly fires a webhook to <code>/webhook/instantly</code>. The reply text, lead email, campaign ID, and sending account are captured and routed to the auto-reply handler.
+      </div>
+      <div class="step-tags">
+        <span class="tag tag-instantly">Instantly Webhook</span>
+        <span class="tag tag-action">Reply Captured</span>
+      </div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+    <div class="connector-dot"></div>
+  </div>
+
+  <!-- ═══════ STEP 4: CLAUDE ANALYSIS ═══════ -->
+  <div class="phase">
+    <div class="phase-label"><span>Step 4 &mdash; Claude AI Analysis &amp; Smart Reply</span></div>
+
+    <div class="step">
+      <div class="step-number">4</div>
+      <div class="step-header">
+        <div class="step-icon" style="background: #2a1a3a;">&#x1F9E0;</div>
+        <div class="step-title">Sentiment Analysis</div>
+      </div>
+      <div class="step-desc">
+        Claude reads the reply and classifies sentiment: <strong>interested</strong>, <strong>objection</strong>, <strong>not interested</strong>, <strong>meeting request</strong>, or <strong>out of office</strong>. Uses the full conversation thread for context.
+      </div>
+      <div class="step-tags">
+        <span class="tag tag-ai">Claude AI</span>
+        <span class="tag tag-ai">Sentiment Classification</span>
+      </div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+
+    <div class="decision-box">
+      <div class="label">Sentiment Gate</div>
+      <div class="question">Positive sentiment? (interested / meeting request)</div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+
+    <div class="branch-container">
+      <div class="branch">
+        <div class="branch-label positive">Positive</div>
+        <div class="branch-desc">
+          Claude generates a smart, contextual reply using BMN's playbook.<br><br>
+          Pushes toward <strong>booking a call</strong> or starting the <strong>brand build</strong> process.
+        </div>
+      </div>
+      <div class="branch">
+        <div class="branch-label negative">Negative / Neutral</div>
+        <div class="branch-desc">
+          Objection &rarr; Claude responds with value-driven rebuttal.<br>
+          Not interested &rarr; Respectful close.<br>
+          OOO &rarr; Queued for follow-up.
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+
+    <div class="step">
+      <div class="step-number">5</div>
+      <div class="step-header">
+        <div class="step-icon" style="background: #2a1a3a;">&#x1F4AC;</div>
+        <div class="step-title">Auto-Reply Sent via Instantly</div>
+      </div>
+      <div class="step-desc">
+        Claude's generated reply is sent back through Instantly using the same sending account (<code>eaccount</code>). The conversation continues naturally in the lead's inbox. Thread is tracked for follow-up.
+      </div>
+      <div class="step-tags">
+        <span class="tag tag-ai">Claude Reply</span>
+        <span class="tag tag-instantly">Instantly Send</span>
+        <span class="tag tag-ai">BMN Playbook</span>
+      </div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+    <div class="connector-dot"></div>
+  </div>
+
+  <!-- ═══════ STEP 5: GHL OPPORTUNITY ═══════ -->
+  <div class="phase">
+    <div class="phase-label"><span>Step 5 &mdash; GoHighLevel Opportunity</span></div>
+
+    <div class="step">
+      <div class="step-number">6</div>
+      <div class="step-header">
+        <div class="step-icon" style="background: #3a2a1a;">&#x1F4C7;</div>
+        <div class="step-title">Create GHL Contact + Opportunity</div>
+      </div>
+      <div class="step-desc">
+        On positive sentiment: creates or updates a contact in BMN's GHL sub-account (<code>GHL_API_KEY_BNN</code> / <code>GHL_LOCATION_ID_BNN</code>). Creates an opportunity in the <strong>Creator Investment Funnel</strong> pipeline with BMN-specific tags.
+      </div>
+      <div class="step-tags">
+        <span class="tag tag-ghl">BMN GHL Location</span>
+        <span class="tag tag-ghl">Creator Investment Funnel</span>
+        <span class="tag tag-ghl">Contact + Opportunity</span>
+        <span class="tag tag-ghl">BMN Tags</span>
+      </div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+
+    <div class="step">
+      <div class="step-number">7</div>
+      <div class="step-header">
+        <div class="step-icon" style="background: #3a1a1a;">&#x1F4F1;</div>
+        <div class="step-title">SMS Alert to Ryan McFarland</div>
+      </div>
+      <div class="step-desc">
+        Hot lead alert sent to <strong>Ryan McFarland</strong> (BMN operator) via SMS. Includes lead name, email, and sentiment summary. Routed by <code>OPERATOR_MAP</code> &mdash; never sent to Colby (GPC).
+      </div>
+      <div class="step-tags">
+        <span class="tag tag-alert">SMS Alert</span>
+        <span class="tag tag-alert">Ryan McFarland</span>
+      </div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+    <div class="connector-dot"></div>
+  </div>
+
+  <!-- ═══════ STEP 6: CONVERSION ═══════ -->
+  <div class="phase">
+    <div class="phase-label"><span>Step 6 &mdash; Conversion</span></div>
+
+    <div class="decision-box">
+      <div class="label">Conversion Path</div>
+      <div class="question">Lead wants to move forward &mdash; which path?</div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+
+    <div class="branch-container">
+      <div class="branch">
+        <div class="branch-label positive">Book a Call</div>
+        <div class="branch-desc">
+          Claude offers available slots from BMN's GHL calendar.<br><br>
+          Lead confirms &rarr; appointment created in GHL.<br><br>
+          Opportunity moves to <strong>"Meeting Scheduled"</strong> stage.
+        </div>
+        <div style="margin-top: 10px;">
+          <span class="tag tag-ghl">BMN Calendar</span>
+          <span class="tag tag-ghl">GHL Appointment</span>
+        </div>
+      </div>
+      <div class="branch">
+        <div class="branch-label positive">Brand Build</div>
+        <div class="branch-desc">
+          Lead wants to start the brand build process directly.<br><br>
+          Brand Builder application sent.<br><br>
+          Opportunity moves to <strong>"Brand Build"</strong> stage.
+        </div>
+        <div style="margin-top: 10px;">
+          <span class="tag tag-ghl">Brand Builder App</span>
+          <span class="tag tag-action">Pipeline Update</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+
+    <div class="step">
+      <div class="step-number">8</div>
+      <div class="step-header">
+        <div class="step-icon" style="background: #1a3a4a;">&#x1F504;</div>
+        <div class="step-title">Warm Nurture (Stalled Threads)</div>
+      </div>
+      <div class="step-desc">
+        If the conversation stalls (no reply 3&ndash;7 days), Claude generates contextual follow-up nudges to keep the lead warm. Continues until the lead books, converts, or opts out.
+      </div>
+      <div class="step-tags">
+        <span class="tag tag-ai">Claude Follow-Up</span>
+        <span class="tag tag-instantly">Instantly Send</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background: #1AE7F6;"></div> Instantly</div>
+    <div class="legend-item"><div class="legend-dot" style="background: #C084FC;"></div> Claude AI</div>
+    <div class="legend-item"><div class="legend-dot" style="background: #86EFAC;"></div> Action</div>
+    <div class="legend-item"><div class="legend-dot" style="background: #FCD34D;"></div> GoHighLevel</div>
+    <div class="legend-item"><div class="legend-dot" style="background: #FCA5A5;"></div> Alert</div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Brand Me Now (company_id=2) &middot; Fully isolated from Granite Park Capital (company_id=1) &middot; No enrichment &middot; No scoring &middot; Generated 2026-03-20
+</div>
+
+</body>
+</html>

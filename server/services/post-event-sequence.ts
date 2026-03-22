@@ -5,6 +5,19 @@ import Anthropic from '@anthropic-ai/sdk';
 import fs from 'fs';
 import path from 'path';
 
+// ═══════════════════════════════════════════════════════════════
+// GPC-ONLY MODULE — Granite Park Capital (company_id = 1)
+//
+// This entire module is specific to Granite Park Capital's
+// post-event follow-up sequences (yacht events, investor dinners).
+// All templates, signatures, links, and pipeline IDs are GPC-branded.
+//
+// DO NOT use this module for Brand Me Now (company_id = 2) or any
+// other company. BMN will need its own event sequence module with
+// creator-specific language and flows if/when needed.
+// ═══════════════════════════════════════════════════════════════
+const GPC_COMPANY_ID = 1;
+
 // ── Types ────────────────────────────────────────────────────
 
 interface SequenceStep {
@@ -407,7 +420,7 @@ const COLBY_CONTACT_ID = 'cIHEhSgoSQdFZJ9A8cnY'; // Colby's GHL contact ID
 const COLBY_PHONE = '+15083973792';
 
 async function notifyColby(message: string): Promise<void> {
-  const ghl = ghlService.getClient(1); // Grand Park Capital
+  const ghl = ghlService.getClient(GPC_COMPANY_ID); // Granite Park Capital
   if (!ghl) { console.error('[Sequence] No GHL client for notifications'); return; }
 
   try {
@@ -437,7 +450,7 @@ export class PostEventSequence {
 
   // Enroll contacts matching tags, excluding test contacts and specified stages
   async enrollContacts(): Promise<EnrolledContact[]> {
-    const ghl = ghlService.getClient(1);
+    const ghl = ghlService.getClient(GPC_COMPANY_ID);
     if (!ghl) throw new Error('GHL client not available');
 
     // Fetch contacts with the event tag
@@ -502,7 +515,7 @@ export class PostEventSequence {
     const state = loadState(this.config.id);
     if (!state) { console.log(`[Sequence:${this.config.id}] No state found`); return { sent: 0, errors: 0 }; }
 
-    const ghl = ghlService.getClient(1);
+    const ghl = ghlService.getClient(GPC_COMPANY_ID);
     if (!ghl) { console.error('[Sequence] No GHL client'); return { sent: 0, errors: 0 }; }
 
     const now = new Date();
@@ -585,7 +598,7 @@ export class PostEventSequence {
     const state = loadState(this.config.id);
     if (!state) return;
 
-    const ghl = ghlService.getClient(1);
+    const ghl = ghlService.getClient(GPC_COMPANY_ID);
     if (!ghl) return;
 
     for (const contact of state.contacts) {
@@ -728,14 +741,19 @@ export function createYachtEventSequence(): PostEventSequence {
 
 // ── Factory: Create Sequence for ANY Future Event ────────────
 
+/** GPC-only factory. Throws if called for a non-GPC company. */
 export function createEventSequence(params: {
   eventId: string;
   eventName: string;
   eventDate: string;
   tag: string;
+  companyId?: number;
   deckLink?: string;
   bookingLink?: string;
 }): PostEventSequence {
+  if (params.companyId && params.companyId !== GPC_COMPANY_ID) {
+    throw new Error(`[PostEventSequence] This module is GPC-only (company_id=${GPC_COMPANY_ID}). Cannot create sequence for company_id=${params.companyId}.`);
+  }
   const steps = buildEventSequence(
     params.eventName,
     params.deckLink || DECK_LINK,

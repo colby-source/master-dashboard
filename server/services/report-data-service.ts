@@ -44,18 +44,20 @@ export interface ReportData {
   summary: string;
 }
 
-const META_PIPELINE_ID = 'iJ5eS6fANsGVejDo6ubW';
-const GPC_COMPANY_ID = 1;
+// Per-company Meta pipeline IDs — loaded from company_pipelines table at runtime
+const META_PIPELINE_IDS: Record<number, string> = {
+  1: 'iJ5eS6fANsGVejDo6ubW', // GPC Meta pipeline
+};
 
 class ReportDataService {
 
-  async gatherReportData(type: 'morning' | 'evening'): Promise<ReportData> {
+  async gatherReportData(type: 'morning' | 'evening', companyId: number = 1): Promise<ReportData> {
     const targetDate = type === 'morning'
       ? this.getYesterdayDate()
       : this.getTodayDate();
 
     const [ghl, meta, enrichment] = await Promise.allSettled([
-      this.fetchGhlData(targetDate),
+      this.fetchGhlData(targetDate, companyId),
       this.fetchMetaData(type),
       this.fetchEnrichmentData(targetDate),
     ]);
@@ -76,8 +78,8 @@ class ReportDataService {
     };
   }
 
-  private async fetchGhlData(targetDate: string): Promise<GhlData> {
-    const client = ghlService.getClient(GPC_COMPANY_ID);
+  private async fetchGhlData(targetDate: string, companyId: number = 1): Promise<GhlData> {
+    const client = ghlService.getClient(companyId);
     if (!client) return this.emptyGhl();
 
     // Search for meta-lead tagged contacts
@@ -96,7 +98,7 @@ class ReportDataService {
       return {
         name: [c.firstName, c.lastName].filter(Boolean).join(' ') || 'Unknown',
         email: c.email || '',
-        investorType: this.extractInvestorType(tags),
+        investorType: this.extractLeadType(tags),
         grade,
         stage: '', // will be enriched from opportunities
         dateAdded: c.dateAdded || c.createdAt || '',
@@ -104,7 +106,8 @@ class ReportDataService {
     });
 
     // Get pipeline opportunities for stage data
-    const oppResult = await client.getOpportunities(META_PIPELINE_ID, 100);
+    const metaPipelineId = META_PIPELINE_IDS[companyId];
+    const oppResult = metaPipelineId ? await client.getOpportunities(metaPipelineId, 100) : null;
     const opportunities = oppResult?.opportunities || [];
 
     // Map contact stages from pipeline
@@ -203,12 +206,17 @@ class ReportDataService {
     return 'Ungraded';
   }
 
-  private extractInvestorType(tags: string[]): string {
+  private extractLeadType(tags: string[]): string {
     for (const tag of tags) {
       const t = tag.toLowerCase();
+      // GPC investor types
       if (t.includes('accredited')) return 'Accredited';
       if (t.includes('qualified')) return 'Qualified Purchaser';
       if (t.includes('institutional')) return 'Institutional';
+      // BMN creator types
+      if (t.includes('influencer')) return 'Influencer';
+      if (t.includes('agency')) return 'Agency';
+      if (t.includes('creator')) return 'Creator';
     }
     return 'Unknown';
   }

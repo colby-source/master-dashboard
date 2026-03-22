@@ -47,6 +47,7 @@ export function CommandPalette() {
     n: '/analytics',
     s: '/settings',
     r: '/reports',
+    i: '/ad-intelligence',
   };
 
   // Keyboard shortcut + chord navigation
@@ -170,6 +171,7 @@ export function CommandPalette() {
       { id: 'nav-discoveries', label: 'AI Discoveries', sublabel: '', icon: Compass, path: '/discoveries' },
       { id: 'nav-competitors', label: 'Competitors', sublabel: '', icon: Radar, path: '/competitors' },
       { id: 'nav-scraping', label: 'Scraping', sublabel: '', icon: Globe, path: '/scraping' },
+      { id: 'nav-ad-intelligence', label: 'Ad Intelligence', sublabel: 'g i', icon: Compass, path: '/ad-intelligence' },
       { id: 'nav-meta', label: 'Meta Ads', sublabel: '', icon: Megaphone, path: '/meta-ads' },
       { id: 'nav-linkedin', label: 'LinkedIn', sublabel: '', icon: Linkedin, path: '/linkedin' },
       { id: 'nav-instagram', label: 'Instagram', sublabel: '', icon: Instagram, path: '/instagram' },

@@ -639,27 +639,32 @@ interface WarmupRampConfig {
   rampSchedule: { minAgeDays: number; dailyLimit: number }[];
 }
 
-const WARMUP_RAMP_CONFIGS: WarmupRampConfig[] = [
-  {
-    campaignId: 'c5ad2979-086b-4a9a-89f2-e7766b7023de', // GPF-II RE (Warm)
-    accounts: [
-      'colby@graniteparkcapitalfund.com', 'ryan@graniteparkcapitalfund.com',
-      'colby@granitehousingpartners.com', 'ryan@granitehousingpartners.com',
-      'colby@granite-park-fund.com', 'ryan@granite-park-fund.com',
-      'colby@granitehousingfund.com', 'ryan@granitehousingfund.com',
-    ],
-    rampSchedule: [
-      { minAgeDays: 14, dailyLimit: 10 },
-      { minAgeDays: 21, dailyLimit: 15 },
-      { minAgeDays: 28, dailyLimit: 20 },
-    ],
-  },
-];
+// Warmup ramp configs — loaded from DB at runtime, with hardcoded fallback for GPC
+function getWarmupRampConfigs(): WarmupRampConfig[] {
+  // TODO: Move to DB table (instantly_warmup_configs) for full multi-tenancy
+  // For now, return known configs — add new companies here as they onboard
+  return [
+    {
+      campaignId: 'c5ad2979-086b-4a9a-89f2-e7766b7023de', // GPC — GPF-II RE (Warm)
+      accounts: [
+        'colby@graniteparkcapitalfund.com', 'ryan@graniteparkcapitalfund.com',
+        'colby@granitehousingpartners.com', 'ryan@granitehousingpartners.com',
+        'colby@granite-park-fund.com', 'ryan@granite-park-fund.com',
+        'colby@granitehousingfund.com', 'ryan@granitehousingfund.com',
+      ],
+      rampSchedule: [
+        { minAgeDays: 14, dailyLimit: 10 },
+        { minAgeDays: 21, dailyLimit: 15 },
+        { minAgeDays: 28, dailyLimit: 20 },
+      ],
+    },
+  ];
+}
 
 async function checkWarmupRampSchedule(): Promise<AuditCheck[]> {
   const checks: AuditCheck[] = [];
 
-  for (const cfg of WARMUP_RAMP_CONFIGS) {
+  for (const cfg of getWarmupRampConfigs()) {
     try {
       // Get warmup age from the first account as reference
       const refAccount = await instantlyService.getAccount(cfg.accounts[0]);

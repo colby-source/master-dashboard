@@ -25,7 +25,7 @@ yachtCheckinPageRouter.get('/:code', (req, res) => {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-  <title>Check In — Granite Park Capital</title>
+  <title>Event Check In</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@300;400;500;600&display=swap');
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -584,7 +584,7 @@ yachtCheckinRouter.post('/:code', async (req, res) => {
  * After check-in: tag in GHL, find/move in opportunity, start appropriate sequence.
  */
 async function processCheckinAsync(event: any, attendee: any): Promise<void> {
-  const companyId = 1; // Grand Park Capital
+  const companyId = 1; // Granite Park Capital
   const ghlClient = ghlService.getClient(companyId);
   if (!ghlClient) return;
 
@@ -951,7 +951,7 @@ yachtEventsRouter.post('/:id/import-ghl', async (req, res) => {
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     const tag = req.body.tag || 'approved for event';
-    const companyId = req.body.companyId || 1; // Default to Grand Park Capital
+    const companyId = req.body.companyId || 1; // Default to Granite Park Capital
 
     const ghlClient = ghlService.getClient(companyId);
     if (!ghlClient) {

@@ -16,8 +16,8 @@ export const config = {
   instantlyBaseUrl: 'https://api.instantly.ai/api/v2',
   ghlBaseUrl: env('GHL_BASE_URL', 'https://services.leadconnectorhq.com'),
   ghlLocations: [
-    { name: 'Grand Park Capital', companyId: 1, apiKey: env('GHL_API_KEY'), locationId: env('GHL_LOCATION_ID') },
-    { name: 'Brand New Now', companyId: 2, apiKey: env('GHL_API_KEY_BNN'), locationId: env('GHL_LOCATION_ID_BNN') },
+    { name: 'Granite Park Capital', companyId: 1, apiKey: env('GHL_API_KEY'), locationId: env('GHL_LOCATION_ID') },
+    { name: 'Brand Me Now', companyId: 2, apiKey: env('GHL_API_KEY_BNN'), locationId: env('GHL_LOCATION_ID_BNN') },
     { name: 'Tikkun', companyId: 4, apiKey: env('GHL_API_KEY_TIKKUN'), locationId: env('GHL_LOCATION_ID_TIKKUN') },
   ],
   openclawEnabled: env('OPENCLAW_ENABLED', 'true') === 'true',
@@ -27,6 +27,7 @@ export const config = {
   metaDeveloperKey: env('META_DEVELOPER_KEY'),
   metaAdAccountId: env('META_AD_ACCOUNT_ID'),
   anthropicApiKey: env('ANTHROPIC_API_KEY'),
+  geminiApiKey: env('GEMINI_API_KEY'),
   apifyApiKey: env('APIFY_API_KEY'),
   apifyBaseUrl: 'https://api.apify.com/v2',
   whatsappAccessToken: env('WHATSAPP_ACCESS_TOKEN'),
@@ -63,23 +64,40 @@ export const config = {
   enrichmentAutoEnabled: env('ENRICHMENT_AUTO_ENABLED', 'true') === 'true',
   enrichmentStaleDays: parseInt(env('ENRICHMENT_STALE_DAYS', '90')),
 
-  // Meeting scheduling (uses GHL calendars for availability)
+  // Meeting scheduling — per-company calendar configs
   meetings: {
-    meetingDays: [3, 4, 5], // Wednesday=3, Thursday=4, Friday=5
-    meetingStartHour: 9,
-    meetingEndHour: 17,
+    calendarId: 'HiJ2M2Xnf0ZRbGCFCAgs', // Default (GPC) calendar
+    meetingDays: [2, 3, 4], // Tuesday=2, Wednesday=3, Thursday=4
+    meetingStartHour: 11,
+    meetingEndHour: 16,
     meetingDurationMinutes: 30,
     timezone: 'America/New_York',
     lookAheadWeeks: 2,
   },
+  meetingsByCompany: {
+    1: { calendarId: 'HiJ2M2Xnf0ZRbGCFCAgs' }, // Granite Park Capital
+    2: { calendarId: env('GHL_CALENDAR_ID_BMN', '') }, // Brand Me Now
+  } as Record<number, { calendarId: string }>,
 
-  // Post-meeting follow-up
+  // Post-meeting follow-up — per-company configs
   postMeeting: {
     dataRoomUrl: env('DATA_ROOM_URL', ''),
     followUpDelayHours: parseInt(env('POST_MEETING_FOLLOWUP_DELAY_HOURS', '4')),
     minimumInvestment: 250000,
     fromEmail: env('POST_MEETING_FROM_EMAIL', 'marc@granitepark.co'),
   },
+  postMeetingByCompany: {
+    1: { fromEmail: env('POST_MEETING_FROM_EMAIL', 'marc@granitepark.co'), dataRoomUrl: env('DATA_ROOM_URL', '') },
+    2: { fromEmail: env('POST_MEETING_FROM_EMAIL_BMN', ''), dataRoomUrl: env('DATA_ROOM_URL_BMN', '') },
+  } as Record<number, { fromEmail: string; dataRoomUrl: string }>,
+
+  // Telegram notifications
+  telegramBotToken: env('TELEGRAM_BOT_TOKEN'),
+  telegramChatId: env('TELEGRAM_CHAT_ID'),             // Colby's chat ID
+  telegramChatIdByCompany: {
+    1: env('TELEGRAM_CHAT_ID', ''),                      // GPC → Colby
+    2: env('TELEGRAM_CHAT_ID_BMN', ''),                  // BMN → Ryan (or fallback to Colby)
+  } as Record<number, string>,
 
   // Daily Reports
   report: {
@@ -87,4 +105,14 @@ export const config = {
     recipients: env('REPORT_RECIPIENTS', '').split(',').filter(Boolean),
     fromEmail: env('REPORT_FROM_EMAIL', 'colby@granitepark.co'),
   },
+  reportByCompany: {
+    1: {
+      fromEmail: env('REPORT_FROM_EMAIL', 'colby@granitepark.co'),
+      recipients: env('REPORT_RECIPIENTS', '').split(',').filter(Boolean),
+    },
+    2: {
+      fromEmail: env('REPORT_FROM_EMAIL_BMN', ''),
+      recipients: env('REPORT_RECIPIENTS_BMN', '').split(',').filter(Boolean),
+    },
+  } as Record<number, { fromEmail: string; recipients: string[] }>,
 };

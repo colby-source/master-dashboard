@@ -4,7 +4,7 @@ import { instantlyService } from '../instantly-service';
 import { ghlService } from '../ghl-service';
 import { wsServer } from '../../websocket/ws-server';
 import { getAvailableSlots, formatSlotsForMessage, bookMeeting } from '../meeting-scheduler';
-import { EnrichmentLead, CompanyPlaybook, ReplyThread, HandleReplyResult } from './types';
+import { EnrichmentLead, CompanyPlaybook, ReplyThread, HandleReplyResult, InstantlySentiment } from './types';
 import { getCompanyConfig, logEvent, updateLead } from './helpers';
 import { getActiveCtaVariant, recordOutcome } from './ab-testing';
 import { createColdEmailOpportunity, loseOpportunity } from './opportunity-pipeline';
@@ -16,13 +16,15 @@ export async function handleReply(
     instantlyEmailId?: string;
     campaignId?: string;
     eaccount?: string;
+    /** Pre-classified sentiment from Instantly AI Reply Agent — skips Claude sentiment analysis */
+    preClassifiedSentiment?: InstantlySentiment;
   },
   deps: {
     processLead: (leadId: number) => Promise<boolean>;
     excludeFromColdEmail: (leadId: number, reason?: string) => void;
   }
 ): Promise<HandleReplyResult> {
-  const { email, replyText, instantlyEmailId, campaignId, eaccount } = params;
+  const { email, replyText, instantlyEmailId, campaignId, eaccount, preClassifiedSentiment } = params;
 
   // 1. Find enrichment lead by email
   const lead = queryOne(
@@ -40,13 +42,36 @@ export async function handleReply(
     return { action: 'skipped', reason: 'auto_reply_disabled' };
   }
 
-  // 3. Analyze sentiment
+  // 3. Analyze sentiment — skip Claude call if Instantly already classified it
   let sentiment: Awaited<ReturnType<typeof claudeService.analyzeReplySentiment>>;
-  try {
-    sentiment = await claudeService.analyzeReplySentiment(replyText);
-  } catch (err: any) {
-    console.error('[AutoReply] Sentiment analysis failed:', err.message);
-    return { action: 'skipped', reason: 'sentiment_analysis_failed' };
+  if (preClassifiedSentiment) {
+    // Map Instantly labels → our internal sentiment format
+    const instantlyToInternal: Record<string, string> = {
+      ooo: 'out_of_office',
+      not_interested: 'not_interested',
+      unsubscribe: 'unsubscribe',
+      bounce: 'not_interested',
+      interested: 'interested',
+      question: 'question',
+      meeting_request: 'meeting_request',
+      positive: 'interested',
+      neutral: 'neutral',
+    };
+    const mappedSentiment = instantlyToInternal[preClassifiedSentiment] || preClassifiedSentiment;
+    sentiment = {
+      sentiment: mappedSentiment,
+      confidence: 0.85,
+      suggestedAction: mappedSentiment === 'interested' ? 'reply' : mappedSentiment === 'not_interested' ? 'exclude' : 'monitor',
+      ghlPipelineStage: mappedSentiment === 'interested' ? 'new_reply' : '',
+    } as Awaited<ReturnType<typeof claudeService.analyzeReplySentiment>>;
+    console.log(`[AutoReply] Using Instantly pre-classified sentiment: ${preClassifiedSentiment} → ${sentiment.sentiment}`);
+  } else {
+    try {
+      sentiment = await claudeService.analyzeReplySentiment(replyText);
+    } catch (err: any) {
+      console.error('[AutoReply] Sentiment analysis failed:', err.message);
+      return { action: 'skipped', reason: 'sentiment_analysis_failed' };
+    }
   }
 
   // 3b. Evaluate hot lead alert (fire-and-forget, don't block reply flow)
@@ -137,7 +162,9 @@ export async function handleReply(
 
     if (thread) {
       // Schedule a gentle follow-up for after their return
-      const reEngageBody = `Hi ${lead.first_name || 'there'} — hope you had a great time away. I wanted to circle back on my earlier note about Granite Park Capital. Would love to find 15 minutes to connect when your schedule allows.`;
+      const reEngagePlaybook = getPlaybook(lead.company_id);
+      const reEngageCompany = reEngagePlaybook?.company_name || 'our team';
+      const reEngageBody = `Hi ${lead.first_name || 'there'} — hope you had a great time away. I wanted to circle back on my earlier note about ${reEngageCompany}. Would love to find 15 minutes to connect when your schedule allows.`;
       runSql(
         `INSERT INTO reply_messages (thread_id, direction, body, sentiment, generated_by, strategy, scheduled_at, sent) VALUES (?, 'outbound', ?, 'ooo_followup', 'system', 'OOO re-engagement after return date', ?, 0)`,
         [thread.id, reEngageBody, reEngageAt.toISOString()]
@@ -163,12 +190,15 @@ export async function handleReply(
     return { action: 'skipped', reason: 'sentiment_not_eligible', sentiment: sentiment.sentiment };
   }
 
-  // 5. If lead not enriched, trigger enrichment first
+  // 5. If lead not enriched, trigger enrichment in background but don't block reply flow
   if (!lead.enrichment_data || lead.status === 'pending') {
-    deps.processLead(lead.id).catch(err => {
-      console.error(`[AutoReply] processLead(${lead.id}) error:`, err.message);
-    });
-    return { action: 'enriching', sentiment: sentiment.sentiment };
+    if (cfg?.auto_enrich) {
+      // Kick off enrichment in background — don't block the reply
+      deps.processLead(lead.id).catch(err => {
+        console.error(`[AutoReply] processLead(${lead.id}) error:`, err.message);
+      });
+    }
+    console.log(`[AutoReply] Lead ${lead.id} not enriched — proceeding with reply (enrichment ${cfg?.auto_enrich ? 'triggered in background' : 'not configured'})`);
   }
 
   // 6. Find or create reply thread
@@ -242,8 +272,9 @@ export async function handleReply(
     const leadLocation = (enrichmentData.location || enrichmentData.location_name || enrichmentData.city || '').toLowerCase();
     const isMiamiArea = /miami|fort lauderdale|ft\. lauderdale|boca raton|palm beach|coral gables|doral|aventura|hollywood, fl|broward|dade/.test(leadLocation);
 
-    if (isMiamiArea) {
-      // Miami-area leads: offer yacht mixer invitation
+    // Yacht event invitations are GPC-ONLY (company_id=1)
+    if (isMiamiArea && lead.company_id === 1) {
+      // GPC Miami-area leads: offer yacht mixer invitation
       try {
         const upcomingEvent = queryOne(
           `SELECT id, name, event_date, location, yacht_name FROM yacht_events WHERE status = 'upcoming' AND event_date >= date('now') ORDER BY event_date ASC LIMIT 1`,
@@ -262,7 +293,7 @@ export async function handleReply(
         await injectMeetingSlots(lead.company_id, conversationGoals);
       }
     } else {
-      // Non-Miami leads: standard 1-on-1 meeting scheduling
+      // Non-Miami leads OR non-GPC companies: standard 1-on-1 meeting scheduling
       await injectMeetingSlots(lead.company_id, conversationGoals);
     }
   }

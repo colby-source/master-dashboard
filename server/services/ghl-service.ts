@@ -225,8 +225,10 @@ class GhlLocationClient {
 
   async createOpportunity(data: { pipelineId: string; stageId: string; contactId: string; name: string; monetaryValue?: number; status?: string }): Promise<any> {
     try {
+      const { stageId, ...rest } = data;
       const { data: resp } = await this.client.post('/opportunities/', {
-        ...data,
+        ...rest,
+        pipelineStageId: stageId,
         locationId: this.location.locationId,
         status: data.status || 'open',
       });
@@ -262,7 +264,7 @@ class GhlLocationClient {
 
   async updateOpportunityStage(opportunityId: string, stageId: string): Promise<any> {
     try {
-      const { data } = await this.client.put(`/opportunities/${opportunityId}`, { stageId });
+      const { data } = await this.client.put(`/opportunities/${opportunityId}`, { pipelineStageId: stageId });
       this.ok();
       return data?.opportunity || data;
     } catch (err: any) {
@@ -422,8 +424,11 @@ class GhlLocationClient {
 
   async getFreeSlots(calendarId: string, startDate: string, endDate: string, timezone = 'America/New_York'): Promise<any> {
     try {
+      // GHL free-slots API requires epoch milliseconds, not ISO strings
+      const startMs = new Date(startDate).getTime();
+      const endMs = new Date(endDate).getTime();
       const { data } = await this.client.get(`/calendars/${calendarId}/free-slots`, {
-        params: { startDate, endDate, timezone },
+        params: { startDate: startMs, endDate: endMs, timezone },
       });
       this.ok();
       return data;
@@ -449,7 +454,7 @@ class GhlLocationClient {
         contactId: params.contactId,
         startTime: params.startTime,
         endTime: params.endTime,
-        title: params.title || '1-on-1 Meeting — Granite Park Capital',
+        title: params.title || '1-on-1 Meeting',
         notes: params.notes || '',
         appointmentStatus: params.appointmentStatus || 'confirmed',
       });

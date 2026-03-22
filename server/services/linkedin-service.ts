@@ -16,7 +16,7 @@ const ACTORS = {
   searchScraper: 'curious_coder/linkedin-search-scraper',
   postScraper: 'curious_coder/linkedin-post-scraper',
   jobScraper: 'helloworlds/linkedin-jobs-scraper',
-  salesNavScraper: 'anchor/linkedin-sales-navigator-scraper',
+  salesNavScraper: 'curious_coder/linkedin-sales-navigator-search-scraper',
 };
 
 class LinkedInService {
@@ -89,6 +89,58 @@ class LinkedInService {
       title: p.headline || p.title || p.currentCompany?.title || '',
       linkedInUrl: p.url || p.linkedInUrl || p.profileUrl || '',
       location: p.location || p.addressLocality || '',
+    })).filter(l => l.firstName || l.lastName);
+  }
+
+  // ── Sales Navigator Search ────────────────────────────────
+
+  async searchSalesNavigator(searchUrl: string, opts?: {
+    maxPages?: number;
+    scrapingMode?: 'Short' | 'Full' | 'Full + email search';
+  }): Promise<any> {
+    const cookie = config.linkedinLiAtCookie;
+    if (!cookie) throw new Error('LINKEDIN_LI_AT cookie not configured');
+
+    return apifyService.runActor(ACTORS.salesNavScraper, {
+      cookie,
+      searchUrl,
+      searchType: 'People/Lead',
+      pageLimit: opts?.maxPages ?? 100,
+      scrapingMode: opts?.scrapingMode ?? 'Short',
+    });
+  }
+
+  async searchSalesNavigatorSync(searchUrl: string, opts?: {
+    maxPages?: number;
+    scrapingMode?: 'Short' | 'Full' | 'Full + email search';
+  }): Promise<any> {
+    const cookie = config.linkedinLiAtCookie;
+    if (!cookie) throw new Error('LINKEDIN_LI_AT cookie not configured');
+
+    return apifyService.runActorSync(ACTORS.salesNavScraper, {
+      cookie,
+      searchUrl,
+      searchType: 'People/Lead',
+      pageLimit: opts?.maxPages ?? 100,
+      scrapingMode: opts?.scrapingMode ?? 'Short',
+    }, { timeout: 600 });
+  }
+
+  formatSalesNavAsLeads(results: any[]): Array<{
+    firstName: string;
+    lastName: string;
+    company: string;
+    title: string;
+    linkedInUrl: string;
+    location: string;
+  }> {
+    return results.map((p: any) => ({
+      firstName: p.firstName || p.first_name || '',
+      lastName: p.lastName || p.last_name || '',
+      company: p.companyName || p.company || p.currentCompany || '',
+      title: p.jobTitle || p.title || p.headline || '',
+      linkedInUrl: p.publicUrl || p.profileUrl || p.salesNavigatorUrl || p.url || p.linkedInUrl || '',
+      location: p.location || p.geo || '',
     })).filter(l => l.firstName || l.lastName);
   }
 

@@ -103,6 +103,8 @@ export interface CompanyPipeline {
 export interface CompanyPlaybook {
   id: number;
   company_id: number;
+  company_name: string;
+  sender_name: string;
   company_description: string;
   value_propositions: string;
   target_icp: string;
@@ -113,6 +115,7 @@ export interface CompanyPlaybook {
   do_not_mention: string | null;
   booking_url: string | null;
   max_auto_replies: number;
+  compliance_rules: string | null;
 }
 
 export interface ReplyThread {
@@ -132,9 +135,21 @@ export interface ReplyThread {
 }
 
 export interface HandleReplyResult {
-  action: 'auto_replied' | 'escalated' | 'skipped' | 'enriching' | 'ooo_reengagement_scheduled';
+  action: 'auto_replied' | 'escalated' | 'skipped' | 'enriching' | 'ooo_reengagement_scheduled' | 'instantly_handled';
   replyText?: string;
   reason?: string;
   threadId?: number;
   sentiment?: string;
 }
+
+/** Sentiment pre-classified by Instantly AI Reply Agent */
+export type InstantlySentiment =
+  | 'ooo'           // Out of office
+  | 'not_interested' // Negative / unsubscribe
+  | 'unsubscribe'
+  | 'bounce'
+  | 'interested'     // Warm+ → route to Claude
+  | 'question'
+  | 'meeting_request'
+  | 'positive'       // Generic positive
+  | 'neutral';

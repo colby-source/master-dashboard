@@ -17,7 +17,7 @@ export function renderReportHtml(data: ReportData): string {
         <!-- Header -->
         <tr>
           <td style="background:linear-gradient(135deg,#1a1a2e,#16213e);padding:32px 40px;text-align:center;">
-            <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:600;">Granite Park Capital</h1>
+            <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:600;">Master Dashboard</h1>
             <p style="margin:8px 0 0;color:#a0aec0;font-size:14px;">Daily Meta Lead Report — ${typeLabel}</p>
             <p style="margin:4px 0 0;color:#718096;font-size:13px;">${dateLabel}</p>
           </td>
@@ -38,7 +38,7 @@ export function renderReportHtml(data: ReportData): string {
         <tr>
           <td style="padding:24px 40px;background:#f7fafc;border-top:1px solid #e2e8f0;text-align:center;">
             <a href="http://localhost:5173/reports" style="display:inline-block;padding:10px 24px;background:#4299e1;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:500;">View Full Dashboard</a>
-            <p style="margin:16px 0 0;color:#a0aec0;font-size:12px;">Granite Park Capital — Automated Report</p>
+            <p style="margin:16px 0 0;color:#a0aec0;font-size:12px;">Master Dashboard — Automated Report</p>
           </td>
         </tr>
 

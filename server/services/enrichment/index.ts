@@ -37,6 +37,7 @@ import {
   bulkProcessImport,
   advanceLeadStage,
   fastTrackEventAttendees,
+  migrateCampaignWithPersonalization,
 } from './pipeline';
 
 // ── Re-export types ─────────────────────────────────────────
@@ -84,6 +85,7 @@ export {
   bulkProcessImport,
   advanceLeadStage,
   fastTrackEventAttendees,
+  migrateCampaignWithPersonalization,
   // opportunity-pipeline
   setupColdEmailPipeline,
   getPipelineConfig,
@@ -147,6 +149,7 @@ class EnrichmentService {
     instantlyEmailId?: string;
     campaignId?: string;
     eaccount?: string;
+    preClassifiedSentiment?: import('./types').InstantlySentiment;
   }) {
     return handleReply(params, {
       processLead,
@@ -213,6 +216,10 @@ setInterval(() => {
 import { initSmsNotifications } from '../sms-notifications';
 initSmsNotifications();
 
+// Initialize CMO health monitor (trend-based early warnings — 7:30 AM, 12:30 PM, 5:30 PM ET)
+import { initCmoHealthMonitor } from '../cmo-health-monitor';
+initCmoHealthMonitor();
+
 // Daily LinkedIn outreach at 9:00 AM ET
 import { linkedInService } from '../linkedin-service';
 import { config as appConfig } from '../../config';
@@ -245,26 +252,46 @@ if (appConfig.linkedinAutoSendEnabled) {
 }
 
 // ── Campaign Performance Tracking & Self-Optimization ──────
+// Dynamically track all companies with active campaigns
+import { queryAll as trackerQueryAll } from '../../db';
+
+function getTrackedCampaigns(): Array<{ campaignId: string; companyId: number }> {
+  const rows = trackerQueryAll(
+    `SELECT company_id, target_instantly_campaign_id
+     FROM enrichment_config
+     WHERE target_instantly_campaign_id IS NOT NULL`
+  );
+  return rows.map((r: any) => ({
+    campaignId: r.target_instantly_campaign_id,
+    companyId: r.company_id,
+  }));
+}
+
 // Capture campaign snapshots every 2 hours
 setInterval(() => {
-  // GPF company_id = 1
-  captureCampaignSnapshot('c5ad2979-086b-4a9a-89f2-e7766b7023de', 1).catch((err: any) => {
-    console.error('[CampaignTracker] Snapshot error:', err.message);
-  });
+  for (const { campaignId, companyId } of getTrackedCampaigns()) {
+    captureCampaignSnapshot(campaignId, companyId).catch((err: any) => {
+      console.error('[CampaignTracker] Snapshot error:', err.message);
+    });
+  }
 }, 2 * 60 * 60 * 1000);
 
 // Run optimization cycle every 4 hours (analyze performance, detect winners, generate insights)
 setInterval(() => {
-  runOptimizationCycle(1).catch((err: any) => {
-    console.error('[FeedbackLoop] Optimization cycle error:', err.message);
-  });
+  for (const { companyId } of getTrackedCampaigns()) {
+    runOptimizationCycle(companyId).catch((err: any) => {
+      console.error('[FeedbackLoop] Optimization cycle error:', err.message);
+    });
+  }
 }, 4 * 60 * 60 * 1000);
 
 // Initial snapshot 30 seconds after startup
 setTimeout(() => {
-  captureCampaignSnapshot('c5ad2979-086b-4a9a-89f2-e7766b7023de', 1).catch((err: any) => {
-    console.error('[CampaignTracker] Initial snapshot error:', err.message);
-  });
+  for (const { campaignId, companyId } of getTrackedCampaigns()) {
+    captureCampaignSnapshot(campaignId, companyId).catch((err: any) => {
+      console.error('[CampaignTracker] Initial snapshot error:', err.message);
+    });
+  }
 }, 30000);
 
 console.log('[EmailEngine] Personalization engine active — full Claude-powered email generation enabled');

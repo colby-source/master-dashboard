@@ -38,13 +38,31 @@ class ReportScheduler {
     console.log('[Reports] Scheduler stopped');
   }
 
-  async run(type: 'morning' | 'evening'): Promise<{ id: number; html: string }> {
+  async run(type: 'morning' | 'evening', companyId?: number): Promise<{ id: number; html: string }> {
     const label = type === 'morning' ? 'Morning Recap' : 'Evening Summary';
-    console.log(`[Reports] Generating ${label}...`);
 
-    const data = await reportDataService.gatherReportData(type);
+    // If no companyId specified, run for all companies with recipients configured
+    if (!companyId) {
+      let lastResult = { id: 0, html: '' };
+      for (const [cidStr, companyReport] of Object.entries(config.reportByCompany)) {
+        if (companyReport.recipients.length > 0) {
+          lastResult = await this.run(type, Number(cidStr));
+        }
+      }
+      // Fall back to legacy global recipients if no per-company recipients configured
+      if (lastResult.id === 0 && config.report.recipients.length > 0) {
+        lastResult = await this.run(type, 1);
+      }
+      return lastResult;
+    }
+
+    console.log(`[Reports] Generating ${label} for company ${companyId}...`);
+
+    const data = await reportDataService.gatherReportData(type, companyId);
     const html = renderReportHtml(data);
-    const recipients = config.report.recipients;
+    const companyReport = config.reportByCompany[companyId];
+    const recipients = companyReport?.recipients?.length ? companyReport.recipients : config.report.recipients;
+    const fromEmail = companyReport?.fromEmail || config.report.fromEmail;
     const recipientStr = recipients.join(', ');
 
     // Store report in DB
@@ -61,15 +79,15 @@ class ReportScheduler {
     // Send email
     if (emailService.available && recipients.length > 0) {
       try {
-        const subject = `Granite Park — ${label} (${data.date})`;
-        await emailService.sendMail(recipients, subject, html);
+        const subject = `Dashboard Report — ${label} (${data.date})`;
+        await emailService.sendMail(recipients, subject, html, fromEmail);
 
         runSql(
           `UPDATE daily_reports SET sent_at = datetime('now') WHERE id = ?`,
           [reportId]
         );
         saveDb();
-        console.log(`[Reports] ${label} sent to ${recipientStr}`);
+        console.log(`[Reports] ${label} sent to ${recipientStr} (company ${companyId})`);
       } catch (err: any) {
         const errorMsg = err.message || 'Send failed';
         runSql(

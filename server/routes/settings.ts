@@ -30,7 +30,7 @@ router.get('/health', (_req, res) => {
         description: 'Cold email campaigns and warmup',
       },
       {
-        name: 'GoHighLevel — Grand Park Capital',
+        name: 'GoHighLevel — Granite Park Capital',
         category: 'crm',
         configured: isSet(config.ghlLocations[0]?.apiKey) && isSet(config.ghlLocations[0]?.locationId),
         keys: [
@@ -38,10 +38,10 @@ router.get('/health', (_req, res) => {
           { label: 'Location ID', set: isSet(config.ghlLocations[0]?.locationId) },
         ],
         baseUrl: config.ghlBaseUrl,
-        description: 'CRM, pipelines, contacts for Grand Park Capital',
+        description: 'CRM, pipelines, contacts for Granite Park Capital',
       },
       {
-        name: 'GoHighLevel — Brand New Now',
+        name: 'GoHighLevel — Brand Me Now',
         category: 'crm',
         configured: isSet(config.ghlLocations[1]?.apiKey) && isSet(config.ghlLocations[1]?.locationId),
         keys: [
@@ -49,7 +49,7 @@ router.get('/health', (_req, res) => {
           { label: 'Location ID', set: isSet(config.ghlLocations[1]?.locationId) },
         ],
         baseUrl: config.ghlBaseUrl,
-        description: 'CRM, pipelines, contacts for Brand New Now',
+        description: 'CRM, pipelines, contacts for Brand Me Now',
       },
       {
         name: 'GoHighLevel — Tikkun',
@@ -286,15 +286,27 @@ router.post('/ping/:service', async (req, res) => {
         break;
       }
       case 'ghl': {
-        const loc = config.ghlLocations[0];
-        if (!loc?.apiKey) {
-          result = { ok: false, latencyMs: 0, details: 'API key not configured' };
-          break;
+        // Check all configured GHL locations, not just the first
+        const ghlResults: string[] = [];
+        let allOk = true;
+        for (const loc of config.ghlLocations) {
+          if (!loc.apiKey) {
+            ghlResults.push(`${loc.name}: not configured`);
+            allOk = false;
+            continue;
+          }
+          try {
+            const resp = await fetch(`${config.ghlBaseUrl}/contacts/?locationId=${loc.locationId}&limit=1`, {
+              headers: { Authorization: `Bearer ${loc.apiKey}`, Version: '2021-07-28' },
+            });
+            ghlResults.push(`${loc.name}: ${resp.ok ? 'OK' : `HTTP ${resp.status}`}`);
+            if (!resp.ok) allOk = false;
+          } catch (e: any) {
+            ghlResults.push(`${loc.name}: ${e.message}`);
+            allOk = false;
+          }
         }
-        const resp = await fetch(`${config.ghlBaseUrl}/contacts/?locationId=${loc.locationId}&limit=1`, {
-          headers: { Authorization: `Bearer ${loc.apiKey}`, Version: '2021-07-28' },
-        });
-        result = { ok: resp.ok, latencyMs: Date.now() - start, details: resp.ok ? 'Connected' : `HTTP ${resp.status}` };
+        result = { ok: allOk, latencyMs: Date.now() - start, details: ghlResults.join(' | ') };
         break;
       }
       case 'meta-ads': {

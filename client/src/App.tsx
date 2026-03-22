@@ -38,6 +38,7 @@ import ReportsPage from './pages/ReportsPage'
 import GhlCommandPage from './pages/GhlCommandPage'
 import AbTestingPage from './pages/AbTestingPage'
 import MeetingTranscriptsPage from './pages/MeetingTranscriptsPage'
+import AdIntelligencePage from './pages/AdIntelligencePage'
 
 export default function App() {
   const { companyId, setCompanyId, companies } = useCompanyFilter()
@@ -82,6 +83,7 @@ export default function App() {
               <Route path="ghl" element={<GhlCommandPage />} />
               <Route path="ab-testing" element={<AbTestingPage />} />
               <Route path="meeting-transcripts" element={<MeetingTranscriptsPage />} />
+              <Route path="ad-intelligence" element={<AdIntelligencePage />} />
             </Route>
           </Routes>
         </ErrorBoundary>

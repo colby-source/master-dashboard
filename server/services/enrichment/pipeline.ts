@@ -96,40 +96,6 @@ export async function enrichLead(leadId: number): Promise<boolean> {
       );
     }
 
-    // Fallback: use old providers if Apollo/MV unavailable
-    if (!apolloClient.available && lead.email && pdlClient.available) {
-      wave1.push(
-        pdlClient.enrichPerson(lead.email).then(pdlPerson => {
-          if (pdlPerson) {
-            enrichmentData.pdl_person = pdlPerson;
-            if (!lead.first_name && pdlPerson.first_name) {
-              updateLead(leadId, { first_name: pdlPerson.first_name });
-            }
-            if (!lead.last_name && pdlPerson.last_name) {
-              updateLead(leadId, { last_name: pdlPerson.last_name });
-            }
-          }
-        }).catch(err => { console.warn(`[Enrichment] PDL person failed:`, err.message); })
-      );
-      const domain = lead.email.split('@')[1];
-      if (domain) {
-        wave1.push(
-          pdlClient.enrichCompany(domain).then(pdlCompany => {
-            if (pdlCompany) enrichmentData.pdl_company = pdlCompany;
-          }).catch(err => { console.warn(`[Enrichment] PDL company failed:`, err.message); })
-        );
-      }
-    }
-    if (!millionverifierClient.available && lead.email) {
-      if (hunterClient.available) {
-        wave1.push(
-          hunterClient.verifyEmail(lead.email).then(hunterResult => {
-            if (hunterResult) enrichmentData.hunter_verify = hunterResult;
-          }).catch(err => { console.warn(`[Enrichment] Hunter verify failed:`, err.message); })
-        );
-      }
-    }
-
     await Promise.all(wave1);
 
     // ── Tier 2: LinkedIn scrape (depends on Apollo/PDL for linkedin_url) ──
@@ -502,20 +468,111 @@ export async function pushToGhl(leadId: number): Promise<boolean> {
 
     await ghlClient.addContactTags(contactId, tags);
 
-    // Add enrichment note (prefer Apollo, fall back to PDL)
-    const noteLines: string[] = ['--- Enrichment Data ---'];
-    const noteTitle = apolloPerson?.title || pdlPerson?.job_title;
-    const noteCompany = apolloPerson?.organization_name || pdlPerson?.job_company_name;
-    const noteIndustry = apolloPerson?.organization_industry || pdlPerson?.industry;
-    const noteLocation = apolloPerson?.location || pdlPerson?.location_name;
+    // Add comprehensive enrichment note with all available data
+    const noteLines: string[] = ['═══ ENRICHMENT REPORT ═══', ''];
+
+    // ── Person Info ──
+    const noteTitle = apolloPerson?.title || pdlPerson?.job_title || liProfile?.headline;
+    const noteCompany = apolloPerson?.organization_name || pdlPerson?.job_company_name || apolloOrg?.name;
+    const noteIndustry = apolloPerson?.organization_industry || pdlPerson?.industry || apolloOrg?.industry;
+    const noteLocation = apolloPerson?.location || pdlPerson?.location_name || liProfile?.location;
     const noteLinkedIn = apolloPerson?.linkedin_url || pdlPerson?.linkedin_url;
+
+    noteLines.push('── PERSON ──');
+    if (lead.first_name || lead.last_name) noteLines.push(`Name: ${[lead.first_name, lead.last_name].filter(Boolean).join(' ')}`);
+    if (lead.email) noteLines.push(`Email: ${lead.email}`);
+    if (lead.phone) noteLines.push(`Phone: ${lead.phone}`);
     if (noteTitle) noteLines.push(`Title: ${noteTitle}`);
     if (noteCompany) noteLines.push(`Company: ${noteCompany}`);
     if (noteIndustry) noteLines.push(`Industry: ${noteIndustry}`);
     if (noteLocation) noteLines.push(`Location: ${noteLocation}`);
     if (noteLinkedIn) noteLines.push(`LinkedIn: ${noteLinkedIn}`);
-    if (lead.score !== null) noteLines.push(`Score: ${lead.score}/100 (${lead.score_label || 'unscored'})`);
+
+    // ── Apollo Person Details ──
+    if (apolloPerson) {
+      if (apolloPerson.seniority) noteLines.push(`Seniority: ${apolloPerson.seniority}`);
+      if (apolloPerson.departments?.length) noteLines.push(`Departments: ${apolloPerson.departments.join(', ')}`);
+      if (apolloPerson.employment_history?.length) {
+        noteLines.push(`Experience: ${apolloPerson.employment_history.length} roles`);
+        for (const role of apolloPerson.employment_history.slice(0, 3)) {
+          noteLines.push(`  • ${role.title || 'N/A'} at ${role.organization_name || 'N/A'}${role.start_date ? ` (${role.start_date}${role.end_date ? ' - ' + role.end_date : ' - Present'})` : ''}`);
+        }
+      }
+    }
+
+    // ── Company/Org Data ──
+    if (apolloOrg || pdlCompany) {
+      noteLines.push('', '── COMPANY ──');
+      const orgName = apolloOrg?.name || pdlCompany?.name;
+      const orgWebsite = apolloOrg?.website_url || pdlCompany?.website;
+      const orgSize = apolloOrg?.estimated_num_employees || pdlCompany?.employee_count;
+      const orgFounded = apolloOrg?.founded_year || pdlCompany?.founded;
+      const orgRevenue = apolloOrg?.annual_revenue_printed || pdlCompany?.annual_revenue;
+      const orgDescription = apolloOrg?.short_description || pdlCompany?.description;
+
+      if (orgName) noteLines.push(`Company: ${orgName}`);
+      if (orgWebsite) noteLines.push(`Website: ${orgWebsite}`);
+      if (orgSize) noteLines.push(`Size: ~${orgSize} employees`);
+      if (orgFounded) noteLines.push(`Founded: ${orgFounded}`);
+      if (orgRevenue) noteLines.push(`Revenue: ${orgRevenue}`);
+      if (orgDescription) noteLines.push(`About: ${orgDescription.slice(0, 300)}`);
+    }
+
+    // ── LinkedIn Profile ──
+    if (liProfile) {
+      noteLines.push('', '── LINKEDIN ──');
+      if (liProfile.summary) noteLines.push(`Summary: ${liProfile.summary.slice(0, 500)}`);
+      if (liProfile.connections) noteLines.push(`Connections: ${liProfile.connections}`);
+      if (liProfile.skills?.length) noteLines.push(`Skills: ${liProfile.skills.slice(0, 10).join(', ')}`);
+      if (liProfile.education?.length) {
+        for (const edu of liProfile.education.slice(0, 2)) {
+          noteLines.push(`Education: ${edu.school || edu.schoolName || 'N/A'}${edu.degree ? ' — ' + edu.degree : ''}`);
+        }
+      }
+      if (liProfile.posts?.length) {
+        noteLines.push(`Recent Posts: ${liProfile.posts.length}`);
+        for (const post of liProfile.posts.slice(0, 2)) {
+          const snippet = (post.text || post.content || '').slice(0, 150);
+          if (snippet) noteLines.push(`  • "${snippet}..."`);
+        }
+      }
+    }
+
+    // ── Email Verification ──
+    const mvResult = enrichmentData.email_verify;
+    const hunterResult = enrichmentData.hunter_verify;
+    if (mvResult || hunterResult) {
+      noteLines.push('', '── EMAIL VERIFICATION ──');
+      if (mvResult) {
+        noteLines.push(`MillionVerifier: ${mvResult.quality || mvResult.result || 'checked'}`);
+      }
+      if (hunterResult) {
+        noteLines.push(`Hunter: ${hunterResult.status || 'checked'} (score: ${hunterResult.score || 'N/A'})`);
+      }
+    }
+
+    // ── AI Scoring ──
+    noteLines.push('', '── AI SCORING ──');
+    if (lead.score !== null) noteLines.push(`Score: ${lead.score}/100 (${(lead.score_label || 'unscored').toUpperCase()})`);
     if (lead.score_reasoning) noteLines.push(`Reasoning: ${lead.score_reasoning}`);
+    if (lead.tags) {
+      try {
+        const parsedTags = JSON.parse(lead.tags);
+        if (parsedTags.length) noteLines.push(`Tags: ${parsedTags.join(', ')}`);
+      } catch {}
+    }
+
+    // ── Personalizations ──
+    const personalizations = enrichmentData.personalizations;
+    if (personalizations) {
+      noteLines.push('', '── PERSONALIZATIONS ──');
+      if (personalizations.opener) noteLines.push(`Opener: ${personalizations.opener}`);
+      if (personalizations.painPoint) noteLines.push(`Pain Point: ${personalizations.painPoint}`);
+      if (personalizations.cta) noteLines.push(`CTA: ${personalizations.cta}`);
+    }
+
+    noteLines.push('', `── Source: ${lead.source || 'unknown'} | Enriched: ${new Date().toISOString().slice(0, 10)} ──`);
+
     await ghlClient.createContactNote(contactId, noteLines.join('\n'));
 
     updateLead(leadId, { ghl_push_status: 'pushed', pushed_at: new Date().toISOString() });
@@ -704,9 +761,9 @@ export async function processLead(leadId: number): Promise<boolean> {
   const scored = await scoreLead(leadId);
   if (!scored) return false;
 
-  // Gated deep-enrich: only spend PDL credits on high-value leads (score >= 70)
+  // Gated deep-enrich: only spend PDL credits on high-value leads (score >= 80)
   const scoredLead = queryOne('SELECT score, company_id FROM enrichment_leads WHERE id = ?', [leadId]);
-  if (scoredLead && scoredLead.score >= 70 && pdlClient.available) {
+  if (scoredLead && scoredLead.score >= 80 && pdlClient.available) {
     await deepEnrichWithPdl(leadId);
     // Re-score with deeper data for more accurate classification
     await scoreLead(leadId);
@@ -1143,4 +1200,136 @@ export async function fastTrackEventAttendees(
   });
 
   return { processed, failed };
+}
+
+/**
+ * Migrate all leads from one Instantly campaign to another, generating
+ * Claude-personalized email sequences for each lead along the way.
+ *
+ * Processes in batches to respect rate limits. Emits WebSocket progress updates.
+ */
+export async function migrateCampaignWithPersonalization(
+  fromCampaignId: string,
+  toCampaignId: string,
+  companyId: number,
+  opts?: { batchSize?: number; delayMs?: number },
+): Promise<{ migrated: number; failed: number; skipped: number; total: number }> {
+  const batchSize = opts?.batchSize ?? 10;
+  const delayMs = opts?.delayMs ?? 2000; // 2s between batches to respect Claude rate limits
+
+  // Get all leads currently pushed to the old campaign
+  const leads = queryAll(
+    `SELECT id, email, first_name, last_name, enrichment_data, score, score_label, source
+     FROM enrichment_leads
+     WHERE company_id = ? AND instantly_campaign_id = ? AND instantly_push_status = 'pushed'
+     ORDER BY id ASC`,
+    [companyId, fromCampaignId],
+  );
+
+  const total = leads.length;
+  let migrated = 0;
+  let failed = 0;
+  let skipped = 0;
+
+  console.log(`[Migration] Starting campaign migration: ${total} leads from ${fromCampaignId} → ${toCampaignId}`);
+  wsServer.broadcast({ type: 'migration_started', fromCampaignId, toCampaignId, total });
+
+  for (let i = 0; i < leads.length; i += batchSize) {
+    const batch = leads.slice(i, i + batchSize);
+
+    const batchPromises = batch.map(async (lead) => {
+      try {
+        const enrichmentData = lead.enrichment_data ? JSON.parse(lead.enrichment_data) : {};
+        const personalizations = enrichmentData.personalizations || {};
+        const ap = enrichmentData.apollo_person;
+        const pp = enrichmentData.pdl_person;
+        const ao = enrichmentData.apollo_org;
+        const pc = enrichmentData.pdl_company;
+
+        // Generate personalized email sequence via Claude
+        let emailSequence = null;
+        if (claudeService.available) {
+          try {
+            emailSequence = await generateEmailSequence(lead.id, companyId);
+          } catch (err: any) {
+            console.warn(`[Migration] Email generation failed for lead ${lead.id}: ${err.message}`);
+          }
+        }
+
+        if (!emailSequence || emailSequence.steps.length < 3) {
+          console.warn(`[Migration] Skipping lead ${lead.id} — no personalized sequence generated`);
+          skipped++;
+          return;
+        }
+
+        // Build custom variables with full personalized bodies
+        const customVars = sequenceToCustomVariables(emailSequence, {
+          score: lead.score,
+          score_label: lead.score_label,
+          job_title: ap?.title || pp?.job_title || '',
+          company: ap?.organization_name || pp?.job_company_name || '',
+          industry: ap?.organization_industry || pp?.industry || '',
+          source: lead.source,
+          opener: personalizations.opener || '',
+          pain_point: personalizations.painPoint || '',
+          cta: personalizations.cta || '',
+        });
+
+        // Push to new campaign
+        const result = await instantlyService.addLeadsToCampaign(toCampaignId, [{
+          email: lead.email,
+          first_name: lead.first_name || undefined,
+          last_name: lead.last_name || undefined,
+          company_name: ap?.organization_name || ao?.name || pp?.job_company_name || pc?.name || undefined,
+          custom_variables: customVars,
+        }]);
+
+        if (result) {
+          // Update DB to point to new campaign
+          const updatedData = { ...enrichmentData, generated_email_sequence: emailSequence };
+          updateLead(lead.id, {
+            instantly_campaign_id: toCampaignId,
+            enrichment_data: JSON.stringify(updatedData),
+          });
+          logEvent(lead.id, companyId, 'campaign_migrated', {
+            from: fromCampaignId,
+            to: toCampaignId,
+            personalized: true,
+            strategy: emailSequence.strategy,
+          });
+          migrated++;
+        } else {
+          failed++;
+        }
+      } catch (err: any) {
+        console.error(`[Migration] Lead ${lead.id} error:`, err.message);
+        failed++;
+      }
+    });
+
+    await Promise.all(batchPromises);
+    saveDb();
+
+    // Progress update
+    const progress = Math.min(i + batchSize, total);
+    console.log(`[Migration] Progress: ${progress}/${total} (migrated=${migrated}, failed=${failed}, skipped=${skipped})`);
+    wsServer.broadcast({
+      type: 'migration_progress',
+      progress,
+      total,
+      migrated,
+      failed,
+      skipped,
+    });
+
+    // Rate limit pause between batches
+    if (i + batchSize < leads.length) {
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+
+  console.log(`[Migration] Complete: ${migrated} migrated, ${failed} failed, ${skipped} skipped out of ${total}`);
+  wsServer.broadcast({ type: 'migration_complete', migrated, failed, skipped, total });
+
+  return { migrated, failed, skipped, total };
 }

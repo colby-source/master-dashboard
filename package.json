@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
+    "@google/genai": "^1.46.0",
     "axios": "^1.7.0",
     "chrome-launcher": "^1.2.1",
     "chrome-remote-interface": "^0.34.0",
@@ -25,6 +26,7 @@
     "googleapis": "^171.4.0",
     "localtunnel": "^2.0.2",
     "node-cron": "^4.2.1",
+    "node-telegram-bot-api": "^0.67.0",
     "nodemailer": "^8.0.2",
     "puppeteer-core": "^24.39.1",
     "qrcode": "^1.5.4",
@@ -37,6 +39,7 @@
     "@types/express": "^4.17.21",
     "@types/node": "^20.11.0",
     "@types/node-cron": "^3.0.11",
+    "@types/node-telegram-bot-api": "^0.64.14",
     "@types/nodemailer": "^7.0.11",
     "@types/qrcode": "^1.5.6",
     "@types/ws": "^8.5.10",

@@ -338,6 +338,8 @@ CREATE INDEX IF NOT EXISTS idx_known_contacts_company ON known_contacts(company_
 CREATE TABLE IF NOT EXISTS company_playbooks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     company_id INTEGER NOT NULL UNIQUE REFERENCES companies(id) ON DELETE CASCADE,
+    company_name TEXT NOT NULL DEFAULT '',          -- Short company name for emails/messages
+    sender_name TEXT NOT NULL DEFAULT '',           -- Rep name (e.g. "Ryan", "Colby")
     company_description TEXT NOT NULL,
     value_propositions TEXT NOT NULL,   -- JSON array
     target_icp TEXT NOT NULL,
@@ -347,6 +349,7 @@ CREATE TABLE IF NOT EXISTS company_playbooks (
     escalation_triggers TEXT,           -- JSON array
     sample_responses TEXT,              -- JSON array
     do_not_mention TEXT,                -- JSON array
+    compliance_rules TEXT,              -- Optional compliance rules (e.g. SEC for funds)
     booking_url TEXT,                    -- Calendly/GHL booking link for meeting requests
     max_auto_replies INTEGER DEFAULT 3,
     created_at TEXT DEFAULT (datetime('now')),
@@ -572,3 +575,72 @@ CREATE TABLE IF NOT EXISTS instantly_audits (
     created_at TEXT DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_instantly_audits_created ON instantly_audits(created_at);
+
+-- ── Ad Intelligence: Competitor Ads ─────────────────────────────
+CREATE TABLE IF NOT EXISTS competitor_ads (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ad_library_id TEXT NOT NULL UNIQUE,
+    page_id TEXT NOT NULL,
+    page_name TEXT NOT NULL,
+    creative_body TEXT,
+    creative_link_title TEXT,
+    creative_link_description TEXT,
+    snapshot_url TEXT,
+    scraped_image_url TEXT,
+    platforms TEXT,
+    delivery_start TEXT,
+    delivery_stop TEXT,
+    days_active INTEGER DEFAULT 0,
+    winner_score INTEGER DEFAULT 0,
+    score_breakdown_json TEXT,
+    analysis_json TEXT,
+    search_term TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_competitor_ads_page ON competitor_ads(page_id);
+CREATE INDEX IF NOT EXISTS idx_competitor_ads_score ON competitor_ads(winner_score);
+CREATE INDEX IF NOT EXISTS idx_competitor_ads_search ON competitor_ads(search_term);
+
+-- ── Ad Intelligence: Generated Ad Creatives ─────────────────────
+CREATE TABLE IF NOT EXISTS generated_ad_creatives (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    headline TEXT,
+    body TEXT,
+    cta TEXT,
+    style TEXT,
+    format TEXT,
+    image_path TEXT,
+    image_url TEXT,
+    prompt_used TEXT,
+    source_competitor_ids TEXT,        -- JSON array of competitor ad IDs used as inspiration
+    research_context TEXT,             -- NotebookLM research summary used
+    status TEXT DEFAULT 'draft',       -- draft, approved, launched
+    meta_ad_id TEXT,                   -- Meta ad ID once launched
+    meta_campaign_id TEXT,
+    performance_json TEXT,             -- Click-through, impressions, etc.
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_gen_creatives_status ON generated_ad_creatives(status);
+
+-- ── Ad Intelligence: Research Briefs ─────────────────────────────
+CREATE TABLE IF NOT EXISTS ad_research_briefs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    brief_json TEXT NOT NULL,
+    raw_text TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- ── Ad Intelligence: Research Variants ───────────────────────────
+CREATE TABLE IF NOT EXISTS ad_research_variants (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    angle TEXT NOT NULL,
+    headline TEXT NOT NULL,
+    primary_text TEXT NOT NULL,
+    description TEXT NOT NULL,
+    cta_type TEXT NOT NULL,
+    compliance_note TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now'))
+);

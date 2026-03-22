@@ -47,6 +47,26 @@ router.post('/search-people/async', async (req, res) => {
   } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Sales Navigator Search ───────────────────────────────────
+
+router.post('/sales-nav/search', async (req, res) => {
+  try {
+    const { searchUrl, maxPages, scrapingMode } = req.body;
+    if (!searchUrl) return res.status(400).json({ error: 'searchUrl is required' });
+    const result = await linkedInService.searchSalesNavigator(searchUrl, { maxPages, scrapingMode });
+    res.json(result);
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/sales-nav/search/sync', async (req, res) => {
+  try {
+    const { searchUrl, maxPages, scrapingMode } = req.body;
+    if (!searchUrl) return res.status(400).json({ error: 'searchUrl is required' });
+    const result = await linkedInService.searchSalesNavigatorSync(searchUrl, { maxPages, scrapingMode });
+    res.json(result);
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Company Scraping ─────────────────────────────────────────
 
 router.post('/scrape-companies', async (req, res) => {

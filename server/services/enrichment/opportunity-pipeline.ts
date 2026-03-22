@@ -62,11 +62,15 @@ function getLegacyPipelineConfig(companyId: number): { pipelineId: string; stage
   const cfg = getCompanyConfig(companyId);
   if (!cfg?.ghl_pipeline_id || !cfg?.ghl_pipeline_stages) return null;
 
+  // Per-company monetary value: GPC fund deals ~$250K, BMN creator deals ~$500
+  const MONETARY_VALUES: Record<number, number> = { 1: 250000, 2: 500 };
+  const monetaryValue = MONETARY_VALUES[companyId] ?? 1000;
+
   try {
     return {
       pipelineId: cfg.ghl_pipeline_id,
       stages: JSON.parse(cfg.ghl_pipeline_stages),
-      monetaryValue: 250000,
+      monetaryValue,
       pipelineName: 'Cold Email Response Pipeline',
     };
   } catch {

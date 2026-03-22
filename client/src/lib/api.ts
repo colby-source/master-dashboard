@@ -453,6 +453,10 @@ export const api = {
     request('/linkedin/scrape-jobs', { method: 'POST', body: JSON.stringify({ query, location, maxResults }) }),
   linkedinEnrichLeads: (profiles: any[]) =>
     request('/linkedin/enrich-leads', { method: 'POST', body: JSON.stringify({ profiles }) }),
+  linkedinSalesNavSearch: (searchUrl: string, maxPages?: number, scrapingMode?: string) =>
+    request('/linkedin/sales-nav/search', { method: 'POST', body: JSON.stringify({ searchUrl, maxPages, scrapingMode }) }),
+  linkedinSalesNavSearchSync: (searchUrl: string, maxPages?: number, scrapingMode?: string) =>
+    request('/linkedin/sales-nav/search/sync', { method: 'POST', body: JSON.stringify({ searchUrl, maxPages, scrapingMode }) }),
   linkedinGetRun: (runId: string) => request(`/linkedin/run/${runId}`),
   linkedinGetRunData: (runId: string, limit?: number) =>
     request(`/linkedin/run/${runId}/data${qs({ limit })}`),

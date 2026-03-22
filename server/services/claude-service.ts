@@ -143,43 +143,33 @@ Only output valid JSON.`
     tags: string[];
     personalizations: { opener: string; painPoint: string; cta: string; confidence: number };
   }> {
-    const defaultPrompt = `Score this lead 0-100 as a potential LP investor for Granite Park Capital Affordable Housing Fund II — a 4th-generation real estate fund ($50M target, $100M hard cap) investing in Section 8 and LIHTC affordable housing. Fund I delivered 179% return on equity in 2 years. $250K minimum, accredited investors only. Government-backed rents, powerful tax strategies (LIHTC credits, cost segregation, depreciation).
+    const defaultPrompt = `Score this lead 0-100 based on their fit as a prospect. Use the company description and target ICP from the playbook to determine relevance.
 
-CRITICAL SCORING RULES:
-- Score the INDIVIDUAL's likelihood of personally investing as an LP — NOT their employer's profile.
-- Employees at mega PE/VC firms (Blackstone, Bain Capital, KKR, Apollo, Carlyle, Canyon Partners, etc.) are NOT LP prospects. They deploy their firm's capital, not personal capital into outside funds. Score these 10-30 MAX unless they have clear personal investing history.
-- Associates, Analysts, VPs at large institutional firms are NOT decision-makers for fund allocation. Score 0-25.
-- The lead's EMPLOYER being a real estate firm does NOT make them an LP prospect. Ask: would this person write a $250K+ personal check?
+Analyze the lead's title, company, industry, and any enrichment data to assess how well they match the ideal customer profile described in the playbook. Consider seniority, decision-making authority, industry fit, and company size.
 
 HIGH-VALUE SIGNALS (score 70-100):
-- Family office principal, CIO, or allocator at a SMALL/MID family office
-- Independent RIA / wealth manager with HNW client base who allocates to alternatives
-- Successful entrepreneur, business owner, or executive with personal wealth
-- CPA / tax advisor managing HNW clients (LIHTC angle)
-- Real estate developer or investor acting in PERSONAL capacity (not as employee of mega-fund)
-- Evidence of personal LP investing or angel investing
-- Title at SMALL firm: Managing Partner, Founder, CEO, CIO, Principal (firms <500 employees)
+- Title and role directly match the target ICP
+- Decision-maker or budget holder at a company that fits the target market
+- Strong industry alignment with the company's offerings
+- Evidence of relevant purchasing history or active need
 
 MEDIUM SIGNALS (score 40-69):
-- Financial advisor or planner at independent practice
-- Real estate professional (broker, developer) with personal capital
-- Director+ at mid-size wealth management firm
-- Evidence of interest in tax-efficient or alternative investments
+- Partial ICP match (right industry, wrong seniority or vice versa)
+- Adjacent role that may influence buying decisions
+- Company fits target market but lead's role is unclear
 
 LOW SIGNALS / DISQUALIFIERS (score 0-39):
-- Employee at mega PE/VC/hedge fund (Blackstone, Bain, KKR, Apollo, Carlyle, Canyon, etc.) — they won't LP into outside funds
-- Junior title (Associate, Analyst, VP at large firm) — no allocation authority or personal capital
-- No financial industry relevance
-- Company too small or irrelevant industry
-- Roles like HR, DEI, Compliance, IT, Marketing at financial firms — no investment capacity
+- No relevance to the target ICP or industry
+- Junior role with no decision-making authority
+- Company outside target market entirely
+- Roles like HR, IT, Marketing at otherwise relevant companies (unless those are the target)
 
 BONUS FACTORS (+5-15 each):
-- Located in major wealth hub (NYC, Miami, LA, SF, Chicago, Dallas, Houston)
-- Personal AUM or firm AUM $10M-$500M (sweet spot — large enough to invest, small enough to need outside funds)
-- Previous fund investment history or angel portfolio
-- CPA or tax background (LIHTC is powerful angle)
+- Located in key geographic market for the company
+- Company size in the sweet spot for the offering
+- Evidence of active need or recent related activity
 
-Return ONLY a numeric score 0-100. Higher = better fit as LP investor.`;
+Return ONLY a numeric score 0-100. Higher = better fit as a prospect.`;
 
     const prompt = companyConfig.scoring_prompt || defaultPrompt;
 
@@ -236,7 +226,7 @@ Respond in this exact JSON format (no markdown, no code fences, raw JSON only):
   "tags": ["accredited-investor", "finance-industry"],
   "personalizations": {
     "opener": "A hyper-specific opening line that references something UNIQUE to THIS lead — their company name, job title, a recent post, their city, their industry niche, or their firm's focus area. NEVER use generic lines like 'As someone in finance...' or 'Given your experience...'. It MUST pass this test: could this line ONLY be sent to this one person? Example: 'Noticed [Company] just closed on that [City] multifamily deal — curious if you're exploring tax-advantaged structures on the equity side.'",
-    "painPoint": "A specific pain point inferred from their role/industry. Reference their actual situation — e.g., a CPA managing HNW clients needs LIHTC strategies, a family office CIO needs uncorrelated yield, a RE developer needs passive income outside their own deals. Be concrete.",
+    "painPoint": "A specific pain point inferred from their role/industry. Reference their actual situation — e.g., a marketing director struggling with content creation at scale, a founder looking for new revenue channels, an agency owner needing white-label solutions. Be concrete and relevant to the company's offering.",
     "cta": "A low-friction call to action tailored to their seniority and likely interest level. Senior decision-makers get 'quick 15-min call', advisors get 'deck + fund overview to share with clients', etc.",
     "confidence": 0.85
   }
@@ -287,6 +277,8 @@ CRITICAL: Output raw JSON only. No \`\`\`json blocks, no markdown, no extra text
     value_propositions?: string;
     target_icp?: string;
     tone?: string;
+    sender_name?: string;
+    company_name?: string;
   }): Promise<string> {
     const firstName = enrichmentData.first_name || enrichmentData.firstName || '';
     const lastName = enrichmentData.last_name || enrichmentData.lastName || '';
@@ -305,8 +297,8 @@ CRITICAL: Output raw JSON only. No \`\`\`json blocks, no markdown, no extra text
           role: 'user',
           content: `Write a short, personal LinkedIn connection request message (under 280 characters — LinkedIn's limit for connection notes).
 
-SENDER: Colby from Granite Park Capital
-COMPANY: ${companyConfig.company_description || 'Granite Park Capital — 4th-generation real estate fund, Fund I returned 179% ROE in 2 years. Section 8 government-backed rents + LIHTC tax credits.'}
+SENDER: ${companyConfig.sender_name || 'the team'} from ${companyConfig.company_name || 'our company'}
+COMPANY: ${companyConfig.company_description || 'No company description provided.'}
 
 RECIPIENT:
 - Name: ${firstName} ${lastName}
@@ -345,6 +337,8 @@ Return ONLY the message text. No quotes, no explanation.`
     target_icp?: string;
     tone?: string;
     booking_url?: string;
+    sender_name?: string;
+    company_name?: string;
   }, connectionMessage: string, previousDMs: Array<{ step: number; direction: string; message: string }>): Promise<string> {
     const firstName = enrichmentData.first_name || enrichmentData.firstName || '';
     const lastName = enrichmentData.last_name || enrichmentData.lastName || '';
@@ -371,8 +365,8 @@ Return ONLY the message text. No quotes, no explanation.`
           role: 'user',
           content: `Write a LinkedIn direct message for step ${step} of a 3-message follow-up sequence.
 
-SENDER: Colby from Granite Park Capital
-COMPANY: ${companyConfig.company_description || 'Granite Park Capital — 4th-generation real estate fund. Fund I returned 179% ROE in 2 years. Section 8 government-backed rents + LIHTC tax credits that offset federal taxes dollar-for-dollar.'}
+SENDER: ${companyConfig.sender_name || 'the team'} from ${companyConfig.company_name || 'our company'}
+COMPANY: ${companyConfig.company_description || 'No company description provided.'}
 
 RECIPIENT:
 - Name: ${firstName} ${lastName}
@@ -394,8 +388,8 @@ RULES:
 - Tone: ${companyConfig.tone || 'professional but warm'}
 - No generic filler — be specific and genuine
 - Don't be pushy or salesy in steps 1-2
-- NEVER mention specific IRR numbers or return percentages — instead reference Fund I's 179% ROE, government-backed rents, and tax strategies
-- Emphasize: 4th-generation real estate expertise, government-backed income, tax credit strategies that alleviate taxes
+- Stay on-brand for ${companyConfig.company_name || 'the company'} — only reference what the company actually does
+- Do not mention details from other companies or funds
 
 Return ONLY the message text. No quotes, no explanation.`
         }],
@@ -481,6 +475,9 @@ Only output valid JSON.`
       do_not_mention: string[];
       booking_url: string | null;
       max_auto_replies: number;
+      compliance_rules?: string | null;
+      sender_name?: string;
+      company_name?: string;
     };
     autoReplyCount: number;
   }): Promise<{
@@ -521,6 +518,13 @@ Only output valid JSON.`
       .map(([k, v]) => `- If "${k}": ${v}`)
       .join('\n');
 
+    const complianceRules: string[] = (() => {
+      try { return JSON.parse(context.playbook.compliance_rules || '[]'); } catch { return []; }
+    })();
+    const complianceBlock = complianceRules.length > 0
+      ? `COMPLIANCE RULES (MANDATORY — violations create legal liability):\n${complianceRules.map(r => `- ${r}`).join('\n')}`
+      : '';
+
     const systemPrompt = `You are a senior sales representative for the following company. You write natural, conversational emails that feel genuinely human — never salesy, robotic, or templated.
 
 COMPANY:
@@ -544,14 +548,7 @@ ${context.playbook.conversation_goals.map(g => `- ${g}`).join('\n')}
 TOPICS TO NEVER MENTION:
 ${context.playbook.do_not_mention.map(t => `- ${t}`).join('\n')}
 
-SEC COMPLIANCE RULES (MANDATORY — violations create legal liability):
-- NEVER guarantee specific returns. Use "targeting" or "projected" — never "will earn", "guaranteed", or "you'll get"
-- NEVER provide tax advice, legal advice, or specific financial advice — always recommend consulting their CPA/attorney
-- NEVER discuss specific investor information or other LPs
-- NEVER make forward-looking guarantees about fund performance
-- If the prospect asks about risks, be transparent: real estate carries risks including illiquidity and potential loss of principal
-- If the prospect asks for PPM, subscription docs, or detailed fund legal terms — set shouldEscalate=true
-- Use "past performance is not indicative of future results" if referencing Fund I track record
+${complianceBlock}
 
 ${context.playbook.booking_url ? `BOOKING LINK (use when prospect wants to meet): ${context.playbook.booking_url}` : ''}
 
@@ -675,7 +672,7 @@ Output raw JSON only. No code fences, no markdown.`;
       ? context.conversationHistory.map(m => `[${m.direction.toUpperCase()}]: ${m.body}`).join('\n\n')
       : '(No prior email exchanges)';
 
-    const prompt = `You are a senior sales analyst for an investment fund. Analyze this meeting transcript and provide a structured assessment.
+    const prompt = `You are a senior sales analyst. Analyze this meeting transcript and provide a structured assessment.
 
 COMPANY CONTEXT:
 ${context.playbook.company_description}
@@ -704,12 +701,12 @@ ${context.transcriptText}
 
 INSTRUCTIONS:
 Analyze the transcript and determine:
-1. Overall sentiment and investment interest level
+1. Overall sentiment and interest level
 2. Key topics discussed
 3. Objections raised by the prospect
-4. Likelihood they will invest (0-100)
-5. Whether they confirmed accredited investor status
-6. Their stated investment timeline
+4. Likelihood they will convert or move forward (0-100)
+5. Whether they confirmed key qualification criteria
+6. Their stated timeline for next steps
 7. Concrete next steps to advance the deal
 8. Which follow-up sequence to assign:
    - "closing" → very interested, high likelihood, ready to commit
@@ -726,7 +723,7 @@ Respond in this exact JSON format:
   "investment_likelihood": 75,
   "accredited_confirmed": true,
   "investment_timeline": "Q2 2026",
-  "next_steps": ["Send Fund II deck", "Schedule follow-up call"],
+  "next_steps": ["Send materials", "Schedule follow-up call"],
   "sequence_recommendation": "closing",
   "follow_up_delay_days": 3,
   "personalized_follow_up": "Hi [Name], great speaking with you today about..."

@@ -160,7 +160,7 @@ export async function processMeetingTranscript(transcriptId: number): Promise<vo
               pipelineId: pipeline.id,
               stageId: stage.id,
               contactId: ghlContactId,
-              name: `${lead?.first_name || 'Lead'} ${lead?.last_name || ''} — Fund II`.trim(),
+              name: `${lead?.first_name || 'Lead'} ${lead?.last_name || ''} — Opportunity`.trim(),
               status: 'open',
               monetaryValue: config.postMeeting.minimumInvestment,
             });
@@ -222,13 +222,13 @@ async function schedulePostMeetingFollowUp(params: {
 
   if (likelihood >= 60) {
     followupType = 'data_room';
-    followUpBody = buildDataRoomFollowUp(firstName, personalizedFollowUp, nextSteps);
+    followUpBody = buildDataRoomFollowUp(firstName, personalizedFollowUp, nextSteps, companyId);
   } else if (likelihood >= 30) {
     followupType = 'nurture';
-    followUpBody = buildNurtureFollowUp(firstName, personalizedFollowUp, nextSteps);
+    followUpBody = buildNurtureFollowUp(firstName, personalizedFollowUp, nextSteps, companyId);
   } else {
     followupType = 'polite_close';
-    followUpBody = buildPoliteCloseFollowUp(firstName, personalizedFollowUp);
+    followUpBody = buildPoliteCloseFollowUp(firstName, personalizedFollowUp, companyId);
   }
 
   // Schedule the follow-up email via the reply system
@@ -306,9 +306,12 @@ async function schedulePostMeetingFollowUp(params: {
 /**
  * High likelihood (≥60%): Data room access + follow-up call scheduling
  */
-function buildDataRoomFollowUp(firstName: string, personalizedFollowUp: string, nextSteps: string[]): string {
-  const dataRoomUrl = config.postMeeting.dataRoomUrl;
+function buildDataRoomFollowUp(firstName: string, personalizedFollowUp: string, nextSteps: string[], companyId: number): string {
+  const dataRoomUrl = config.postMeetingByCompany[companyId]?.dataRoomUrl || config.postMeeting.dataRoomUrl;
   const name = firstName || 'there';
+  const playbook = queryOne('SELECT company_name, sender_name FROM company_playbooks WHERE company_id = ?', [companyId]) as { company_name?: string; sender_name?: string } | null;
+  const senderName = playbook?.sender_name || 'Our team';
+  const companyName = playbook?.company_name || 'our team';
 
   const lines = [
     `Hi ${name},`,
@@ -325,10 +328,10 @@ function buildDataRoomFollowUp(firstName: string, personalizedFollowUp: string, 
   // Data room link
   if (dataRoomUrl) {
     lines.push(
-      `As discussed, I'd like to share our investor materials with you. You can access the data room here:`,
+      `As discussed, I'd like to share some materials with you. You can access them here:`,
       dataRoomUrl,
       '',
-      `Inside you'll find our PPM, subscription documents, and detailed fund performance materials.`,
+      `Inside you'll find detailed information about what we discussed.`,
       '',
     );
   }
@@ -346,8 +349,8 @@ function buildDataRoomFollowUp(firstName: string, personalizedFollowUp: string, 
     `Would you be available for a brief follow-up call this week to address any questions after you've had a chance to review?`,
     '',
     `Best,`,
-    `Marc Menowitz`,
-    `Granite Park Capital`,
+    senderName,
+    companyName,
   );
 
   return lines.join('\n');
@@ -356,13 +359,16 @@ function buildDataRoomFollowUp(firstName: string, personalizedFollowUp: string, 
 /**
  * Medium likelihood (30-59%): Additional materials + nurture
  */
-function buildNurtureFollowUp(firstName: string, personalizedFollowUp: string, nextSteps: string[]): string {
+function buildNurtureFollowUp(firstName: string, personalizedFollowUp: string, nextSteps: string[], companyId: number): string {
   const name = firstName || 'there';
+  const playbook = queryOne('SELECT company_name, sender_name, company_description FROM company_playbooks WHERE company_id = ?', [companyId]) as { company_name?: string; sender_name?: string; company_description?: string } | null;
+  const senderName = playbook?.sender_name || 'Our team';
+  const companyName = playbook?.company_name || 'our team';
 
   const lines = [
     `Hi ${name},`,
     '',
-    `Thank you for taking the time to connect today. I enjoyed learning more about your investment approach.`,
+    `Thank you for taking the time to connect today. I enjoyed learning more about your priorities.`,
     '',
   ];
 
@@ -371,12 +377,7 @@ function buildNurtureFollowUp(firstName: string, personalizedFollowUp: string, n
   }
 
   lines.push(
-    `I wanted to share a few additional resources about our approach to affordable housing:`,
-    '',
-    `• Our portfolio currently includes 5,500 units with Section 8 contracts, providing stable, government-backed rental income`,
-    `• Fund I delivered 179% return on equity in just 2 years — Fund II builds on that proven track record`,
-    `• Government-backed rents through Section 8 HAP contracts plus LIHTC tax credits that provide dollar-for-dollar offsets against your federal tax liability`,
-    `• Quarterly distributions backed by recession-resistant, government-contracted income`,
+    `I wanted to share a few additional resources about what we're working on at ${companyName}. I think you'll find them relevant given our conversation.`,
     '',
   );
 
@@ -392,8 +393,8 @@ function buildNurtureFollowUp(firstName: string, personalizedFollowUp: string, n
     `I'd be happy to share more detailed materials or schedule another call whenever you're ready to dive deeper.`,
     '',
     `Best,`,
-    `Marc Menowitz`,
-    `Granite Park Capital`,
+    senderName,
+    companyName,
   );
 
   return lines.join('\n');
@@ -402,13 +403,16 @@ function buildNurtureFollowUp(firstName: string, personalizedFollowUp: string, n
 /**
  * Low likelihood (<30%): Polite close + quarterly newsletter
  */
-function buildPoliteCloseFollowUp(firstName: string, personalizedFollowUp: string): string {
+function buildPoliteCloseFollowUp(firstName: string, personalizedFollowUp: string, companyId: number): string {
   const name = firstName || 'there';
+  const playbook = queryOne('SELECT company_name, sender_name FROM company_playbooks WHERE company_id = ?', [companyId]) as { company_name?: string; sender_name?: string } | null;
+  const senderName = playbook?.sender_name || 'Our team';
+  const companyName = playbook?.company_name || 'our team';
 
   const lines = [
     `Hi ${name},`,
     '',
-    `Thank you for taking the time to chat today. I appreciated learning about your investment priorities.`,
+    `Thank you for taking the time to chat today. I appreciated learning about your priorities.`,
     '',
   ];
 
@@ -417,13 +421,13 @@ function buildPoliteCloseFollowUp(firstName: string, personalizedFollowUp: strin
   }
 
   lines.push(
-    `While the timing may not be right for Fund II, I'd love to keep you in the loop on our progress. We send quarterly updates on portfolio performance and new developments in the affordable housing space.`,
+    `I'd love to keep you in the loop on what we're doing at ${companyName}. We send periodic updates on our progress and new developments.`,
     '',
     `If your situation changes or you'd like to explore this further down the line, my door is always open.`,
     '',
     `Wishing you all the best,`,
-    `Marc Menowitz`,
-    `Granite Park Capital`,
+    senderName,
+    companyName,
   );
 
   return lines.join('\n');
@@ -435,8 +439,8 @@ function buildGhlNote(analysis: any, transcript: any): string {
     `Duration: ${transcript.duration_minutes || '?'} minutes`,
     '',
     `Sentiment: ${analysis.sentiment}`,
-    `Investment Likelihood: ${analysis.investment_likelihood}/100`,
-    `Accredited Confirmed: ${analysis.accredited_confirmed ? 'Yes' : 'No'}`,
+    `Conversion Likelihood: ${analysis.investment_likelihood}/100`,
+    `Qualified: ${analysis.accredited_confirmed ? 'Yes' : 'Pending'}`,
     `Timeline: ${analysis.investment_timeline || 'Not specified'}`,
     `Sequence: ${analysis.sequence_recommendation}`,
     '',
@@ -475,7 +479,8 @@ function buildGhlTags(analysis: any): string[] {
   }
 
   if (analysis.accredited_confirmed) {
-    tags.push('accredited-confirmed');
+    // "accredited" applies to GPC investors; for BMN creators this maps to "qualified-confirmed" generically
+    tags.push('qualified-confirmed');
   }
 
   return tags;

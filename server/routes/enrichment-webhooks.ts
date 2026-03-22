@@ -187,7 +187,10 @@ router.post('/webhook/rb2b', async (req, res) => {
 });
 
 // ── Instantly Reply/Bounce Webhook ─────────────────────────
-// Receives reply and bounce notifications from Instantly
+// Receives reply and bounce notifications from Instantly.
+// Supports hybrid triage: if Instantly AI Reply Agent pre-classified the sentiment,
+// it's passed through to skip Claude's sentiment analysis (faster + cheaper).
+// Negative dispositions (OOO, unsubscribe, not_interested, bounce) are fast-pathed.
 
 router.post('/webhook/instantly', async (req, res) => {
   try {
@@ -200,6 +203,9 @@ router.post('/webhook/instantly', async (req, res) => {
     const eventType = payload.event_type || payload.type;
     const email = payload.lead_email || payload.email;
 
+    // Instantly AI Reply Agent may include pre-classified sentiment
+    const instantlySentiment = payload.label || payload.sentiment || payload.classification;
+
     if (eventType === 'reply' && email) {
       const replyText = payload.reply_text || payload.body || '';
       const instantlyEmailId = payload.email_id || payload.id;
@@ -210,16 +216,40 @@ router.post('/webhook/instantly', async (req, res) => {
         return res.json({ received: true, action: 'skipped', reason: 'empty_reply' });
       }
 
-      // Delegate to enrichmentService.handleReply() for full auto-reply orchestration
+      // Fast-path: If Instantly already handled negative dispositions natively,
+      // log it and skip Claude entirely — Instantly responds sub-5-min
+      const instantlyHandledSentiments = ['ooo', 'unsubscribe', 'bounce', 'not_interested'];
+      if (instantlySentiment && instantlyHandledSentiments.includes(instantlySentiment)) {
+        const lead = queryOne(
+          'SELECT id, company_id FROM enrichment_leads WHERE email = ? ORDER BY created_at DESC LIMIT 1',
+          [email.toLowerCase()]
+        );
+        if (lead) {
+          logWebhookEvent(lead.id, lead.company_id, 'instantly_handled_disposition', {
+            sentiment: instantlySentiment,
+            email,
+            campaignId,
+            handledBy: 'instantly_ai_agent',
+          });
+        }
+        console.log(`[Webhook:Instantly] Fast-path: ${email} handled by Instantly (${instantlySentiment})`);
+        return res.json({ received: true, action: 'instantly_handled', sentiment: instantlySentiment });
+      }
+
+      // Auto-create lead if not in DB (BMN leads live in Instantly, not the dashboard)
+      ensureLeadExistsForWebhook(email.toLowerCase(), campaignId, payload);
+
+      // Warm+ replies → full Claude orchestration (with pre-classified sentiment if available)
       const result = await enrichmentService.handleReply({
         email: email.toLowerCase(),
         replyText,
         instantlyEmailId,
         campaignId,
         eaccount,
+        preClassifiedSentiment: instantlySentiment || undefined,
       });
 
-      console.log(`[Webhook:Instantly] Reply from ${email}: action=${result.action}${result.reason ? ` reason=${result.reason}` : ''}`);
+      console.log(`[Webhook:Instantly] Reply from ${email}: action=${result.action}${result.reason ? ` reason=${result.reason}` : ''}${instantlySentiment ? ` (pre-classified: ${instantlySentiment})` : ''}`);
 
       return res.json({ received: true, ...result });
     }
@@ -367,8 +397,9 @@ function resolveCompanyId(locationId: string | undefined, payload: any): number 
     if (company) return company.id;
   }
 
-  // Default to first company if can't resolve
-  return 1;
+  // Do NOT default to company 1 — that would silently route BMN leads to GPC
+  console.warn(`[Webhook] Could not resolve company from locationId="${locationId}" — rejecting lead`);
+  return null;
 }
 
 async function upsertLead(data: {
@@ -423,6 +454,47 @@ async function upsertLead(data: {
     [data.ghl_contact_id, data.company_id]
   );
   return lead?.id || 0;
+}
+
+// ── Auto-create lead for Instantly-only flows (e.g., BMN) ────
+// Leads loaded directly into Instantly won't exist in enrichment_leads
+// until they reply. This mirrors the logic in reply-poller.ts.
+function ensureLeadExistsForWebhook(email: string, campaignId: string | undefined, payload: any): void {
+  const existing = queryOne(
+    'SELECT id FROM enrichment_leads WHERE email = ? ORDER BY created_at DESC LIMIT 1',
+    [email]
+  );
+  if (existing) return;
+
+  if (!campaignId) return;
+
+  // Resolve campaign → company via company_pipelines or enrichment_config
+  const pipeline = queryOne(
+    'SELECT company_id FROM company_pipelines WHERE instantly_campaign_id = ?',
+    [campaignId]
+  ) as { company_id: number } | null;
+  const cfgRow = !pipeline ? queryOne(
+    'SELECT company_id FROM enrichment_config WHERE target_instantly_campaign_id = ?',
+    [campaignId]
+  ) as { company_id: number } | null : null;
+  const companyId = pipeline?.company_id || cfgRow?.company_id;
+
+  if (!companyId) {
+    console.log(`[Webhook:Instantly] Unknown campaign ${campaignId} for ${email} — cannot auto-create lead`);
+    return;
+  }
+
+  const firstName = payload.lead_first_name || payload.first_name || null;
+  const lastName = payload.lead_last_name || payload.last_name || null;
+
+  runSql(
+    `INSERT INTO enrichment_leads (company_id, email, first_name, last_name, source, status, instantly_campaign_id, instantly_push_status, ghl_contact_id)
+     VALUES (?, ?, ?, ?, 'instantly_reply', 'replied', ?, 'pushed', '')`,
+    [companyId, email, firstName, lastName, campaignId]
+  );
+  saveDb();
+
+  console.log(`[Webhook:Instantly] Auto-created lead for ${email} (company ${companyId}, campaign ${campaignId})`);
 }
 
 function logWebhookEvent(leadId: number | null, companyId: number, eventType: string, eventData: any): void {

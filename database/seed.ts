@@ -3,8 +3,8 @@ import { getDb } from '../server/db';
 async function seed() {
   const db = await getDb();
 
-  db.run(`INSERT OR IGNORE INTO companies (name, type, color) VALUES ('Grand Park Capital', 'investment_fund', '#1e40af')`);
-  db.run(`INSERT OR IGNORE INTO companies (name, type, color) VALUES ('Brand New Now', 'marketing', '#7c3aed')`);
+  db.run(`INSERT OR IGNORE INTO companies (name, type, color) VALUES ('Granite Park Capital', 'investment_fund', '#1e40af')`);
+  db.run(`INSERT OR IGNORE INTO companies (name, type, color) VALUES ('Brand Me Now', 'marketing', '#7c3aed')`);
   db.run(`INSERT OR IGNORE INTO companies (name, type, color) VALUES ('Personal', 'personal', '#059669')`);
 
   db.run(`INSERT OR IGNORE INTO integrations (name, type, status) VALUES ('instantly', 'api', 'active')`);

@@ -341,8 +341,8 @@ async function fullHealthCheck(targetDomain?: string): Promise<any[]> {
     const items = result?.items ?? result ?? [];
     if (!Array.isArray(items) || items.length === 0) break;
     allAccounts.push(...items);
-    startingAfter = items[items.length - 1]?.email;
-    if (items.length < 100) break;
+    startingAfter = result?.next_starting_after;
+    if (!startingAfter || items.length < 100) break;
   }
 
   // Group by domain

@@ -104,29 +104,109 @@ function isSlotBusy(slot: MeetingSlot, busySlots: { start: string; end: string }
 }
 
 /**
- * Get available meeting slots on Wed/Thu/Fri that don't conflict with GHL calendars.
- * Returns up to `maxSlots` available time slots.
+ * Get available meeting slots using GHL's native free-slots API.
+ * This respects conflict calendars configured in GHL,
+ * so we don't need to manually check for busy times.
+ * Falls back to candidate-based filtering if free-slots API fails.
  */
 export async function getAvailableSlots(companyId = 1, maxSlots = 6): Promise<MeetingSlot[]> {
+  const { meetingDays, meetingDurationMinutes, timezone } = config.meetings;
+  const calendarId = config.meetingsByCompany[companyId]?.calendarId || config.meetings.calendarId;
+
+  // SAFETY: Warn if a non-default company resolves to the GPC default calendar
+  if (companyId !== 1 && calendarId === config.meetings.calendarId) {
+    console.error(`[MeetingScheduler] CALENDAR ISOLATION WARNING: Company ${companyId} has no dedicated calendar configured — falling back to GPC default (${config.meetings.calendarId}). Set GHL_CALENDAR_ID for this company in .env!`);
+  }
+
+  const ghlClient = ghlService.getClient(companyId);
+
+  if (ghlClient) {
+    try {
+      const candidates = generateCandidateSlots();
+      if (candidates.length === 0) return [];
+
+      const rangeStart = candidates[0].start;
+      const rangeEnd = candidates[candidates.length - 1].end;
+
+      // Use GHL's native free-slots API — respects conflict calendars automatically
+      const freeSlotData = await ghlClient.getFreeSlots(calendarId, rangeStart, rangeEnd, timezone);
+
+      if (freeSlotData && Object.keys(freeSlotData).length > 0) {
+        // GHL returns { "YYYY-MM-DD": [{ "slots": [{ "startTime": "...", "endTime": "..." }] }] }
+        // or { "slots": { "YYYY-MM-DD": ["HH:mm", ...] } }
+        const available: MeetingSlot[] = [];
+
+        // Handle the nested date→slots format
+        const slotsMap = freeSlotData.slots || freeSlotData;
+        for (const [dateKey, daySlots] of Object.entries(slotsMap)) {
+          if (!Array.isArray(daySlots)) continue;
+
+          for (const slot of daySlots) {
+            const startStr = typeof slot === 'string' ? `${dateKey}T${slot}` : slot.startTime || slot.start;
+            if (!startStr) continue;
+
+            const slotStart = new Date(startStr);
+            const dayOfWeek = slotStart.getDay();
+
+            // Only include slots on our configured meeting days
+            if (!meetingDays.includes(dayOfWeek)) continue;
+
+            const slotEnd = new Date(slotStart);
+            slotEnd.setMinutes(slotEnd.getMinutes() + meetingDurationMinutes);
+
+            const dayName = DAY_NAMES[dayOfWeek];
+            const monthDay = slotStart.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+            const timeStr = slotStart.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+            available.push({
+              start: slotStart.toISOString(),
+              end: slotEnd.toISOString(),
+              dayName,
+              displayTime: `${dayName}, ${monthDay} at ${timeStr} ET`,
+            });
+
+            if (available.length >= maxSlots) break;
+          }
+          if (available.length >= maxSlots) break;
+        }
+
+        if (available.length > 0) {
+          console.log(`[MeetingScheduler] Found ${available.length} free slots via GHL API`);
+          return available;
+        }
+      }
+
+      console.warn('[MeetingScheduler] GHL free-slots returned empty, falling back to manual check');
+    } catch (err: any) {
+      console.error('[MeetingScheduler] GHL free-slots API error, falling back:', err.message);
+    }
+  }
+
+  // Fallback: manual candidate generation + busy-slot filtering
+  return getAvailableSlotsFallback(companyId, maxSlots);
+}
+
+/**
+ * Fallback: generate candidates and filter against GHL appointments manually.
+ */
+async function getAvailableSlotsFallback(companyId: number, maxSlots: number): Promise<MeetingSlot[]> {
+  const calendarId = config.meetingsByCompany[companyId]?.calendarId || config.meetings.calendarId;
   const candidates = generateCandidateSlots();
   if (candidates.length === 0) return [];
 
   const rangeStart = candidates[0].start;
   const rangeEnd = candidates[candidates.length - 1].end;
 
-  // Get busy times from GHL calendars
   const allBusySlots: { start: string; end: string }[] = [];
   const ghlClient = ghlService.getClient(companyId);
 
   if (ghlClient) {
     try {
-      const calendars = await ghlClient.getCalendars();
-      for (const cal of calendars) {
-        const events = await ghlClient.getAppointments(cal.id, rangeStart, rangeEnd);
-        for (const evt of events) {
-          if (evt.startTime && evt.endTime) {
-            allBusySlots.push({ start: evt.startTime, end: evt.endTime });
-          }
+      // Only check the target calendar, not all 14
+      const events = await ghlClient.getAppointments(calendarId, rangeStart, rangeEnd);
+      for (const evt of events) {
+        if (evt.startTime && evt.endTime) {
+          allBusySlots.push({ start: evt.startTime, end: evt.endTime });
         }
       }
     } catch (err: any) {
@@ -134,7 +214,6 @@ export async function getAvailableSlots(companyId = 1, maxSlots = 6): Promise<Me
     }
   }
 
-  // Filter candidates against busy slots
   const available: MeetingSlot[] = [];
   for (const slot of candidates) {
     if (!isSlotBusy(slot, allBusySlots)) {
@@ -174,25 +253,25 @@ export async function bookMeeting(
   }
 
   try {
-    // Get the first calendar (or the 1-on-1 meeting calendar)
-    const calendars = await ghlClient.getCalendars();
-    if (calendars.length === 0) {
-      return { success: false, error: 'No GHL calendars found' };
+    const calendarId = config.meetingsByCompany[companyId]?.calendarId || config.meetings.calendarId;
+
+    // SAFETY: Block booking if non-default company would land on GPC calendar
+    if (companyId !== 1 && calendarId === config.meetings.calendarId) {
+      console.error(`[MeetingScheduler] BLOCKED: Company ${companyId} booking would go to GPC calendar. Set GHL_CALENDAR_ID for this company.`);
+      return { success: false, error: `Calendar not configured for company ${companyId} — refusing to book on GPC calendar` };
     }
 
-    // Prefer calendar with "1-1" or "meeting" in the name, fall back to first
-    const targetCal = calendars.find((c: any) =>
-      c.name?.toLowerCase().includes('1-1') ||
-      c.name?.toLowerCase().includes('meeting') ||
-      c.name?.toLowerCase().includes('1 on 1')
-    ) || calendars[0];
+    // Get company name from playbook
+    const playbook = queryOne('SELECT company_name, sender_name FROM company_playbooks WHERE company_id = ?', [companyId]);
+    const companyName = playbook?.company_name || 'Meeting';
+    const senderName = playbook?.sender_name || '';
 
     const appointment = await ghlClient.createAppointment({
-      calendarId: targetCal.id,
+      calendarId,
       contactId: ghlContactId,
       startTime: slot.start,
       endTime: slot.end,
-      title: '1-on-1 Meeting — Granite Park Capital',
+      title: `1-on-1 Meeting — ${companyName}`,
       notes: notes || `Scheduled via auto-reply system\nSlot: ${slot.displayTime}`,
     });
 
@@ -272,13 +351,16 @@ async function sendMeetingConfirmation(
   const ghlClient = ghlService.getClient(companyId);
   if (!ghlClient) return;
 
-  const subject = `Confirmed: ${slot.displayTime} — Granite Park Capital`;
+  const playbook = queryOne('SELECT company_name, sender_name, company_description FROM company_playbooks WHERE company_id = ?', [companyId]);
+  const companyName = playbook?.company_name || 'our team';
+  const senderName = playbook?.sender_name || 'our team';
+
+  const subject = `Confirmed: ${slot.displayTime} — ${companyName}`;
   const html = [
     `<p>Hi there,</p>`,
-    `<p>This confirms your meeting with Marc Realty at <strong>${slot.displayTime}</strong> (30 minutes).</p>`,
-    `<p><strong>What to expect:</strong> A brief overview of Granite Park Capital Affordable Housing Fund II and how it may fit your portfolio. No prep needed on your end.</p>`,
+    `<p>This confirms your meeting with ${senderName} at <strong>${slot.displayTime}</strong> (30 minutes).</p>`,
     `<p>If you need to reschedule, just reply to this email and we'll find another time.</p>`,
-    `<p>Looking forward to connecting,<br/>Marc Realty<br/>Granite Park Capital</p>`,
+    `<p>Looking forward to connecting,<br/>${senderName}<br/>${companyName}</p>`,
   ].join('\n');
 
   await ghlClient.sendMessage({
@@ -303,9 +385,13 @@ async function scheduleMeetingReminders(
   const meetingTime = new Date(slot.start).getTime();
   const now = Date.now();
 
+  const playbook = queryOne('SELECT company_name, sender_name FROM company_playbooks WHERE company_id = ?', [companyId]);
+  const reminderSender = playbook?.sender_name || 'our team';
+  const reminderCompany = playbook?.company_name || 'our team';
+
   const reminders = [
-    { label: '24h', offsetMs: 24 * 60 * 60 * 1000, message: `Quick reminder — you have a call with Marc from Granite Park Capital tomorrow at ${slot.displayTime}. Looking forward to it!` },
-    { label: '1h', offsetMs: 60 * 60 * 1000, message: `Just a heads up — your call with Marc from Granite Park Capital starts in about an hour (${slot.displayTime}). Talk soon!` },
+    { label: '24h', offsetMs: 24 * 60 * 60 * 1000, message: `Quick reminder — you have a call with ${reminderSender} from ${reminderCompany} tomorrow at ${slot.displayTime}. Looking forward to it!` },
+    { label: '1h', offsetMs: 60 * 60 * 1000, message: `Just a heads up — your call with ${reminderSender} from ${reminderCompany} starts in about an hour (${slot.displayTime}). Talk soon!` },
   ];
 
   for (const reminder of reminders) {
@@ -346,12 +432,16 @@ export async function processMeetingReminders(): Promise<number> {
     if (!ghlClient) continue;
 
     try {
+      const reminderPlaybook = queryOne('SELECT company_name, sender_name FROM company_playbooks WHERE company_id = ?', [event.company_id]);
+      const rSender = reminderPlaybook?.sender_name || 'our team';
+      const rCompany = reminderPlaybook?.company_name || 'our team';
+
       await ghlClient.sendMessage({
         contactId: data.ghlContactId,
         type: 'SMS',
         message: data.reminderType === '24h'
-          ? `Quick reminder — you have a call with Marc from Granite Park Capital tomorrow at ${data.slot.displayTime}. Looking forward to it!`
-          : `Just a heads up — your call with Marc from Granite Park Capital starts in about an hour (${data.slot.displayTime}). Talk soon!`,
+          ? `Quick reminder — you have a call with ${rSender} from ${rCompany} tomorrow at ${data.slot.displayTime}. Looking forward to it!`
+          : `Just a heads up — your call with ${rSender} from ${rCompany} starts in about an hour (${data.slot.displayTime}). Talk soon!`,
       });
 
       // Mark as sent
@@ -378,5 +468,5 @@ export async function processMeetingReminders(): Promise<number> {
  * Initialize the meeting scheduler (call on server startup).
  */
 export async function initMeetingScheduler(): Promise<void> {
-  console.log(`[MeetingScheduler] Ready — meetings on ${config.meetings.meetingDays.map(d => DAY_NAMES[d]).join(', ')}, ${config.meetings.meetingStartHour}:00-${config.meetings.meetingEndHour}:00 ET, using GHL calendars`);
+  console.log(`[MeetingScheduler] Ready — calendar ${config.meetings.calendarId}, meetings on ${config.meetings.meetingDays.map(d => DAY_NAMES[d]).join(', ')}, ${config.meetings.meetingStartHour}:00-${config.meetings.meetingEndHour}:00 ET`);
 }

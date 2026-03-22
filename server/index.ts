@@ -48,6 +48,8 @@ import { dailyAuditService } from './services/daily-audit-service';
 import { startTunnel } from './tunnel';
 import auditRouter from './routes/audit';
 import spendRouter from './routes/spend';
+import cmoHealthRouter from './routes/cmo-health';
+import adIntelligenceRouter from './routes/ad-intelligence';
 
 async function main() {
   // Initialize database
@@ -64,8 +66,10 @@ async function main() {
     'http://localhost:5173',   // Vite dev server
     'http://localhost:3001',   // Production self-serve
     `http://localhost:${config.port}`,
-    'https://granitepark.co',  // GHL hosted pages
-    'https://checkin.graiteparkcapitalfund.com',  // Cloudflare tunnel
+    'https://granitepark.co',  // GHL hosted pages — GPC
+    'https://checkin.graiteparkcapitalfund.com',  // Cloudflare tunnel — GPC
+    'https://brandmenow.co',   // BMN main domain
+    'https://www.brandmenow.co', // BMN www
   ];
   app.use(cors({
     origin: (origin, callback) => {
@@ -127,6 +131,8 @@ async function main() {
   app.use('/api/yacht-events', yachtEventsRouter);
   app.use('/api/audit', auditRouter);
   app.use('/api/spend', spendRouter);
+  app.use('/api/cmo', cmoHealthRouter);
+  app.use('/api/ad-intelligence', adIntelligenceRouter);
 
   // 404 handler for unmatched API routes (must be after all API routes)
   app.use(notFoundHandler);
