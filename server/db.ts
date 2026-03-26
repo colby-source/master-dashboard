@@ -68,55 +68,55 @@ export async function getDb(): Promise<Database> {
   // Migrate: add auto_reply columns to enrichment_config
   try {
     db.run(`ALTER TABLE enrichment_config ADD COLUMN auto_reply_enabled INTEGER DEFAULT 0`);
-  } catch { /* column already exists */ }
+  } catch (e: any) { if (!e.message?.includes('duplicate column')) throw e; }
   try {
     db.run(`ALTER TABLE enrichment_config ADD COLUMN auto_reply_sentiments TEXT DEFAULT '["interested","question","meeting_request"]'`);
-  } catch { /* column already exists */ }
+  } catch (e: any) { if (!e.message?.includes('duplicate column')) throw e; }
 
   // Migrate: add ab_variant to enrichment_leads
   try {
     db.run(`ALTER TABLE enrichment_leads ADD COLUMN ab_variant TEXT`);
-  } catch { /* column already exists */ }
+  } catch (e: any) { if (!e.message?.includes('duplicate column')) throw e; }
 
   // Migrate: add GHL opportunity pipeline config columns
   try {
     db.run(`ALTER TABLE enrichment_config ADD COLUMN ghl_pipeline_id TEXT`);
-  } catch { /* column already exists */ }
+  } catch (e: any) { if (!e.message?.includes('duplicate column')) throw e; }
   try {
     db.run(`ALTER TABLE enrichment_config ADD COLUMN ghl_pipeline_stages TEXT`);
-  } catch { /* column already exists */ }
+  } catch (e: any) { if (!e.message?.includes('duplicate column')) throw e; }
 
   // Migrate: add GHL opportunity tracking to enrichment_leads
   try {
     db.run(`ALTER TABLE enrichment_leads ADD COLUMN ghl_opportunity_id TEXT`);
-  } catch { /* column already exists */ }
+  } catch (e: any) { if (!e.message?.includes('duplicate column')) throw e; }
 
   // Migrate: add subject to reply_threads
   try {
     db.run(`ALTER TABLE reply_threads ADD COLUMN subject TEXT`);
-  } catch { /* column already exists */ }
+  } catch (e: any) { if (!e.message?.includes('duplicate column')) throw e; }
 
   // Migrate: add LinkedIn outreach columns to enrichment_leads
   try {
     db.run(`ALTER TABLE enrichment_leads ADD COLUMN linkedin_outreach_status TEXT DEFAULT 'none'`);
-  } catch { /* column already exists */ }
+  } catch (e: any) { if (!e.message?.includes('duplicate column')) throw e; }
   try {
     db.run(`ALTER TABLE enrichment_leads ADD COLUMN linkedin_message TEXT`);
-  } catch { /* column already exists */ }
+  } catch (e: any) { if (!e.message?.includes('duplicate column')) throw e; }
 
   // Migrate: add LinkedIn sequence columns to enrichment_leads
   try {
     db.run(`ALTER TABLE enrichment_leads ADD COLUMN linkedin_connected_at TEXT`);
-  } catch { /* column already exists */ }
+  } catch (e: any) { if (!e.message?.includes('duplicate column')) throw e; }
   try {
     db.run(`ALTER TABLE enrichment_leads ADD COLUMN linkedin_sequence_step INTEGER DEFAULT 0`);
-  } catch { /* column already exists */ }
+  } catch (e: any) { if (!e.message?.includes('duplicate column')) throw e; }
   try {
     db.run(`ALTER TABLE enrichment_leads ADD COLUMN linkedin_last_dm_at TEXT`);
-  } catch { /* column already exists */ }
+  } catch (e: any) { if (!e.message?.includes('duplicate column')) throw e; }
   try {
     db.run(`ALTER TABLE enrichment_leads ADD COLUMN linkedin_dm_reply_at TEXT`);
-  } catch { /* column already exists */ }
+  } catch (e: any) { if (!e.message?.includes('duplicate column')) throw e; }
 
   // Create LinkedIn DM sequence messages table
   db.run(`CREATE TABLE IF NOT EXISTS linkedin_dm_messages (
@@ -130,6 +130,11 @@ export async function getDb(): Promise<Database> {
   )`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_linkedin_dm_lead ON linkedin_dm_messages(lead_id)`);
 
+  // Migrate: add missing ab_tests columns (test_name alias, winning_variant, completed_at)
+  try { db.run(`ALTER TABLE ab_tests ADD COLUMN test_name TEXT`); } catch (e: any) { if (!e.message?.includes('duplicate column')) throw e; }
+  try { db.run(`ALTER TABLE ab_tests ADD COLUMN winning_variant TEXT`); } catch (e: any) { if (!e.message?.includes('duplicate column')) throw e; }
+  try { db.run(`ALTER TABLE ab_tests ADD COLUMN completed_at TEXT`); } catch (e: any) { if (!e.message?.includes('duplicate column')) throw e; }
+
   // Create campaign snapshots table for performance tracking
   db.run(`CREATE TABLE IF NOT EXISTS campaign_snapshots (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -141,9 +146,9 @@ export async function getDb(): Promise<Database> {
   db.run(`CREATE INDEX IF NOT EXISTS idx_campaign_snapshots_campaign ON campaign_snapshots(campaign_id, captured_at)`);
 
   // Add new playbook columns for company-aware messaging
-  try { db.run(`ALTER TABLE company_playbooks ADD COLUMN company_name TEXT NOT NULL DEFAULT ''`); } catch { /* already exists */ }
-  try { db.run(`ALTER TABLE company_playbooks ADD COLUMN sender_name TEXT NOT NULL DEFAULT ''`); } catch { /* already exists */ }
-  try { db.run(`ALTER TABLE company_playbooks ADD COLUMN compliance_rules TEXT`); } catch { /* already exists */ }
+  try { db.run(`ALTER TABLE company_playbooks ADD COLUMN company_name TEXT NOT NULL DEFAULT ''`); } catch (e: any) { if (!e.message?.includes('duplicate column')) throw e; }
+  try { db.run(`ALTER TABLE company_playbooks ADD COLUMN sender_name TEXT NOT NULL DEFAULT ''`); } catch (e: any) { if (!e.message?.includes('duplicate column')) throw e; }
+  try { db.run(`ALTER TABLE company_playbooks ADD COLUMN compliance_rules TEXT`); } catch (e: any) { if (!e.message?.includes('duplicate column')) throw e; }
 
   // Seed company playbooks if empty
   const pbStmt = db.prepare('SELECT COUNT(*) as count FROM company_playbooks');
@@ -219,7 +224,7 @@ export async function getDb(): Promise<Database> {
       JSON.stringify(['specific_contract_terms', 'legal_questions', 'specific_date_time_meeting', 'complaint_or_threat']),
       JSON.stringify(['specific_revenue_guarantees', 'other_creator_earnings', 'internal_margins']),
       null, // no compliance rules for BMN
-      null,
+      'https://api.leadconnectorhq.com/widget/bookings/brand-me-now-sales',
       3
     ]);
 
@@ -335,6 +340,62 @@ export async function getDb(): Promise<Database> {
 
     console.log('[DB] Seeded BMN company_pipelines (Creator Investment + Agency Partner funnels)');
   }
+
+  // Seed BMN A/B test: Book a Call vs Brand Builder CTA
+  const bmnAbTest = db.prepare("SELECT COUNT(*) as count FROM ab_tests WHERE company_id = 2 AND test_type = 'cta_style' AND status = 'active'");
+  bmnAbTest.step();
+  const bmnAbCount = (bmnAbTest.getAsObject() as any).count;
+  bmnAbTest.free();
+
+  if (bmnAbCount === 0) {
+    db.run(
+      `INSERT INTO ab_tests (company_id, name, test_name, test_type, status) VALUES (2, ?, ?, 'cta_style', 'active')`,
+      ['BMN Creator CTA Split', 'BMN Creator CTA Split']
+    );
+
+    // Get the test ID we just inserted
+    const lastId = db.prepare('SELECT last_insert_rowid() as id');
+    lastId.step();
+    const testId = (lastId.getAsObject() as any).id;
+    lastId.free();
+
+    // Variant A: Push booking link (book a call)
+    db.run(
+      `INSERT INTO ab_test_variants (test_id, variant_name, description, config) VALUES (?, ?, ?, ?)`,
+      [
+        testId,
+        'book_a_call',
+        'Push creator to book a discovery call via scheduling link',
+        JSON.stringify({
+          cta_instruction: 'Your goal is to get the creator on a discovery call. Share the booking link and encourage them to grab a time. Frame it as a quick, casual chat to walk them through how it works. Keep it low-pressure.',
+          cta_type: 'booking_link',
+        }),
+      ]
+    );
+
+    // Variant B: Push Brand Builder application
+    db.run(
+      `INSERT INTO ab_test_variants (test_id, variant_name, description, config) VALUES (?, ?, ?, ?)`,
+      [
+        testId,
+        'brand_builder',
+        'Push creator to start the Brand Builder application to get their own product line',
+        JSON.stringify({
+          cta_instruction: 'Your goal is to get the creator excited about launching their own brand and direct them to start the Brand Builder application. Frame it as the first step to getting their own product line — it only takes a few minutes and lets us tailor everything to their audience. Share the Brand Builder link and make it feel like an exciting next step, not a chore.',
+          cta_type: 'brand_builder',
+        }),
+      ]
+    );
+
+    console.log('[DB] Seeded BMN A/B test: Book a Call vs Brand Builder CTA');
+  }
+
+  // Migrate: add review_status to reply_messages (pending_review, approved, rejected)
+  try {
+    db.run(`ALTER TABLE reply_messages ADD COLUMN review_status TEXT`);
+    // Backfill existing unsent outbound messages to 'approved' so they don't get stuck
+    db.run(`UPDATE reply_messages SET review_status = 'approved' WHERE review_status IS NULL AND direction = 'outbound' AND sent = 0`);
+  } catch (e: any) { if (!e.message?.includes('duplicate column')) throw e; }
 
   saveDb(db);
   return db;

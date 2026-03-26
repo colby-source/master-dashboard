@@ -8,6 +8,7 @@ import { EnrichmentLead, CompanyPlaybook, ReplyThread, HandleReplyResult, Instan
 import { getCompanyConfig, logEvent, updateLead } from './helpers';
 import { getActiveCtaVariant, recordOutcome } from './ab-testing';
 import { createColdEmailOpportunity, loseOpportunity } from './opportunity-pipeline';
+import { getReplyStrategyInsights } from './feedback-loop';
 
 export async function handleReply(
   params: {
@@ -34,6 +35,35 @@ export async function handleReply(
 
   if (!lead) {
     return { action: 'skipped', reason: 'lead_not_found' };
+  }
+
+  // 1b. Dedup: skip if this exact Instantly email was already processed
+  // (prevents duplicate webhook/poller processing of the same reply)
+  if (instantlyEmailId) {
+    const alreadyProcessed = queryOne(
+      `SELECT id FROM reply_messages WHERE instantly_email_id = ? AND direction = 'inbound'`,
+      [instantlyEmailId]
+    );
+    if (alreadyProcessed) {
+      console.log(`[AutoReply] Skipping duplicate reply: ${instantlyEmailId} for ${email}`);
+      return { action: 'skipped', reason: 'duplicate_reply' };
+    }
+    const alreadyInEvents = queryOne(
+      `SELECT id FROM enrichment_events WHERE event_type = 'reply_received' AND event_data LIKE ?`,
+      [`%"instantlyEmailId":"${instantlyEmailId}"%`]
+    );
+    if (alreadyInEvents) {
+      console.log(`[AutoReply] Skipping duplicate reply (event): ${instantlyEmailId} for ${email}`);
+      return { action: 'skipped', reason: 'duplicate_reply' };
+    }
+
+    // Log reply_received event so future dedup checks catch it
+    logEvent(lead.id, lead.company_id, 'reply_received', {
+      instantlyEmailId,
+      email,
+      campaignId: campaignId || null,
+    });
+    saveDb();
   }
 
   // 2. Check auto-reply is enabled for this company
@@ -166,7 +196,7 @@ export async function handleReply(
       const reEngageCompany = reEngagePlaybook?.company_name || 'our team';
       const reEngageBody = `Hi ${lead.first_name || 'there'} — hope you had a great time away. I wanted to circle back on my earlier note about ${reEngageCompany}. Would love to find 15 minutes to connect when your schedule allows.`;
       runSql(
-        `INSERT INTO reply_messages (thread_id, direction, body, sentiment, generated_by, strategy, scheduled_at, sent) VALUES (?, 'outbound', ?, 'ooo_followup', 'system', 'OOO re-engagement after return date', ?, 0)`,
+        `INSERT INTO reply_messages (thread_id, direction, body, sentiment, generated_by, strategy, scheduled_at, sent, review_status) VALUES (?, 'outbound', ?, 'ooo_followup', 'system', 'OOO re-engagement after return date', ?, 0, 'pending_review')`,
         [thread.id, reEngageBody, reEngageAt.toISOString()]
       );
       saveDb();
@@ -210,10 +240,10 @@ export async function handleReply(
     campaignId,
   });
 
-  // 7. Record inbound message
+  // 7. Record inbound message (store instantly_email_id for dedup)
   runSql(
-    `INSERT INTO reply_messages (thread_id, direction, body, sentiment, generated_by) VALUES (?, 'inbound', ?, ?, NULL)`,
-    [thread.id, replyText, sentiment.sentiment]
+    `INSERT INTO reply_messages (thread_id, direction, body, sentiment, generated_by, instantly_email_id) VALUES (?, 'inbound', ?, ?, NULL, ?)`,
+    [thread.id, replyText, sentiment.sentiment, instantlyEmailId || null]
   );
 
   // 8. Update thread with inbound info
@@ -266,35 +296,69 @@ export async function handleReply(
     conversationGoals.push(`CTA STYLE (A/B test ${abVariant.variantName}): ${abVariant.config.cta_instruction}`);
   }
 
-  // 12c. If prospect is interested or requesting a meeting, route by location
+  // 12c. If prospect is interested or requesting a meeting, route by location/company
   const meetingSentiments = ['interested', 'meeting_request'];
   if (meetingSentiments.includes(sentiment.sentiment)) {
-    const leadLocation = (enrichmentData.location || enrichmentData.location_name || enrichmentData.city || '').toLowerCase();
-    const isMiamiArea = /miami|fort lauderdale|ft\. lauderdale|boca raton|palm beach|coral gables|doral|aventura|hollywood, fl|broward|dade/.test(leadLocation);
-
-    // Yacht event invitations are GPC-ONLY (company_id=1)
-    if (isMiamiArea && lead.company_id === 1) {
-      // GPC Miami-area leads: offer yacht mixer invitation
-      try {
-        const upcomingEvent = queryOne(
-          `SELECT id, name, event_date, location, yacht_name FROM yacht_events WHERE status = 'upcoming' AND event_date >= date('now') ORDER BY event_date ASC LIMIT 1`,
-          []
+    if (lead.company_id === 2) {
+      // BMN: A/B test determines CTA — booking link vs Brand Builder application.
+      // The A/B variant cta_instruction (if active) already got pushed into conversationGoals above.
+      // Only add default booking link goal if no A/B variant is active.
+      if (!abVariant?.config?.cta_instruction) {
+        conversationGoals.push(
+          `MEETING BOOKING: The creator seems interested! Your #1 goal is to get them on a call. Share the booking link and encourage them to pick a time that works. Keep it casual and low-pressure — something like "Would love to walk you through how it works — grab a time here that works for you: [booking link]". Do NOT propose specific times yourself — let them self-schedule via the link.`
         );
-        if (upcomingEvent) {
-          conversationGoals.push(
-            `YACHT EVENT INVITATION: This prospect is in the Miami area and seems interested. Instead of a standard call, invite them to our exclusive yacht mixer: "${upcomingEvent.name}" on ${upcomingEvent.event_date} at ${upcomingEvent.location} aboard the ${upcomingEvent.yacht_name}. Frame it as: "We're hosting an intimate investor gathering aboard a private yacht in Miami — I'd love to have you join us. It's a great way to meet the team and other investors in a relaxed setting." If they accept, tell them you'll send a formal invitation with details. Do NOT share a booking link — just gauge interest.`
-          );
-        } else {
-          // No upcoming yacht event, fall back to standard meeting
-          await injectMeetingSlots(lead.company_id, conversationGoals);
-        }
-      } catch (err: any) {
-        console.warn('[AutoReply] Failed to check yacht events:', err.message);
-        await injectMeetingSlots(lead.company_id, conversationGoals);
       }
     } else {
-      // Non-Miami leads OR non-GPC companies: standard 1-on-1 meeting scheduling
-      await injectMeetingSlots(lead.company_id, conversationGoals);
+      const leadLocation = (enrichmentData.location || enrichmentData.location_name || enrichmentData.city || '').toLowerCase();
+      const isMiamiArea = /miami|fort lauderdale|ft\. lauderdale|boca raton|palm beach|coral gables|doral|aventura|hollywood, fl|broward|dade/.test(leadLocation);
+
+      // Yacht event invitations are GPC-ONLY (company_id=1)
+      if (isMiamiArea && lead.company_id === 1) {
+        // GPC Miami-area leads: offer yacht mixer invitation
+        try {
+          const upcomingEvent = queryOne(
+            `SELECT id, name, event_date, location, yacht_name FROM yacht_events WHERE status = 'upcoming' AND event_date >= date('now') ORDER BY event_date ASC LIMIT 1`,
+            []
+          );
+          if (upcomingEvent) {
+            conversationGoals.push(
+              `YACHT EVENT INVITATION: This prospect is in the Miami area and seems interested. Instead of a standard call, invite them to our exclusive yacht mixer: "${upcomingEvent.name}" on ${upcomingEvent.event_date} at ${upcomingEvent.location} aboard the ${upcomingEvent.yacht_name}. Frame it as: "We're hosting an intimate investor gathering aboard a private yacht in Miami — I'd love to have you join us. It's a great way to meet the team and other investors in a relaxed setting." If they accept, tell them you'll send a formal invitation with details. Do NOT share a booking link — just gauge interest.`
+            );
+          } else {
+            // No upcoming yacht event, fall back to standard meeting
+            await injectMeetingSlots(lead.company_id, conversationGoals);
+          }
+        } catch (err: any) {
+          console.warn('[AutoReply] Failed to check yacht events:', err.message);
+          await injectMeetingSlots(lead.company_id, conversationGoals);
+        }
+      } else {
+        // Non-Miami leads OR non-GPC companies: standard 1-on-1 meeting scheduling
+        await injectMeetingSlots(lead.company_id, conversationGoals);
+      }
+    }
+  }
+
+  // 12d. Inject self-learning insights from past reply performance
+  const replyInsights = getReplyStrategyInsights(lead.company_id);
+  if (replyInsights?.topStrategies && replyInsights.topStrategies.length > 0) {
+    const winningStrategies = replyInsights.topStrategies
+      .filter(s => s.meetingRate > 0)
+      .map(s => `"${s.strategy}" (${s.meetingRate}% meeting rate, n=${s.total})`)
+      .join('; ');
+    if (winningStrategies) {
+      conversationGoals.push(
+        `LEARNED FROM PAST PERFORMANCE: These reply strategies have converted best: ${winningStrategies}. Adapt your approach based on what has worked.`
+      );
+    }
+  }
+  if (replyInsights?.abPerformance && replyInsights.abPerformance.length > 1) {
+    const abSummary = replyInsights.abPerformance
+      .filter(v => v.assigned >= 5)
+      .map(v => `${v.variant}: ${v.meetingRate}% meeting rate (n=${v.assigned})`)
+      .join(' vs ');
+    if (abSummary) {
+      conversationGoals.push(`A/B TEST STATUS: ${abSummary}. Lean into what is winning.`);
     }
   }
 
@@ -370,7 +434,7 @@ export async function handleReply(
   const scheduledAt = new Date(Date.now() + delayMs).toISOString();
 
   runSql(
-    `INSERT INTO reply_messages (thread_id, direction, body, sentiment, generated_by, instantly_email_id, strategy, scheduled_at, sent) VALUES (?, 'outbound', ?, ?, 'claude', ?, ?, ?, 0)`,
+    `INSERT INTO reply_messages (thread_id, direction, body, sentiment, generated_by, instantly_email_id, strategy, scheduled_at, sent, review_status) VALUES (?, 'outbound', ?, ?, 'claude', ?, ?, ?, 0, 'pending_review')`,
     [thread.id, result.reply, sentiment.sentiment, instantlyEmailId || null, result.strategy, scheduledAt]
   );
 
@@ -414,8 +478,9 @@ export async function handleReply(
     });
 
     // 18b. Auto-book meeting for interested/meeting_request (if GHL contact exists)
+    // BMN (company_id=2) skips auto-booking — creators self-book via link in sequence copy
     const meetingAutoBook = ['interested', 'meeting_request'];
-    if (meetingAutoBook.includes(sentiment.sentiment) && lead.ghl_contact_id) {
+    if (meetingAutoBook.includes(sentiment.sentiment) && lead.ghl_contact_id && lead.company_id !== 2) {
       try {
         const slots = await getAvailableSlots(lead.company_id);
         if (slots.length > 0) {
@@ -578,14 +643,21 @@ const MAX_REPLY_RETRIES = 3;
 
 export async function processScheduledReplies(): Promise<number> {
   const pending = queryAll(
-    `SELECT rm.*, rt.instantly_email_id as thread_email_id, rt.enrichment_lead_id, rt.company_id, rt.email as thread_email
+    `SELECT rm.*, rt.instantly_email_id as thread_email_id, rt.enrichment_lead_id, rt.company_id, rt.email as thread_email, rt.subject as thread_subject
      FROM reply_messages rm
      JOIN reply_threads rt ON rm.thread_id = rt.id
-     WHERE rm.sent = 0 AND rm.direction = 'outbound' AND rm.scheduled_at <= datetime('now')
-       AND COALESCE(rm.retry_count, 0) < ${MAX_REPLY_RETRIES}
+     WHERE rm.sent = 0 AND rm.direction = 'outbound'
+       AND rm.review_status = 'approved'
+       AND REPLACE(REPLACE(rm.scheduled_at, 'T', ' '), 'Z', '') <= datetime('now')
+       AND COALESCE(rm.retry_count, 0) < ?
      ORDER BY rm.scheduled_at ASC
-     LIMIT 10`
+     LIMIT 10`,
+    [MAX_REPLY_RETRIES]
   );
+
+  if (pending.length > 0) {
+    console.log(`[AutoReply] Found ${pending.length} pending replies to send`);
+  }
 
   let sent = 0;
 
@@ -602,12 +674,29 @@ export async function processScheduledReplies(): Promise<number> {
       `SELECT event_data FROM enrichment_events WHERE enrichment_lead_id = ? AND event_type = 'reply_received' ORDER BY created_at DESC LIMIT 1`,
       [msg.enrichment_lead_id]
     );
-    const eaccount = event?.event_data ? JSON.parse(event.event_data).eaccount : undefined;
+    let eaccount = event?.event_data ? JSON.parse(event.event_data).eaccount : undefined;
+
+    // Fallback: look up a sending account from the campaign's email_list
+    if (!eaccount && msg.thread_email_id) {
+      try {
+        const emailData = await instantlyService.getEmail(msg.thread_email_id);
+        eaccount = emailData?.eaccount || emailData?.to_address_email;
+      } catch { /* best effort */ }
+    }
+
+    if (!eaccount) {
+      console.warn(`[AutoReply] No eaccount for reply_message ${msg.id} (thread ${msg.thread_id}), skipping`);
+      runSql('UPDATE reply_messages SET retry_count = COALESCE(retry_count, 0) + 1, last_error = ? WHERE id = ?', ['no_eaccount', msg.id]);
+      continue;
+    }
+
+    const subject = msg.thread_subject ? `Re: ${msg.thread_subject.replace(/^Re:\s*/i, '')}` : 'Re:';
 
     try {
       await instantlyService.replyToEmail(emailId, {
         body: msg.body,
         eaccount,
+        subject,
       });
 
       runSql('UPDATE reply_messages SET sent = 1 WHERE id = ?', [msg.id]);
@@ -620,11 +709,12 @@ export async function processScheduledReplies(): Promise<number> {
       sent++;
       console.log(`[AutoReply] Sent reply for thread ${msg.thread_id} to ${msg.thread_email}`);
     } catch (err: any) {
+      const errDetail = err.response?.data ? JSON.stringify(err.response.data) : err.message;
       const retryCount = (msg.retry_count || 0) + 1;
-      runSql('UPDATE reply_messages SET retry_count = ?, last_error = ? WHERE id = ?', [retryCount, err.message, msg.id]);
+      runSql('UPDATE reply_messages SET retry_count = ?, last_error = ? WHERE id = ?', [retryCount, errDetail, msg.id]);
 
       if (retryCount >= MAX_REPLY_RETRIES) {
-        console.error(`[AutoReply] Reply ${msg.id} permanently failed after ${MAX_REPLY_RETRIES} retries: ${err.message}`);
+        console.error(`[AutoReply] Reply ${msg.id} permanently failed after ${MAX_REPLY_RETRIES} retries: ${errDetail}`);
         runSql('UPDATE reply_messages SET sent = -1 WHERE id = ?', [msg.id]); // -1 = permanently failed
         logEvent(msg.enrichment_lead_id, msg.company_id, 'auto_reply_permanently_failed', {
           error: err.message,
@@ -632,7 +722,7 @@ export async function processScheduledReplies(): Promise<number> {
           retries: retryCount,
         });
       } else {
-        console.warn(`[AutoReply] Reply ${msg.id} failed (attempt ${retryCount}/${MAX_REPLY_RETRIES}): ${err.message}`);
+        console.warn(`[AutoReply] Reply ${msg.id} failed (attempt ${retryCount}/${MAX_REPLY_RETRIES}): ${errDetail}`);
         logEvent(msg.enrichment_lead_id, msg.company_id, 'auto_reply_send_failed', {
           error: err.message,
           threadId: msg.thread_id,
@@ -686,7 +776,7 @@ export async function processWarmNurture(): Promise<number> {
       const scheduledAt = new Date(Date.now() + 120000 + Math.floor(Math.random() * 180000)).toISOString(); // 2-5 min delay
 
       runSql(
-        `INSERT INTO reply_messages (thread_id, direction, body, sentiment, generated_by, strategy, scheduled_at, sent) VALUES (?, 'outbound', ?, 'warm_nurture', 'system', 'Warm nurture: positive reply but no meeting booked after 3 days', ?, 0)`,
+        `INSERT INTO reply_messages (thread_id, direction, body, sentiment, generated_by, strategy, scheduled_at, sent, review_status) VALUES (?, 'outbound', ?, 'warm_nurture', 'system', 'Warm nurture: positive reply but no meeting booked after 3 days', ?, 0, 'pending_review')`,
         [thread.id, body, scheduledAt]
       );
 
@@ -718,15 +808,24 @@ function findOrCreateThread(params: {
   instantlyEmailId?: string;
   campaignId?: string;
 }): ReplyThread {
-  // Find existing active thread for this lead
-  const existing = queryOne(
+  // Find existing active/paused thread for this lead
+  const active = queryOne(
     `SELECT * FROM reply_threads WHERE enrichment_lead_id = ? AND thread_status IN ('active', 'paused') ORDER BY created_at DESC LIMIT 1`,
     [params.enrichmentLeadId]
   ) as ReplyThread | null;
 
-  if (existing) return existing;
+  if (active) return active;
 
-  // Create new thread
+  // Check for escalated/closed thread — return it instead of creating a duplicate.
+  // The caller (handleReply) will hit the max_auto_replies check and handle accordingly.
+  const terminal = queryOne(
+    `SELECT * FROM reply_threads WHERE enrichment_lead_id = ? AND thread_status IN ('escalated', 'closed') ORDER BY created_at DESC LIMIT 1`,
+    [params.enrichmentLeadId]
+  ) as ReplyThread | null;
+
+  if (terminal) return terminal;
+
+  // Create new thread only when no thread exists at all for this lead
   runSql(
     `INSERT INTO reply_threads (enrichment_lead_id, company_id, email, instantly_email_id, instantly_campaign_id) VALUES (?, ?, ?, ?, ?)`,
     [params.enrichmentLeadId, params.companyId, params.email, params.instantlyEmailId || null, params.campaignId || null]

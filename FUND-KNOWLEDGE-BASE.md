@@ -27,11 +27,16 @@
 | Metric | Value |
 |--------|-------|
 | **Fund I Size** | $50 million (fully subscribed) |
-| **Return on Equity** | 179% in just 2 years |
+| **Return on Equity** | 179% (unrealized — fund is still active, ~18 months in) |
+| **Status** | Active — no exit yet. ROE is based on current portfolio valuations. |
+| **First Distribution** | Q1 — LPs started receiving capital back within the first quarter |
 | **Q3 Distributions** | $320K across the portfolio — every dollar from government-backed Section 8 rent |
 | **Performance** | Performing exactly as projected |
+| **Properties** | Detailed in Fund I offering documents |
 
-Fund I is the proof of concept. Every promise made to Fund I LPs has been delivered.
+Fund I is the proof of concept. Every promise made to Fund I LPs has been delivered. Fund is still active and performing — 179% ROE is current unrealized return, not a realized exit.
+
+**IMPORTANT:** Do NOT quote a specific IRR for Fund I — it is unrealized. Use "179% return on equity" as the headline stat. Never frame it as a guaranteed or final return.
 
 ---
 

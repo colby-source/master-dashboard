@@ -11,18 +11,23 @@
     "build:client": "cd client && npm run build",
     "start": "node dist/server/index.js",
     "db:seed": "tsx database/seed.ts",
-    "db:migrate": "tsx database/migrations/migrate.ts"
+    "db:migrate": "tsx database/migrations/migrate.ts",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
     "@google/genai": "^1.46.0",
     "axios": "^1.7.0",
+    "cheerio": "^1.2.0",
     "chrome-launcher": "^1.2.1",
     "chrome-remote-interface": "^0.34.0",
     "cors": "^2.8.5",
     "docx": "^9.6.0",
     "dotenv": "^16.4.0",
+    "duck-duck-scrape": "^2.2.7",
     "express": "^4.21.0",
+    "google-it": "^1.6.4",
     "googleapis": "^171.4.0",
     "localtunnel": "^2.0.2",
     "node-cron": "^4.2.1",
@@ -45,6 +50,7 @@
     "@types/ws": "^8.5.10",
     "concurrently": "^8.2.0",
     "tsx": "^4.7.0",
-    "typescript": "^5.4.0"
+    "typescript": "^5.4.0",
+    "vitest": "^4.1.1"
   }
 }
