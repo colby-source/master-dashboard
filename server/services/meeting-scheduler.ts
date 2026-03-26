@@ -122,11 +122,15 @@ export async function getAvailableSlots(companyId = 1, maxSlots = 6): Promise<Me
 
   if (ghlClient) {
     try {
-      const candidates = generateCandidateSlots();
-      if (candidates.length === 0) return [];
-
-      const rangeStart = candidates[0].start;
-      const rangeEnd = candidates[candidates.length - 1].end;
+      // Query GHL for the full look-ahead window — let the calendar's own availability rules decide
+      const now = new Date();
+      const rangeStartDate = new Date(now);
+      rangeStartDate.setDate(rangeStartDate.getDate() + 1);
+      rangeStartDate.setHours(0, 0, 0, 0);
+      const rangeEndDate = new Date(rangeStartDate);
+      rangeEndDate.setDate(rangeEndDate.getDate() + config.meetings.lookAheadWeeks * 7);
+      const rangeStart = rangeStartDate.toISOString();
+      const rangeEnd = rangeEndDate.toISOString();
 
       // Use GHL's native free-slots API — respects conflict calendars automatically
       const freeSlotData = await ghlClient.getFreeSlots(calendarId, rangeStart, rangeEnd, timezone);
@@ -136,20 +140,28 @@ export async function getAvailableSlots(companyId = 1, maxSlots = 6): Promise<Me
         // or { "slots": { "YYYY-MM-DD": ["HH:mm", ...] } }
         const available: MeetingSlot[] = [];
 
-        // Handle the nested date→slots format
+        // Handle GHL free-slots response: { "YYYY-MM-DD": { "slots": ["ISO-string", ...] }, "traceId": "..." }
         const slotsMap = freeSlotData.slots || freeSlotData;
         for (const [dateKey, daySlots] of Object.entries(slotsMap)) {
-          if (!Array.isArray(daySlots)) continue;
+          if (dateKey === 'traceId') continue;
 
-          for (const slot of daySlots) {
-            const startStr = typeof slot === 'string' ? `${dateKey}T${slot}` : slot.startTime || slot.start;
+          // daySlots can be { slots: string[] } or string[] directly
+          const slotArray: any[] = Array.isArray(daySlots)
+            ? daySlots
+            : (daySlots as any)?.slots && Array.isArray((daySlots as any).slots)
+              ? (daySlots as any).slots
+              : [];
+          if (slotArray.length === 0) continue;
+
+          for (const slot of slotArray) {
+            // Slots can be full ISO strings ("2026-03-23T10:30:00-04:00") or "HH:mm"
+            const startStr = typeof slot === 'string'
+              ? (slot.includes('T') ? slot : `${dateKey}T${slot}`)
+              : slot.startTime || slot.start;
             if (!startStr) continue;
 
             const slotStart = new Date(startStr);
             const dayOfWeek = slotStart.getDay();
-
-            // Only include slots on our configured meeting days
-            if (!meetingDays.includes(dayOfWeek)) continue;
 
             const slotEnd = new Date(slotStart);
             slotEnd.setMinutes(slotEnd.getMinutes() + meetingDurationMinutes);
@@ -309,8 +321,8 @@ export async function bookMeeting(
         console.error('[MeetingScheduler] Confirmation email failed:', err.message);
       });
 
-      // SMS alert for meeting booked
-      import('./sms-notifications').then(({ sendSms }) => {
+      // Email alert for meeting booked
+      import('./sms-notifications').then(({ sendSmsToOperator }) => {
         const lead = queryOne('SELECT first_name, last_name, email, company_name, score FROM enrichment_leads WHERE id = ?', [leadId]);
         const name = lead ? [lead.first_name, lead.last_name].filter(Boolean).join(' ') || lead.email : ghlContactId;
         const company = lead?.company_name || '';
@@ -320,7 +332,7 @@ export async function bookMeeting(
           `${slot.displayTime}`,
           lead?.score ? `Score: ${lead.score}` : '',
         ].filter(Boolean).join('\n');
-        sendSms(msg).catch(err => console.error('[SMS] Meeting booked alert error:', err.message));
+        sendSmsToOperator(companyId, msg).catch(err => console.error('[Notify] Meeting booked alert error:', err.message));
       }).catch(() => {});
 
       // Schedule 24-hour and 1-hour reminders
@@ -436,12 +448,15 @@ export async function processMeetingReminders(): Promise<number> {
       const rSender = reminderPlaybook?.sender_name || 'our team';
       const rCompany = reminderPlaybook?.company_name || 'our team';
 
+      const reminderBody = data.reminderType === '24h'
+        ? `Quick reminder — you have a call with ${rSender} from ${rCompany} tomorrow at ${data.slot.displayTime}. Looking forward to it!`
+        : `Just a heads up — your call with ${rSender} from ${rCompany} starts in about an hour (${data.slot.displayTime}). Talk soon!`;
+
       await ghlClient.sendMessage({
         contactId: data.ghlContactId,
-        type: 'SMS',
-        message: data.reminderType === '24h'
-          ? `Quick reminder — you have a call with ${rSender} from ${rCompany} tomorrow at ${data.slot.displayTime}. Looking forward to it!`
-          : `Just a heads up — your call with ${rSender} from ${rCompany} starts in about an hour (${data.slot.displayTime}). Talk soon!`,
+        type: 'Email',
+        subject: `Reminder: Call with ${rCompany} — ${data.slot.displayTime}`,
+        html: `<p>${reminderBody}</p>`,
       });
 
       // Mark as sent

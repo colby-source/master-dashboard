@@ -640,6 +640,18 @@ export const api = {
   getAutoReplyStats: (companyId?: number) =>
     request(`/enrichment/auto-reply-stats${qs({ company_id: companyId })}`),
 
+  // Reply draft review queue
+  getReplyDrafts: (params?: { company_id?: number; review_status?: string; limit?: number; offset?: number }) =>
+    request(`/enrichment/reply-drafts${qs(params as any ?? {})}`),
+  approveReplyDraft: (id: number) =>
+    request(`/enrichment/reply-drafts/${id}/approve`, { method: 'POST' }),
+  rejectReplyDraft: (id: number) =>
+    request(`/enrichment/reply-drafts/${id}/reject`, { method: 'POST' }),
+  bulkActionReplyDrafts: (ids: number[], action: 'approve' | 'reject') =>
+    request('/enrichment/reply-drafts/bulk-action', { method: 'POST', body: JSON.stringify({ ids, action }) }),
+  editReplyDraft: (id: number, body: string) =>
+    request(`/enrichment/reply-drafts/${id}`, { method: 'PATCH', body: JSON.stringify({ body }) }),
+
   // ── BTR Conference ─────────────────────────────────────────
   getBtrDashboard: () => request('/btr-conference/dashboard'),
   updateBtrContactStatus: (contactId: string, status: string) =>

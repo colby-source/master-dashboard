@@ -59,7 +59,7 @@ export interface PrefilterResult {
  *
  * Returns { passed: true } if the email is worth enriching.
  */
-export async function prefilterEmail(email: string): Promise<PrefilterResult> {
+export async function prefilterEmail(email: string, options?: { companyId?: number }): Promise<PrefilterResult> {
   const normalized = email.trim().toLowerCase();
 
   // Basic format check
@@ -84,9 +84,10 @@ export async function prefilterEmail(email: string): Promise<PrefilterResult> {
     };
   }
 
-  // Check personal email domains
+  // Check personal email domains — skip for BMN (company_id=2) since creators
+  // use personal emails (Gmail, Yahoo, etc.) and should never be disqualified for it
   const isPersonal = PERSONAL_DOMAINS.has(domain);
-  if (isPersonal) {
+  if (isPersonal && options?.companyId !== 2) {
     return {
       passed: false,
       reason: 'personal_email',

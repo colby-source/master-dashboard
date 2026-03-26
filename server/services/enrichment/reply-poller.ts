@@ -28,9 +28,11 @@ export async function pollInstantlyReplies(): Promise<number> {
     }
 
     let processed = 0;
+    let skippedUnmapped = 0;
 
     for (const email of items) {
       const emailId = email.id;
+      const threadId = email.thread_id;
       const leadEmail = email.lead_email || email.from_address_email || email.from?.email;
       const replyText = email.body?.text || email.body?.html || email.body || '';
       const campaignId = email.campaign_id;
@@ -39,17 +41,32 @@ export async function pollInstantlyReplies(): Promise<number> {
       const leadLastName = email.lead_last_name || email.lead_name?.split(' ').slice(1).join(' ') || null;
 
       if (!leadEmail || !replyText || !emailId) {
+        await markRead(emailId, threadId);
         continue;
       }
 
-      // Skip if we already processed this email (check DB)
-      const alreadyProcessed = queryOne(
+      // Skip unmapped campaigns immediately — mark as read to clear Unibox
+      if (campaignId && !resolveCompanyFromCampaign(campaignId)) {
+        await markRead(emailId, threadId);
+        skippedUnmapped++;
+        continue;
+      }
+
+      // Skip if we already processed this email (check both inbound messages and enrichment events)
+      const alreadyInMessages = queryOne(
+        `SELECT id FROM reply_messages WHERE instantly_email_id = ? AND direction = 'inbound'`,
+        [emailId]
+      );
+      if (alreadyInMessages) {
+        await markRead(emailId, threadId);
+        continue;
+      }
+      const alreadyInEvents = queryOne(
         `SELECT id FROM enrichment_events WHERE event_type = 'reply_received' AND event_data LIKE ?`,
         [`%"instantlyEmailId":"${emailId}"%`]
       );
-      if (alreadyProcessed) {
-        // Still mark as read so we don't fetch it again
-        try { await instantlyService.markEmailRead(emailId); } catch {}
+      if (alreadyInEvents) {
+        await markRead(emailId, threadId);
         continue;
       }
 
@@ -74,14 +91,19 @@ export async function pollInstantlyReplies(): Promise<number> {
         );
 
         // Mark as read in Instantly so we don't process it again
-        try { await instantlyService.markEmailRead(emailId); } catch {}
+        await markRead(emailId, threadId);
 
         processed++;
       } catch (err: any) {
         console.error(`[ReplyPoller] Error processing reply from ${leadEmail}:`, err.message);
+        // Still mark as read to prevent infinite retry on broken emails
+        await markRead(emailId, threadId);
       }
     }
 
+    if (skippedUnmapped > 0) {
+      console.log(`[ReplyPoller] Marked ${skippedUnmapped} unmapped campaign emails as read`);
+    }
     if (processed > 0) {
       console.log(`[ReplyPoller] Processed ${processed} new replies`);
     }
@@ -90,6 +112,22 @@ export async function pollInstantlyReplies(): Promise<number> {
   } catch (err: any) {
     console.error('[ReplyPoller] Poll error:', err.message);
     return 0;
+  }
+}
+
+/**
+ * Mark an email/thread as read using the best available method.
+ * Tries thread-level mark-as-read first (official API), falls back to email patch.
+ */
+async function markRead(emailId: string | undefined, threadId: string | undefined): Promise<void> {
+  try {
+    if (threadId) {
+      await instantlyService.markThreadRead(threadId);
+    } else if (emailId) {
+      await instantlyService.markEmailRead(emailId);
+    }
+  } catch {
+    // Swallow — best-effort
   }
 }
 

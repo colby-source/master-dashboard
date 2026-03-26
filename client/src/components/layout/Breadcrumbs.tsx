@@ -29,6 +29,7 @@ const routeLabels: Record<string, string> = {
   competitors: "Competitors",
   scraping: "Scraping",
   btr: "BTR Conference",
+  "reply-review": "Reply Review",
 }
 
 export function Breadcrumbs() {

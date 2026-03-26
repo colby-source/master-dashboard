@@ -90,6 +90,9 @@ export async function runOptimizationCycle(companyId: number): Promise<{
     // 4. Correlate reply outcomes with email generation strategies
     await correlateOutcomes(companyId);
 
+    // 5. Analyze reply strategy performance (which Claude reply strategies convert to meetings)
+    await analyzeReplyStrategies(companyId);
+
     saveDb();
 
     console.log(
@@ -196,6 +199,110 @@ async function correlateOutcomes(companyId: number): Promise<void> {
         [JSON.stringify(updatedData), lead.id]
       );
     } catch { /* skip malformed */ }
+  }
+}
+
+/**
+ * Analyze which Claude reply strategies lead to meetings vs escalations.
+ * Feeds learnings back into the system prompt so Claude improves over time.
+ */
+async function analyzeReplyStrategies(companyId: number): Promise<void> {
+  try {
+    // Get outbound reply strategies and their thread outcomes
+    const strategyOutcomes = queryAll(
+      `SELECT rm.strategy, rt.thread_status, rt.last_sentiment, rt.auto_reply_count,
+              (SELECT COUNT(*) FROM enrichment_events ee
+               WHERE ee.enrichment_lead_id = rt.enrichment_lead_id
+                 AND ee.event_type = 'meeting_booked') as meetings
+       FROM reply_messages rm
+       JOIN reply_threads rt ON rm.thread_id = rt.id
+       WHERE rt.company_id = ? AND rm.direction = 'outbound' AND rm.generated_by = 'claude'
+         AND rm.strategy IS NOT NULL AND rm.strategy != ''
+       ORDER BY rm.created_at DESC LIMIT 100`,
+      [companyId]
+    );
+
+    if (strategyOutcomes.length < 10) return; // Need enough data
+
+    // Group by strategy and count outcomes
+    const strategyStats: Record<string, { total: number; meetings: number; escalated: number; positive: number }> = {};
+    for (const row of strategyOutcomes) {
+      const strategy = (row.strategy || '').slice(0, 100); // Truncate long strategies
+      if (!strategyStats[strategy]) {
+        strategyStats[strategy] = { total: 0, meetings: 0, escalated: 0, positive: 0 };
+      }
+      strategyStats[strategy].total++;
+      if (row.meetings > 0) strategyStats[strategy].meetings++;
+      if (row.thread_status === 'escalated') strategyStats[strategy].escalated++;
+      if (['interested', 'meeting_request'].includes(row.last_sentiment)) strategyStats[strategy].positive++;
+    }
+
+    // Also analyze A/B variant performance for this company
+    const abResults = queryAll(
+      `SELECT atv.variant_name, atv.leads_assigned, atv.meetings_booked, atv.positive_replies
+       FROM ab_test_variants atv
+       JOIN ab_tests at2 ON atv.test_id = at2.id
+       WHERE at2.company_id = ? AND at2.status = 'active'`,
+      [companyId]
+    );
+
+    // Store as reply_strategy_insights event
+    logEvent(null, companyId, 'reply_strategy_insights', {
+      strategyStats,
+      abVariantPerformance: abResults.map(r => ({
+        variant: r.variant_name,
+        assigned: r.leads_assigned,
+        meetings: r.meetings_booked,
+        positiveReplies: r.positive_replies,
+        meetingRate: r.leads_assigned > 0 ? Math.round((r.meetings_booked / r.leads_assigned) * 1000) / 10 : 0,
+      })),
+      analyzedAt: new Date().toISOString(),
+      sampleSize: strategyOutcomes.length,
+    });
+
+    console.log(`[FeedbackLoop] Reply strategy analysis: ${Object.keys(strategyStats).length} strategies from ${strategyOutcomes.length} replies`);
+  } catch (err: any) {
+    console.error('[FeedbackLoop] Reply strategy analysis error:', err.message);
+  }
+}
+
+/**
+ * Get the latest reply strategy insights for a company.
+ * Used by the reply handler to incorporate learnings into Claude's system prompt.
+ */
+export function getReplyStrategyInsights(companyId: number): {
+  topStrategies: { strategy: string; meetingRate: number; total: number }[];
+  abPerformance: { variant: string; meetingRate: number; assigned: number }[];
+} | null {
+  const event = queryOne(
+    `SELECT event_data FROM enrichment_events
+     WHERE company_id = ? AND event_type = 'reply_strategy_insights'
+     ORDER BY created_at DESC LIMIT 1`,
+    [companyId]
+  );
+
+  if (!event?.event_data) return null;
+
+  try {
+    const data = JSON.parse(event.event_data);
+    const stats = data.strategyStats || {};
+
+    const topStrategies = Object.entries(stats)
+      .map(([strategy, s]: [string, any]) => ({
+        strategy,
+        meetingRate: s.total > 0 ? Math.round((s.meetings / s.total) * 1000) / 10 : 0,
+        total: s.total,
+      }))
+      .filter(s => s.total >= 3) // Need at least 3 uses
+      .sort((a, b) => b.meetingRate - a.meetingRate)
+      .slice(0, 5);
+
+    return {
+      topStrategies,
+      abPerformance: data.abVariantPerformance || [],
+    };
+  } catch {
+    return null;
   }
 }
 

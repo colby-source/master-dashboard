@@ -28,6 +28,7 @@ import {
   SearchCheck,
   FlaskConical,
   FileText,
+  MailCheck,
 } from "lucide-react"
 
 import {
@@ -88,6 +89,7 @@ const navGroups = [
       { title: "Contacts", icon: Users, path: "/contacts" },
       { title: "Pipelines", icon: GitBranch, path: "/pipelines" },
       { title: "Enrichment", icon: Sparkles, path: "/enrichment" },
+      { title: "Reply Review", icon: MailCheck, path: "/reply-review" },
       { title: "GHL Command", icon: Zap, path: "/ghl" },
       { title: "Lookup", icon: SearchCheck, path: "/lookup" },
       { title: "Transcripts", icon: FileText, path: "/meeting-transcripts" },

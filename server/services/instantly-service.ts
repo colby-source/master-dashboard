@@ -451,8 +451,13 @@ class InstantlyService {
     }
   }
 
-  async replyToEmail(emailId: string, body: { body: string; eaccount?: string }): Promise<any> {
-    const { data } = await this.client.post(`/emails/${emailId}/reply`, body);
+  async replyToEmail(emailId: string, opts: { body: string; eaccount: string; subject?: string }): Promise<any> {
+    const { data } = await this.client.post('/emails/reply', {
+      reply_to_uuid: emailId,
+      eaccount: opts.eaccount,
+      subject: opts.subject || 'Re:',
+      body: { text: opts.body },
+    });
     return data;
   }
 
@@ -462,7 +467,13 @@ class InstantlyService {
   }
 
   async markEmailRead(emailId: string): Promise<any> {
-    const { data } = await this.client.post(`/emails/${emailId}/mark-read`, {});
+    // Legacy — prefer markThreadRead for reliable mark-as-read
+    const { data } = await this.client.patch(`/emails/${emailId}`, { is_unread: 0 });
+    return data;
+  }
+
+  async markThreadRead(threadId: string): Promise<any> {
+    const { data } = await this.client.post(`/emails/threads/${threadId}/mark-as-read`, {});
     return data;
   }
 

@@ -22,6 +22,13 @@ export async function enrichLead(leadId: number): Promise<boolean> {
   const lead = queryOne('SELECT * FROM enrichment_leads WHERE id = ?', [leadId]) as EnrichmentLead | null;
   if (!lead) return false;
 
+  // BMN (company_id=2) NEVER runs through enrichment — creators use personal
+  // emails and don't need B2B enrichment/scoring. They flow: Instantly → GHL directly.
+  if (lead.company_id === 2) {
+    console.log(`[Enrichment] Skipping enrichment for BMN lead ${leadId} (${lead.email})`);
+    return false;
+  }
+
   updateLead(leadId, { status: 'enriching' });
   logEvent(leadId, lead.company_id, 'enrichment_started', null);
 
@@ -31,7 +38,7 @@ export async function enrichLead(leadId: number): Promise<boolean> {
 
     // ── Tier 0: Free pre-filter (MX check + personal domain block) ──
     if (lead.email) {
-      const prefilter = await prefilterEmail(lead.email);
+      const prefilter = await prefilterEmail(lead.email, { companyId: lead.company_id });
       enrichmentData.prefilter = prefilter;
 
       if (!prefilter.passed) {
@@ -755,6 +762,13 @@ export function excludeFromColdEmail(leadId: number, reason?: string): void {
 }
 
 export async function processLead(leadId: number): Promise<boolean> {
+  // BMN (company_id=2) NEVER runs through the enrichment pipeline
+  const checkLead = queryOne('SELECT company_id FROM enrichment_leads WHERE id = ?', [leadId]);
+  if (checkLead?.company_id === 2) {
+    console.log(`[Enrichment] Skipping processLead for BMN lead ${leadId}`);
+    return false;
+  }
+
   const enriched = await enrichLead(leadId);
   if (!enriched) return false;
 

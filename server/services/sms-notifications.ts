@@ -1,5 +1,6 @@
-// ── SMS Notification Service ──────────────────────────────
-// Sends daily campaign reports + real-time hot lead alerts via GHL SMS
+// ── Operator Notification Service ─────────────────────────
+// Sends daily campaign reports + real-time hot lead alerts via GHL Email
+// (Originally SMS — switched to Email because GHL free trial SMS credits exhausted)
 
 import { schedule as cronSchedule } from 'node-cron';
 import Anthropic from '@anthropic-ai/sdk';
@@ -43,27 +44,42 @@ function getActiveCompanies(): SmsCompanyConfig[] {
   }));
 }
 
-// ── Send SMS helper ───────────────────────────────────────
-// Routes to the correct operator based on company ID
-async function sendSmsToOperator(companyId: number, message: string): Promise<boolean> {
+// ── Send Email helper ─────────────────────────────────────
+// Routes to the correct operator based on company ID (via GHL Email)
+async function sendEmailToOperator(companyId: number, subject: string, message: string): Promise<boolean> {
   const recipient = OPERATOR_MAP[companyId] || DEFAULT_RECIPIENT;
   const client = ghlService.getClient(recipient.companyId);
   if (!client) {
-    console.error(`[SMS] No GHL client for company ${recipient.companyId}`);
+    console.error(`[Notify] No GHL client for company ${recipient.companyId}`);
     return false;
   }
   try {
+    // Convert plain text message to simple HTML (preserve line breaks)
+    const html = message
+      .split('\n')
+      .map(line => line.trim() === '' ? '<br/>' : `<p style="margin:2px 0">${line}</p>`)
+      .join('\n');
+
     await client.sendMessage({
       contactId: recipient.ghlContactId,
-      type: 'SMS',
-      message,
+      type: 'Email',
+      subject,
+      html,
     });
-    console.log(`[SMS] Sent to operator (company ${companyId}):`, message.slice(0, 60) + '...');
+    console.log(`[Notify] Email sent to operator (company ${companyId}): ${subject}`);
     return true;
   } catch (err: any) {
-    console.error('[SMS] Send failed:', err.message);
+    console.error('[Notify] Email send failed:', err.message);
     return false;
   }
+}
+
+// Legacy-compatible wrapper: sends email instead of SMS
+async function sendSmsToOperator(companyId: number, message: string): Promise<boolean> {
+  // Extract first line as subject, rest as body
+  const lines = message.split('\n');
+  const subject = lines[0] || 'Dashboard Alert';
+  return sendEmailToOperator(companyId, subject, message);
 }
 
 // Legacy: send to Colby (backward compat for non-company-specific messages)
@@ -272,9 +288,9 @@ export function initSmsNotifications(): void {
     });
   }, { timezone: 'America/New_York' });
 
-  console.log('[SMS] Daily campaign report scheduled — 8:00 AM ET');
-  console.log('[SMS] Hot lead alerts active — real-time via Claude analysis');
+  console.log('[Notify] Daily campaign report scheduled — 8:00 AM ET');
+  console.log('[Notify] Hot lead alerts active — real-time via Claude analysis (Email)');
 }
 
-// Export for manual testing
-export { sendDailyCampaignReport, sendSms, sendSmsToOperator };
+// Export for manual testing and other services
+export { sendDailyCampaignReport, sendSms, sendSmsToOperator, sendEmailToOperator };

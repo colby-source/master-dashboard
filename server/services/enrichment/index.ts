@@ -22,7 +22,7 @@ import {
 } from './opportunity-pipeline';
 import { generateEmailSequence } from './email-generator';
 import { captureCampaignSnapshot, analyzePersonalizationPerformance, getCampaignTrend } from './campaign-tracker';
-import { runOptimizationCycle, getLatestInsights } from './feedback-loop';
+import { runOptimizationCycle, getLatestInsights, getReplyStrategyInsights } from './feedback-loop';
 import {
   enrichLead,
   pushToGhl,
@@ -219,6 +219,21 @@ initSmsNotifications();
 // Initialize CMO health monitor (trend-based early warnings — 7:30 AM, 12:30 PM, 5:30 PM ET)
 import { initCmoHealthMonitor } from '../cmo-health-monitor';
 initCmoHealthMonitor();
+
+// ── BMN Follow-Up Cadence (polls GHL → Claude personalized emails → book calls) ──
+import { migrateBmnFollowup, runFollowupCycle } from '../bmn-followup-cadence';
+migrateBmnFollowup();
+setInterval(() => {
+  runFollowupCycle().catch((err: any) => {
+    console.error('[BmnFollowup] runFollowupCycle error:', err.message);
+  });
+}, 30 * 60 * 1000); // every 30 minutes
+// Initial run 15 seconds after startup
+setTimeout(() => {
+  runFollowupCycle().catch((err: any) => {
+    console.error('[BmnFollowup] initial cycle error:', err.message);
+  });
+}, 15000);
 
 // Daily LinkedIn outreach at 9:00 AM ET
 import { linkedInService } from '../linkedin-service';

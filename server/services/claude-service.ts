@@ -525,77 +525,69 @@ Only output valid JSON.`
       ? `COMPLIANCE RULES (MANDATORY — violations create legal liability):\n${complianceRules.map(r => `- ${r}`).join('\n')}`
       : '';
 
-    const systemPrompt = `You are a senior sales representative for the following company. You write natural, conversational emails that feel genuinely human — never salesy, robotic, or templated.
+    const senderName = context.playbook.sender_name || '';
+    const companyName = context.playbook.company_name || '';
 
-COMPANY:
-${context.playbook.company_description}
+    const systemPrompt = `You are ${senderName}${companyName ? ` from ${companyName}` : ''}. You are replying to a real email thread. Write exactly like a busy professional texting — ultra-short, no fluff, no sales language.
 
-KEY VALUE PROPOSITIONS:
+HARD RULES:
+- 1-3 sentences MAX. Period. If you write more, you failed.
+- Never open with their name + comma. Just start talking.
+- Never use: "I completely understand", "That's exactly why", "I'd love to", "Just following up", "Hope this finds you", "Great question", "Absolutely", "No worries at all"
+- No bullet points. No paragraphs. No re-explaining the offer.
+- Sound like a person, not a chatbot. Read it back — would a real person send this?
+
+COMPANY: ${context.playbook.company_description}
+
+VALUE PROPS (use sparingly, don't list them):
 ${context.playbook.value_propositions.map(v => `- ${v}`).join('\n')}
 
-TARGET CUSTOMER:
-${context.playbook.target_icp}
+TARGET CUSTOMER: ${context.playbook.target_icp}
 
-TONE: ${context.playbook.tone}
-${toneGuide[context.playbook.tone] || toneGuide.professional}
+TONE: ${context.playbook.tone} — ${toneGuide[context.playbook.tone] || toneGuide.professional}
 
-OBJECTION RESPONSES:
+OBJECTION RESPONSES (adapt naturally, don't copy verbatim):
 ${objectionHandlerStr}
 
-CONVERSATION GOALS (advance toward these):
-${context.playbook.conversation_goals.map(g => `- ${g}`).join('\n')}
+GOALS: ${context.playbook.conversation_goals.join(', ')}
 
-TOPICS TO NEVER MENTION:
-${context.playbook.do_not_mention.map(t => `- ${t}`).join('\n')}
+NEVER MENTION: ${context.playbook.do_not_mention.join(', ')}
 
 ${complianceBlock}
 
-${context.playbook.booking_url ? `BOOKING LINK (use when prospect wants to meet): ${context.playbook.booking_url}` : ''}
+${context.playbook.booking_url ? `BOOKING LINK: ${context.playbook.booking_url}\nDrop it when they show interest. Keep it casual: "here's my calendar: [link]" — one line, done.` : ''}
 
-ESCALATION TRIGGERS (if any of these apply, set shouldEscalate=true):
+ESCALATION TRIGGERS (set shouldEscalate=true):
 ${context.playbook.escalation_triggers.map(t => `- ${t}`).join('\n')}
 - Auto-reply count has reached ${context.playbook.max_auto_replies} (currently at ${context.autoReplyCount})`;
 
-    const userPrompt = `PROSPECT INFORMATION:
-${prospectContext || 'No enrichment data available.'}
+    const userPrompt = `PROSPECT: ${prospectContext || 'No data.'}
 
-CONVERSATION HISTORY:
+THREAD:
 ${conversationStr}
 
-LATEST REPLY FROM PROSPECT:
+THEIR LATEST MESSAGE:
 "${context.replyText}"
 
-DETECTED SENTIMENT: ${context.sentiment}
+SENTIMENT: ${context.sentiment}
 
-INSTRUCTIONS:
-1. Write a reply that directly addresses what the prospect said
-2. Keep it 2-4 sentences maximum — short and human
-3. Reference their role, company, or situation naturally if you have the data
-4. Advance toward the next conversation goal
-5. Match the ${context.playbook.tone} tone exactly
-6. If they're asking to meet or schedule, ${context.playbook.booking_url ? 'include the booking link: ' + context.playbook.booking_url : 'suggest a time and set shouldEscalate=true so a human can coordinate'}
-7. If they said they're not interested or asked to unsubscribe, be gracious and set shouldEscalate=false (the system handles unsubscribes separately)
-8. Never use phrases like "I hope this email finds you well", "Just following up", "As per my last email", or other obviously templated language
-9. Do NOT include a subject line — this is a reply in an existing thread
-10. Do NOT include a greeting like "Hi [Name]," — jump straight into the response naturally, or use a very casual opener
+Read the thread above. Don't repeat anything already said. Pick up naturally.
 
-Respond in this exact JSON format:
-{
-  "reply": "the email reply text",
-  "strategy": "1-sentence explanation of your approach",
-  "shouldEscalate": false,
-  "escalationReason": "only if shouldEscalate is true",
-  "suggestedNextStep": "what should happen next in this thread"
-}
+If they said "yes" / "interested" / "tell me more" → booking link + one line. Done. Don't re-pitch.
+If not interested or unsubscribe → be gracious, short. shouldEscalate=false.
+${context.playbook.booking_url ? 'Interest shown → include: ' + context.playbook.booking_url : 'Want to meet → shouldEscalate=true'}
+No subject line. This is a reply.
 
-Output raw JSON only. No code fences, no markdown.`;
+JSON only:
+{"reply":"...","strategy":"...","shouldEscalate":false,"escalationReason":"...","suggestedNextStep":"..."}`;
 
     try {
       const response = await client.messages.create({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
+        max_tokens: 500,
+        system: systemPrompt,
         messages: [
-          { role: 'user', content: systemPrompt + '\n\n---\n\n' + userPrompt },
+          { role: 'user', content: userPrompt },
         ],
       });
 
