@@ -78,6 +78,8 @@ async function main() {
       if (allowedOrigins.includes(origin)) return callback(null, true);
       // Allow any trycloudflare.com tunnel origin (URL changes on restart)
       if (origin.endsWith('.trycloudflare.com')) return callback(null, true);
+      // Allow Railway deployment origin
+      if (origin.endsWith('.railway.app')) return callback(null, true);
       callback(new Error(`CORS: origin ${origin} not allowed`));
     },
     credentials: true,
