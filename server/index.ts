@@ -179,4 +179,8 @@ async function main() {
   });
 }
 
-main().catch(console.error);
+console.log('[Boot] Starting master-dashboard...');
+main().catch(err => {
+  console.error('[Boot] Fatal startup error:', err);
+  process.exit(1);
+});
