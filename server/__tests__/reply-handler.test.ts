@@ -6,8 +6,6 @@
  *     (not string interpolation), confirming the parameterized query fix.
  */
 
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-
 // ---------------------------------------------------------------------------
 // Mock all heavy dependencies so the module can be imported without a real DB
 // or network calls.

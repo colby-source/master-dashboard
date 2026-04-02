@@ -50,6 +50,7 @@ import auditRouter from './routes/audit';
 import spendRouter from './routes/spend';
 import cmoHealthRouter from './routes/cmo-health';
 import adIntelligenceRouter from './routes/ad-intelligence';
+import bmnCadenceRouter from './routes/bmn-cadence';
 
 async function main() {
   // Initialize database
@@ -135,6 +136,7 @@ async function main() {
   app.use('/api/spend', spendRouter);
   app.use('/api/cmo', cmoHealthRouter);
   app.use('/api/ad-intelligence', adIntelligenceRouter);
+  app.use('/api/bmn-cadence', bmnCadenceRouter);
 
   // 404 handler for unmatched API routes (must be after all API routes)
   app.use(notFoundHandler);

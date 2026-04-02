@@ -210,11 +210,14 @@ class GhlLocationClient {
     }
   }
 
-  async getOpportunities(pipelineId: string, limit = 50): Promise<any> {
+  async getOpportunities(pipelineId: string, limit = 50, startAfterId?: string | null, startAfter?: number | null): Promise<any> {
     try {
-      const { data } = await this.client.get('/opportunities/search', {
-        params: { location_id: this.location.locationId, pipeline_id: pipelineId, limit },
-      });
+      const params: Record<string, any> = { location_id: this.location.locationId, pipeline_id: pipelineId, limit };
+      if (startAfterId) {
+        params.startAfterId = startAfterId;
+        params.startAfter = startAfter;
+      }
+      const { data } = await this.client.get('/opportunities/search', { params });
       this.ok();
       return data;
     } catch (err: any) {
@@ -343,6 +346,32 @@ class GhlLocationClient {
     } catch (err: any) {
       this.handleError('searchConversations', err);
       return { conversations: [] };
+    }
+  }
+
+  async getContactConversations(contactId: string): Promise<any[]> {
+    try {
+      const { data } = await this.client.get('/conversations/search', {
+        params: { locationId: this.location.locationId, contactId, limit: 1 },
+      });
+      this.ok();
+      return data?.conversations || [];
+    } catch (err: any) {
+      this.handleError('getContactConversations', err);
+      return [];
+    }
+  }
+
+  async getConversationMessages(conversationId: string, limit = 20): Promise<any[]> {
+    try {
+      const { data } = await this.client.get(`/conversations/${conversationId}/messages`, {
+        params: { limit },
+      });
+      this.ok();
+      return data?.messages || [];
+    } catch (err: any) {
+      this.handleError('getConversationMessages', err);
+      return [];
     }
   }
 

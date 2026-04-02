@@ -1,0 +1,57 @@
+TOTAL CANDIDATES: 50
+SAFE (last outbound before 2026-03-27): 31
+SKIP (last outbound on/after 2026-03-27): 19
+
+--- SKIP (double-hit risk) ---
+lovegod16@icloud.com | - | lastOut:2026-03-30 | lastIn:2026-03-30
+amouur777@gmail.com | - | lastOut:2026-03-27 | lastIn:2026-03-28
+creditrepair@wehelpweinvest.com | - | lastOut:2026-03-28 | lastIn:2026-03-28
+ique.lifts@gmail.com | - | lastOut:2026-03-27 | lastIn:2026-03-28
+lydia@i-market.biz | - | lastOut:2026-03-27 | lastIn:2026-03-27
+usher.frank.fu@gmail.com | - | lastOut:2026-03-27 | lastIn:2026-03-27
+ydelctr@hotmail.com | - | lastOut:2026-03-27 | lastIn:2026-03-27
+devyn_ram@outlook.com | - | lastOut:2026-03-27 | lastIn:2026-03-27
+anaisrocha.net@gmail.com | - | lastOut:2026-03-27 | lastIn:2026-03-27
+mandy@mandyp.com | - | lastOut:2026-03-27 | lastIn:2026-03-27
+kristinaprilfitness@gmail.com | - | lastOut:2026-03-29 | lastIn:2026-03-23
+thekingdomcoaching@gmail.com | - | lastOut:2026-03-29 | lastIn:2026-03-23
+theadgexperience@gmail.com | - | lastOut:2026-03-29 | lastIn:2026-03-21
+analisesantiago278@gmail.com | - | lastOut:2026-03-29 | lastIn:2026-03-21
+mombuddycommunity@gmail.com | - | lastOut:2026-03-29 | lastIn:2026-03-22
+richsemere@gmail.com | - | lastOut:2026-03-29 | lastIn:2026-03-23
+chinyaani.conceptions@gmail.com | - | lastOut:2026-03-29 | lastIn:2026-03-25
+mom.reviewz@gmail.com | - | lastOut:2026-03-29 | lastIn:2026-03-23
+shanniebee1111@icloud.com | - | lastOut:2026-03-29 | lastIn:2026-03-21
+
+--- SAFE (ok to email) ---
+jeremiahward0@gmail.com | - | lastOut:2026-03-26 | lastIn:2026-03-29
+ahnaebali@icloud.com | - | lastOut:2026-03-26 | lastIn:2026-03-28
+mvckiano@gmail.com | - | lastOut:2026-03-25 | lastIn:2026-03-27
+jennifer@rootedholistichealth.com | - | lastOut:2026-03-26 | lastIn:2026-03-27
+paulachavez01@hotmail.com | - | lastOut:2026-03-26 | lastIn:2026-03-26
+brebethell18@gmail.com | - | lastOut:2026-03-26 | lastIn:2026-03-26
+alyce@yoursolotravelbestie.com | - | lastOut:2026-03-26 | lastIn:2026-03-26
+bsimonecontact@gmail.com | - | lastOut:2026-03-26 | lastIn:2026-03-26
+olasgifts.co@gmail.com | co olasgifts | lastOut:2026-03-26 | lastIn:2026-03-26
+clemenfitnesstherapy@gmail.com | - | lastOut:2026-03-25 | lastIn:2026-03-25
+brittneybouchard@me.com | Brittney Bouchard | lastOut:2026-03-25 | lastIn:2026-03-25
+farriershaniah@gmail.com | Shaniah Farrier | lastOut:2026-03-25 | lastIn:2026-03-25
+thewholisticmarket@gmail.com | - | lastOut:2026-03-25 | lastIn:2026-03-25
+bmoore@aygtraining.com | - | lastOut:2026-03-24 | lastIn:2026-03-24
+mariannaabdulldzecollaboration@gmail.com | - | lastOut:2026-03-24 | lastIn:2026-03-24
+amberdgregg@yahoo.com | - | lastOut:2026-03-24 | lastIn:2026-03-24
+example@gmail.com | Jane Doe | lastOut:none | lastIn:none
+courtney@mothersource.com | - | lastOut:2026-03-24 | lastIn:2026-03-24
+raven@bodybyraven.com | - | lastOut:2026-03-24 | lastIn:2026-03-24
+jessica@thejkoagency.com | - | lastOut:2026-03-23 | lastIn:2026-03-23
+symone.s59@gmail.com | - | lastOut:2026-03-23 | lastIn:2026-03-23
+contacthelenmarie@gmail.com | - | lastOut:2026-03-24 | lastIn:2026-03-24
+mikhail.gittens@gmail.com | - | lastOut:2026-03-23 | lastIn:2026-03-21
+eddy@pgtampabay.com | Eddy Midyett | lastOut:2026-03-20 | lastIn:2026-03-20
+thecasualbrian@gmail.com | - | lastOut:2026-03-19 | lastIn:2026-03-19
+hidden61taniaht@gmail.com | - | lastOut:2026-03-19 | lastIn:2026-03-19
+jaimieleefit@gmail.com | - | lastOut:2026-03-19 | lastIn:2026-03-19
+tawnyaclinebikinipro@gmail.com | - | lastOut:2026-03-19 | lastIn:2026-03-19
+aisha0490@hotmail.com | - | lastOut:2026-03-19 | lastIn:2026-03-19
+haitiandebb@gmail.com | - | lastOut:2026-03-19 | lastIn:2026-03-19
+kathy@kathyromero.com | - | lastOut:2026-03-19 | lastIn:2026-03-19

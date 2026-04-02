@@ -44,11 +44,30 @@ function getPendingMigrationFiles(applied: Set<string>): string[] {
 /**
  * Runs all pending database migrations in order.
  * Must be called after getDb() has initialized the database.
+ *
+ * On a fresh database, schema.sql already creates all tables and columns,
+ * so we mark all existing migrations as applied to avoid duplicate-column errors.
  */
 export function runMigrations(): void {
   ensureMigrationsTable();
 
   const applied = getAppliedMigrations();
+
+  // Fresh DB: schema.sql already created everything — mark all migrations as applied
+  if (applied.size === 0) {
+    const allFiles = fs.existsSync(MIGRATIONS_DIR)
+      ? fs.readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith('.sql')).sort()
+      : [];
+    if (allFiles.length > 0) {
+      for (const fileName of allFiles) {
+        runSql('INSERT INTO schema_migrations (name) VALUES (?)', [fileName]);
+      }
+      saveDb();
+      console.log(`[Migrations] Fresh DB — marked ${allFiles.length} migration(s) as applied`);
+      return;
+    }
+  }
+
   const pending = getPendingMigrationFiles(applied);
 
   if (pending.length === 0) {
@@ -82,6 +101,12 @@ export function runMigrations(): void {
       console.log(`[Migrations] Applied: ${fileName}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
+      // Tolerate duplicate-column errors (schema.sql may already define these columns)
+      if (message.includes('duplicate column')) {
+        runSql('INSERT INTO schema_migrations (name) VALUES (?)', [fileName]);
+        console.log(`[Migrations] Skipped (already in schema): ${fileName}`);
+        continue;
+      }
       console.error(`[Migrations] FAILED: ${fileName} - ${message}`);
       throw error;
     }

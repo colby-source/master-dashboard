@@ -221,7 +221,7 @@ import { initCmoHealthMonitor } from '../cmo-health-monitor';
 initCmoHealthMonitor();
 
 // ── BMN Follow-Up Cadence (polls GHL → Claude personalized emails → book calls) ──
-import { migrateBmnFollowup, runFollowupCycle } from '../bmn-followup-cadence';
+import { migrateBmnFollowup, runFollowupCycle } from '../bmn/cadence';
 migrateBmnFollowup();
 setInterval(() => {
   runFollowupCycle().catch((err: any) => {

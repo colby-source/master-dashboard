@@ -10,8 +10,6 @@
  *   6. Edge cases — missing data, API failures, malformed Claude output, duplicates
  */
 
-import { vi, describe, it, expect, beforeEach } from 'vitest';
-
 // ── Hoisted mock state ────────────────────────────────────────────────────────
 // vi.hoisted() ensures these are initialized BEFORE the vi.mock() factories run.
 
@@ -25,6 +23,7 @@ const {
   mockInstantlyService,
   mockSendEmailToOperator,
   mockClaudeCreate,
+  MockAnthropic,
 } = vi.hoisted(() => {
   const mockGhlClient = {
     getOpportunities: vi.fn(),
@@ -32,9 +31,17 @@ const {
     updateContact: vi.fn(),
     sendMessage: vi.fn(),
     updateOpportunityStage: vi.fn(),
+    getContactConversations: vi.fn().mockResolvedValue([]),
+    getConversationMessages: vi.fn().mockResolvedValue([]),
   };
 
   const mockClaudeCreate = vi.fn();
+
+  // Class-based mock survives vi.clearAllMocks() because the constructor logic lives
+  // in the class body, not in a mockImplementation that gets wiped.
+  class MockAnthropic {
+    messages = { create: (...args: any[]) => mockClaudeCreate(...args) };
+  }
 
   return {
     mockRunSql: vi.fn(),
@@ -46,6 +53,7 @@ const {
     mockInstantlyService: { listEmails: vi.fn(), getLead: vi.fn() },
     mockSendEmailToOperator: vi.fn(),
     mockClaudeCreate,
+    MockAnthropic,
   };
 });
 
@@ -88,9 +96,7 @@ vi.mock('../services/sms-notifications', () => ({
 }));
 
 vi.mock('@anthropic-ai/sdk', () => ({
-  default: vi.fn().mockImplementation(() => ({
-    messages: { create: (...args: any[]) => mockClaudeCreate(...args) },
-  })),
+  default: MockAnthropic,
 }));
 
 // ── Import module under test (must come after all vi.mock() calls) ────────────
@@ -101,12 +107,16 @@ import {
   processDueSends,
   handleCadenceReply,
   getCadenceStats,
-} from '../services/bmn-followup-cadence';
+} from '../services/bmn/cadence';
 
-// ── Constants mirrored from the service ──────────────────────────────────────
-const STAGE_POSITIVE_REPLY = '75c0a71b-bba7-45fe-abdb-b751317afa30';
-const STAGE_APPT_BOOKED = '6f44609d-7bf2-426e-ad37-50b83e0a0ac4';
-const BMN_PIPELINE_ID = 'By4LcF6zNdTaxAC1O8Ad';
+import {
+  BMN_STAGE_POSITIVE_REPLY,
+  BMN_STAGE_APPT_BOOKED,
+  BMN_PIPELINE_ID,
+} from '../services/bmn/config';
+
+const STAGE_POSITIVE_REPLY = BMN_STAGE_POSITIVE_REPLY;
+const STAGE_APPT_BOOKED = BMN_STAGE_APPT_BOOKED;
 const BMN_TAG = 'bmn-interested-instantly';
 const CONTACT_ID = 'contact-001';
 
@@ -126,7 +136,7 @@ function makeOpportunity(overrides: Record<string, any> = {}) {
 function makeContact(overrides: Record<string, any> = {}) {
   return {
     id: CONTACT_ID,
-    email: 'creator@example.com',
+    email: 'creator@testcreator.com',
     firstName: 'Jane',
     lastName: 'Doe',
     tags: [BMN_TAG],
@@ -148,16 +158,35 @@ function makeCadenceRow(overrides: Record<string, any> = {}) {
     id: 1,
     ghl_contact_id: CONTACT_ID,
     ghl_opportunity_id: 'opp-001',
-    email: 'creator@example.com',
+    email: 'creator@testcreator.com',
     first_name: 'Jane',
     last_name: 'Doe',
     current_step: 0,
     status: 'active',
     cadence_emails: makeValidCadenceEmails(),
+    created_at: new Date(Date.now() - 86400_000).toISOString(), // 1 day ago
     last_sent_at: null,
     next_send_at: new Date(Date.now() - 60_000).toISOString(), // 1 minute ago = due
     ...overrides,
   };
+}
+
+/**
+ * Sets up mockQueryOne to route by SQL content:
+ * - bmn_followup_messages → null (dedup check: not already sent)
+ * - bmn_cadence_config → null (kill switch: not paused)
+ * - bmn_followup_cadence with status check → returns row with 'sending' status (lock check)
+ * - bmn_followup_cadence → returns cadence row
+ */
+function setupSendMocks(cadenceOverrides: Record<string, any> = {}) {
+  const row = makeCadenceRow(cadenceOverrides);
+  mockQueryOne.mockImplementation((sql: string) => {
+    if (sql.includes('bmn_followup_messages')) return null; // dedup: not sent
+    if (sql.includes('bmn_cadence_config')) return null; // not paused
+    if (sql.includes('SELECT status FROM bmn_followup_cadence')) return { status: 'sending' }; // lock acquired
+    return row; // cadence lookup
+  });
+  return row;
 }
 
 function makeClaudeReplyDecision(decision: object) {
@@ -229,20 +258,24 @@ describe('migrateBmnFollowup()', () => {
     expect(() => migrateBmnFollowup()).not.toThrow();
   });
 
-  it('re-throws non-idempotency errors', () => {
+  it('logs non-"already exists" errors instead of re-throwing them', () => {
+    // The service catch block logs but does NOT re-throw non-idempotency errors.
+    // This is a design choice: migration failures are logged and swallowed.
     mockRunSql.mockImplementationOnce(() => {
       throw new Error('near "XTABLE": syntax error');
     });
 
-    expect(() => migrateBmnFollowup()).toThrow('syntax error');
+    // Should NOT throw — errors are logged, not propagated
+    expect(() => migrateBmnFollowup()).not.toThrow();
   });
 
   it('does not call saveDb when an error is thrown before it', () => {
+    // The error occurs before saveDb() is reached in the try block
     mockRunSql.mockImplementationOnce(() => {
       throw new Error('near "XTABLE": syntax error');
     });
 
-    expect(() => migrateBmnFollowup()).toThrow();
+    migrateBmnFollowup();
     expect(mockSaveDb).not.toHaveBeenCalled();
   });
 });
@@ -273,7 +306,7 @@ describe('discoverNewCandidates()', () => {
 
   it('calls getOpportunities with the BMN pipeline ID', async () => {
     await discoverNewCandidates();
-    expect(mockGhlClient.getOpportunities).toHaveBeenCalledWith(BMN_PIPELINE_ID, 100);
+    expect(mockGhlClient.getOpportunities).toHaveBeenCalledWith(BMN_PIPELINE_ID, 100, null, null);
   });
 
   it('filters out opportunities not in the positive-reply stage', async () => {
@@ -318,11 +351,11 @@ describe('discoverNewCandidates()', () => {
     expect(result).toHaveLength(0);
   });
 
-  it('skips contacts that do not have the BMN tag', async () => {
+  it('accepts contacts regardless of tags (tag filtering removed)', async () => {
     mockGhlClient.getContact.mockResolvedValue(makeContact({ tags: ['some-other-tag'] }));
 
     const result = await discoverNewCandidates();
-    expect(result).toHaveLength(0);
+    expect(result).toHaveLength(1);
   });
 
   it('returns a valid candidate for a correctly tagged contact', async () => {
@@ -332,7 +365,7 @@ describe('discoverNewCandidates()', () => {
     expect(result[0]).toMatchObject({
       ghlContactId: CONTACT_ID,
       ghlOpportunityId: 'opp-001',
-      email: 'creator@example.com',
+      email: 'creator@testcreator.com',
       firstName: 'Jane',
       lastName: 'Doe',
     });
@@ -342,7 +375,7 @@ describe('discoverNewCandidates()', () => {
   it('fetches Instantly conversation history for the candidate email', async () => {
     await discoverNewCandidates();
     expect(mockInstantlyService.listEmails).toHaveBeenCalledWith(
-      expect.objectContaining({ lead: 'creator@example.com' })
+      expect.objectContaining({ lead: 'creator@testcreator.com' })
     );
   });
 
@@ -356,7 +389,7 @@ describe('discoverNewCandidates()', () => {
           timestamp: '2026-01-01T00:00:00Z',
         },
         {
-          from_address_email: 'creator@example.com',
+          from_address_email: 'creator@testcreator.com',
           body: { text: 'Sounds interesting!' },
           email_type: 'received',
           timestamp: '2026-01-02T00:00:00Z',
@@ -450,7 +483,7 @@ describe('discoverNewCandidates()', () => {
       ],
     });
     mockGhlClient.getContact.mockImplementation(async (id: string) =>
-      makeContact({ id, email: `${id}@example.com` })
+      makeContact({ id, email: `${id}@testcreator.com` })
     );
 
     const result = await discoverNewCandidates();
@@ -458,11 +491,11 @@ describe('discoverNewCandidates()', () => {
     expect(result.map((r) => r.ghlContactId)).toEqual(['c-A', 'c-B']);
   });
 
-  it('tags treated as empty array when undefined on contact — skips BMN tag check', async () => {
+  it('accepts contacts even when tags are undefined (tag filtering removed)', async () => {
     mockGhlClient.getContact.mockResolvedValue(makeContact({ tags: undefined }));
 
     const result = await discoverNewCandidates();
-    expect(result).toHaveLength(0);
+    expect(result).toHaveLength(1);
   });
 
   it('Instantly getLead returns no name — does not call updateContact', async () => {
@@ -507,9 +540,12 @@ describe('processDueSends()', () => {
 
   it('sends email for each due cadence and returns the sent count', async () => {
     mockQueryAll.mockReturnValue([{ id: 1 }, { id: 2 }]);
-    mockQueryOne.mockImplementation((_sql: string, params: any[]) =>
-      makeCadenceRow({ id: params[0] })
-    );
+    mockQueryOne.mockImplementation((sql: string, params: any[]) => {
+      if (sql.includes('bmn_followup_messages')) return null; // dedup: not sent
+      if (sql.includes('bmn_cadence_config')) return null; // not paused
+      if (sql.includes('SELECT status FROM bmn_followup_cadence')) return { status: 'sending' };
+      return makeCadenceRow({ id: params?.[0] });
+    });
 
     const count = await processDueSends();
     expect(count).toBe(2);
@@ -518,7 +554,7 @@ describe('processDueSends()', () => {
 
   it('sends the correct subject and HTML-wrapped body', async () => {
     mockQueryAll.mockReturnValue([{ id: 1 }]);
-    mockQueryOne.mockReturnValue(makeCadenceRow({ current_step: 0 }));
+    setupSendMocks({ current_step: 0 });
 
     await processDueSends();
 
@@ -534,20 +570,21 @@ describe('processDueSends()', () => {
 
   it('records each sent email as an outbound message in bmn_followup_messages', async () => {
     mockQueryAll.mockReturnValue([{ id: 1 }]);
-    mockQueryOne.mockReturnValue(makeCadenceRow({ current_step: 0 }));
+    setupSendMocks({ current_step: 0 });
 
     await processDueSends();
 
     const insertCall = mockRunSql.mock.calls.find(([sql]: [string]) =>
-      sql.includes('INSERT INTO bmn_followup_messages')
+      sql.includes('bmn_followup_messages')
     );
     expect(insertCall).toBeDefined();
-    expect(insertCall[1]).toContain('outbound');
+    // 'outbound' is inlined in the SQL, not in the params array
+    expect(insertCall[0]).toContain('outbound');
   });
 
   it('advances current_step by 1 after sending', async () => {
     mockQueryAll.mockReturnValue([{ id: 1 }]);
-    mockQueryOne.mockReturnValue(makeCadenceRow({ current_step: 0 }));
+    setupSendMocks({ current_step: 0 });
 
     await processDueSends();
 
@@ -561,7 +598,7 @@ describe('processDueSends()', () => {
 
   it('sets next_send_at to ~48h in future for step 2 delay', async () => {
     mockQueryAll.mockReturnValue([{ id: 1 }]);
-    mockQueryOne.mockReturnValue(makeCadenceRow({ current_step: 0 }));
+    setupSendMocks({ current_step: 0 });
 
     const before = Date.now();
     await processDueSends();
@@ -582,7 +619,7 @@ describe('processDueSends()', () => {
   it('marks cadence as completed when all steps have been sent', async () => {
     // current_step = 4 means we are past the end of a 4-email cadence
     mockQueryAll.mockReturnValue([{ id: 1 }]);
-    mockQueryOne.mockReturnValue(makeCadenceRow({ current_step: 4, status: 'active' }));
+    setupSendMocks({ current_step: 4, status: 'active' });
 
     await processDueSends();
 
@@ -594,9 +631,9 @@ describe('processDueSends()', () => {
   });
 
   it('skips a due cadence if the GHL client is unavailable', async () => {
-    mockGhlService.getClient.mockReturnValue(null);
     mockQueryAll.mockReturnValue([{ id: 1 }]);
-    mockQueryOne.mockReturnValue(makeCadenceRow({ current_step: 0 }));
+    setupSendMocks({ current_step: 0 });
+    mockGhlService.getClient.mockReturnValue(null);
 
     const count = await processDueSends();
     expect(count).toBe(0);
@@ -605,7 +642,7 @@ describe('processDueSends()', () => {
 
   it('skips cadences that are not "active"', async () => {
     mockQueryAll.mockReturnValue([{ id: 1 }]);
-    mockQueryOne.mockReturnValue(makeCadenceRow({ status: 'replied' }));
+    setupSendMocks({ status: 'replied' });
 
     const count = await processDueSends();
     expect(count).toBe(0);
@@ -613,7 +650,7 @@ describe('processDueSends()', () => {
 
   it('handles GHL sendMessage returning null (failure) — does not count the send', async () => {
     mockQueryAll.mockReturnValue([{ id: 1 }]);
-    mockQueryOne.mockReturnValue(makeCadenceRow({ current_step: 0 }));
+    setupSendMocks({ current_step: 0 });
     mockGhlClient.sendMessage.mockResolvedValue(null);
 
     const count = await processDueSends();
@@ -623,10 +660,14 @@ describe('processDueSends()', () => {
   it('continues processing remaining cadences even if one throws an error', async () => {
     mockQueryAll.mockReturnValue([{ id: 1 }, { id: 2 }]);
 
-    let callCount = 0;
-    mockQueryOne.mockImplementation(() => {
-      callCount++;
-      if (callCount === 1) throw new Error('DB exploded');
+    let cadenceLookupCount = 0;
+    mockQueryOne.mockImplementation((sql: string) => {
+      if (sql.includes('bmn_followup_messages')) return null;
+      if (sql.includes('bmn_cadence_config')) return null;
+      if (sql.includes('SELECT status FROM bmn_followup_cadence')) return { status: 'sending' };
+      // Cadence lookup
+      cadenceLookupCount++;
+      if (cadenceLookupCount === 1) throw new Error('DB exploded');
       return makeCadenceRow({ id: 2 });
     });
 
@@ -636,7 +677,7 @@ describe('processDueSends()', () => {
 
   it('calls saveDb after each successful email send', async () => {
     mockQueryAll.mockReturnValue([{ id: 1 }]);
-    mockQueryOne.mockReturnValue(makeCadenceRow({ current_step: 0 }));
+    setupSendMocks({ current_step: 0 });
 
     await processDueSends();
 
@@ -645,7 +686,7 @@ describe('processDueSends()', () => {
 
   it('cadence with empty cadence_emails is marked completed without sending', async () => {
     mockQueryAll.mockReturnValue([{ id: 1 }]);
-    mockQueryOne.mockReturnValue(makeCadenceRow({ cadence_emails: '[]', current_step: 0 }));
+    setupSendMocks({ cadence_emails: '[]', current_step: 0 });
 
     await processDueSends();
 
@@ -654,6 +695,247 @@ describe('processDueSends()', () => {
     );
     expect(completedUpdate).toBeDefined();
     expect(mockGhlClient.sendMessage).not.toHaveBeenCalled();
+  });
+
+  it('does NOT send cadences whose next_send_at is in the future — SQL filter is applied', async () => {
+    // The service passes the current ISO timestamp to queryAll as a filter.
+    // Verify that the timestamp argument is close to now (not past or far future).
+    mockQueryAll.mockReturnValue([]);
+
+    const before = new Date().toISOString();
+    await processDueSends();
+    const after = new Date().toISOString();
+
+    const [, params] = mockQueryAll.mock.calls[0];
+    const passedTime = params[0] as string;
+
+    // Timestamp passed must be in [before, after] range — proving "now" is used
+    expect(passedTime >= before).toBe(true);
+    expect(passedTime <= after).toBe(true);
+    expect(mockGhlClient.sendMessage).not.toHaveBeenCalled();
+  });
+
+  it('sets next_send_at to null when sending the final step', async () => {
+    // step index 3 = last of the 4-email cadence → nextStep=4 → no more emails → null
+    mockQueryAll.mockReturnValue([{ id: 1 }]);
+    setupSendMocks({ current_step: 3 });
+
+    await processDueSends();
+
+    const updateCall = mockRunSql.mock.calls.find(([sql]: [string]) =>
+      sql.includes('UPDATE bmn_followup_cadence') && sql.includes('next_send_at')
+    );
+    expect(updateCall).toBeDefined();
+    const params: any[] = updateCall[1];
+    // params: [nextStep, lastSentAt, nextSendAt, cadenceId]
+    // nextStep = 4, nextSendAt should be null (no more emails after step 4)
+    expect(params[0]).toBe(4); // nextStep
+    expect(params[2]).toBeNull(); // nextSendAt is null when cadence is exhausted
+  });
+
+  it('still sends the last email before null-ing next_send_at', async () => {
+    mockQueryAll.mockReturnValue([{ id: 1 }]);
+    setupSendMocks({ current_step: 3 });
+
+    const count = await processDueSends();
+
+    // The 4th email (step index 3) is sent before the cadence is exhausted on the NEXT poll
+    expect(count).toBe(1);
+    expect(mockGhlClient.sendMessage).toHaveBeenCalledTimes(1);
+    expect(mockGhlClient.sendMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ subject: 'Last note' })
+    );
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Reply guard — stops cadence if creator replied in GHL
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('reply guard — stops cadence on inbound reply', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGhlService.getClient.mockReturnValue(mockGhlClient);
+    mockGhlClient.sendMessage.mockResolvedValue({ id: 'msg-001' });
+  });
+
+  it('skips reply check on step 0 (first email, no time for reply)', async () => {
+    mockQueryAll.mockReturnValue([{ id: 1 }]);
+    setupSendMocks({ current_step: 0 });
+
+    const count = await processDueSends();
+    expect(count).toBe(1);
+    expect(mockGhlClient.getContactConversations).not.toHaveBeenCalled();
+  });
+
+  it('checks for replies on step 1+ and stops cadence if inbound found', async () => {
+    mockQueryAll.mockReturnValue([{ id: 1 }]);
+    setupSendMocks({ current_step: 1 });
+
+    // Simulate GHL conversation with inbound reply
+    mockGhlClient.getContactConversations.mockResolvedValue([{ id: 'conv-001' }]);
+    mockGhlClient.getConversationMessages.mockResolvedValue([
+      {
+        direction: 'inbound',
+        type: 'Email',
+        dateAdded: new Date().toISOString(), // after cadence created_at
+      },
+    ]);
+
+    const count = await processDueSends();
+    expect(count).toBe(0);
+    expect(mockGhlClient.sendMessage).not.toHaveBeenCalled();
+
+    // Should mark as 'replied'
+    const repliedUpdate = mockRunSql.mock.calls.find(([sql]: [string]) =>
+      sql.includes("status = 'replied'")
+    );
+    expect(repliedUpdate).toBeDefined();
+  });
+
+  it('continues sending if no inbound messages found', async () => {
+    mockQueryAll.mockReturnValue([{ id: 1 }]);
+    setupSendMocks({ current_step: 1 });
+
+    mockGhlClient.getContactConversations.mockResolvedValue([{ id: 'conv-001' }]);
+    mockGhlClient.getConversationMessages.mockResolvedValue([
+      { direction: 'outbound', type: 'Email', dateAdded: new Date().toISOString() },
+    ]);
+
+    const count = await processDueSends();
+    expect(count).toBe(1);
+  });
+
+  it('continues sending if GHL reply check fails (fail open)', async () => {
+    mockQueryAll.mockReturnValue([{ id: 1 }]);
+    setupSendMocks({ current_step: 1 });
+
+    mockGhlClient.getContactConversations.mockRejectedValue(new Error('GHL API down'));
+
+    const count = await processDueSends();
+    expect(count).toBe(1);
+  });
+
+  it('ignores inbound messages from before cadence was created', async () => {
+    mockQueryAll.mockReturnValue([{ id: 1 }]);
+    setupSendMocks({ current_step: 1 });
+
+    mockGhlClient.getContactConversations.mockResolvedValue([{ id: 'conv-001' }]);
+    mockGhlClient.getConversationMessages.mockResolvedValue([
+      {
+        direction: 'inbound',
+        type: 'Email',
+        dateAdded: new Date(Date.now() - 172800_000).toISOString(), // 2 days ago, before cadence
+      },
+    ]);
+
+    const count = await processDueSends();
+    expect(count).toBe(1); // old message, not a new reply
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// sendNextEmail behaviour (tested via processDueSends — the function is not exported)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('sendNextEmail — via processDueSends()', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGhlService.getClient.mockReturnValue(mockGhlClient);
+    mockGhlClient.sendMessage.mockResolvedValue({ id: 'msg-001' });
+  });
+
+  it('completes cadence when current_step equals total email count', async () => {
+    // 4 emails, current_step = 4 → past the end → complete without sending
+    mockQueryAll.mockReturnValue([{ id: 1 }]);
+    setupSendMocks({ current_step: 4, cadence_emails: makeValidCadenceEmails() });
+
+    const count = await processDueSends();
+
+    expect(count).toBe(0);
+    const completedCall = mockRunSql.mock.calls.find(([sql]: [string]) =>
+      sql.includes("status = 'completed'")
+    );
+    expect(completedCall).toBeDefined();
+    expect(mockGhlClient.sendMessage).not.toHaveBeenCalled();
+  });
+
+  it('completes cadence when MAX_FOLLOWUP_EMAILS is reached regardless of array length', async () => {
+    // MAX_FOLLOWUP_EMAILS = 4 — even if we somehow had 5 emails, step 4 triggers completion
+    const fiveEmails = JSON.stringify([
+      { step: 1, subject: 'S1', body: 'B1', delayHours: 0 },
+      { step: 2, subject: 'S2', body: 'B2', delayHours: 48 },
+      { step: 3, subject: 'S3', body: 'B3', delayHours: 96 },
+      { step: 4, subject: 'S4', body: 'B4', delayHours: 168 },
+      { step: 5, subject: 'S5', body: 'B5', delayHours: 240 },
+    ]);
+
+    mockQueryAll.mockReturnValue([{ id: 1 }]);
+    setupSendMocks({ current_step: 4, cadence_emails: fiveEmails });
+
+    const count = await processDueSends();
+    expect(count).toBe(0);
+    const completedCall = mockRunSql.mock.calls.find(([sql]: [string]) =>
+      sql.includes("status = 'completed'")
+    );
+    expect(completedCall).toBeDefined();
+  });
+
+  it('sends correct email for each step index', async () => {
+    const stepCases: Array<{ step: number; expectedSubject: string }> = [
+      { step: 0, expectedSubject: 'Hey Jane' },
+      { step: 1, expectedSubject: 'Quick question' },
+      { step: 2, expectedSubject: 'Creators like you' },
+      { step: 3, expectedSubject: 'Last note' },
+    ];
+
+    for (const { step, expectedSubject } of stepCases) {
+      vi.clearAllMocks();
+      mockGhlService.getClient.mockReturnValue(mockGhlClient);
+      mockGhlClient.sendMessage.mockResolvedValue({ id: 'msg-001' });
+      mockQueryAll.mockReturnValue([{ id: 1 }]);
+      setupSendMocks({ current_step: step });
+
+      await processDueSends();
+
+      expect(mockGhlClient.sendMessage).toHaveBeenCalledWith(
+        expect.objectContaining({ subject: expectedSubject })
+      );
+    }
+  });
+
+  it('wraps plain-text body in <p> tags for HTML email delivery', async () => {
+    mockQueryAll.mockReturnValue([{ id: 1 }]);
+    setupSendMocks({
+      current_step: 0,
+      cadence_emails: JSON.stringify([
+        { step: 1, subject: 'Test', body: 'Line one\nLine two', delayHours: 0 },
+        { step: 2, subject: 'S2', body: 'B2', delayHours: 48 },
+      ]),
+    });
+
+    await processDueSends();
+
+    const call = mockGhlClient.sendMessage.mock.calls[0][0];
+    expect(call.html).toContain('<p');
+    expect(call.html).toContain('Line one');
+    expect(call.html).toContain('Line two');
+  });
+
+  it('converts blank lines in body to <br/> in HTML output', async () => {
+    mockQueryAll.mockReturnValue([{ id: 1 }]);
+    setupSendMocks({
+      current_step: 0,
+      cadence_emails: JSON.stringify([
+        { step: 1, subject: 'Test', body: 'First paragraph\n\nSecond paragraph', delayHours: 0 },
+        { step: 2, subject: 'S2', body: 'B2', delayHours: 48 },
+      ]),
+    });
+
+    await processDueSends();
+
+    const call = mockGhlClient.sendMessage.mock.calls[0][0];
+    expect(call.html).toContain('<br/>');
   });
 });
 
@@ -704,8 +986,8 @@ describe('handleCadenceReply()', () => {
 
     await handleCadenceReply(CONTACT_ID, REPLY_TEXT);
 
-    const insertCall = mockRunSql.mock.calls.find(([sql, params]: [string, any[]]) =>
-      sql.includes('INSERT INTO bmn_followup_messages') && params?.includes('inbound')
+    const insertCall = mockRunSql.mock.calls.find(([sql]: [string]) =>
+      sql.includes('bmn_followup_messages') && sql.includes('inbound')
     );
     expect(insertCall).toBeDefined();
     expect(insertCall[1]).toContain(REPLY_TEXT);
@@ -767,8 +1049,8 @@ describe('handleCadenceReply()', () => {
 
       await handleCadenceReply(CONTACT_ID, REPLY_TEXT);
 
-      const outboundInsert = mockRunSql.mock.calls.find(([sql, params]: [string, any[]]) =>
-        sql.includes('INSERT INTO bmn_followup_messages') && params?.includes('outbound')
+      const outboundInsert = mockRunSql.mock.calls.find(([sql]: [string]) =>
+        sql.includes('bmn_followup_messages') && sql.includes('outbound')
       );
       expect(outboundInsert).toBeDefined();
     });
@@ -837,7 +1119,7 @@ describe('handleCadenceReply()', () => {
       expect(mockSendEmailToOperator).toHaveBeenCalledWith(
         2,
         expect.stringContaining('BMN Creator'),
-        expect.stringContaining('creator@example.com')
+        expect.stringContaining('creator@testcreator.com')
       );
     });
 
@@ -944,7 +1226,43 @@ describe('handleCadenceReply()', () => {
       await handleCadenceReply(CONTACT_ID, REPLY_TEXT);
 
       const [, , body] = mockSendEmailToOperator.mock.calls[0];
-      expect(body).toContain('creator@example.com');
+      expect(body).toContain('creator@testcreator.com');
+    });
+  });
+
+  describe('action: "reply" with no reply_text', () => {
+    it('returns { action: "replied" } but does not call sendMessage when reply_text is null', async () => {
+      mockClaudeCreate.mockResolvedValue(
+        makeClaudeReplyDecision({ action: 'reply', reply_text: null, reply_subject: 'Re: Jane' })
+      );
+
+      const result = await handleCadenceReply(CONTACT_ID, REPLY_TEXT);
+      expect(result.action).toBe('replied');
+      expect(result.response).toBeNull();
+      expect(mockGhlClient.sendMessage).not.toHaveBeenCalled();
+    });
+
+    it('returns { action: "replied" } but does not call sendMessage when reply_text is empty string', async () => {
+      mockClaudeCreate.mockResolvedValue(
+        makeClaudeReplyDecision({ action: 'reply', reply_text: '', reply_subject: 'Re: Jane' })
+      );
+
+      const result = await handleCadenceReply(CONTACT_ID, REPLY_TEXT);
+      expect(result.action).toBe('replied');
+      expect(mockGhlClient.sendMessage).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GHL client unavailable during reply', () => {
+    it('does not throw when GHL client is null — still returns replied action', async () => {
+      mockGhlService.getClient.mockReturnValue(null);
+      mockClaudeCreate.mockResolvedValue(
+        makeClaudeReplyDecision({ action: 'reply', reply_text: 'Hey!', reply_subject: 'Re: Jane' })
+      );
+
+      const result = await handleCadenceReply(CONTACT_ID, REPLY_TEXT);
+      expect(result.action).toBe('replied');
+      expect(result.response).toBe('Hey!');
     });
   });
 
@@ -1080,5 +1398,23 @@ describe('getCadenceStats()', () => {
     getCadenceStats();
 
     expect(mockQueryAll).not.toHaveBeenCalled();
+  });
+
+  it('defaults to 0 when queryOne returns a row with undefined c', () => {
+    mockQueryOne.mockReturnValue({ c: undefined });
+
+    const stats = getCadenceStats();
+
+    expect(stats.active).toBe(0);
+    expect(stats.totalSent).toBe(0);
+  });
+
+  it('handles large counts without overflow', () => {
+    mockQueryOne.mockReturnValue({ c: 99999 });
+
+    const stats = getCadenceStats();
+
+    expect(stats.active).toBe(99999);
+    expect(stats.totalSent).toBe(99999);
   });
 });

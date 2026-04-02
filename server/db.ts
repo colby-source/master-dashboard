@@ -341,6 +341,34 @@ export async function getDb(): Promise<Database> {
     console.log('[DB] Seeded BMN company_pipelines (Creator Investment + Agency Partner funnels)');
   }
 
+  // Seed GPC company_pipelines (Cold Email Response Pipeline)
+  const gpcPipelineCount = db.prepare('SELECT COUNT(*) as count FROM company_pipelines WHERE company_id = 1');
+  gpcPipelineCount.step();
+  const gpcPipelineExists = (gpcPipelineCount.getAsObject() as any).count;
+  gpcPipelineCount.free();
+
+  if (gpcPipelineExists === 0) {
+    db.run(
+      `INSERT INTO company_pipelines (company_id, pipeline_name, ghl_pipeline_id, instantly_campaign_id, stage_map, monetary_value, is_default) VALUES (1, ?, ?, ?, ?, ?, 1)`,
+      [
+        'Cold Email Response Pipeline',
+        'hN3fT6V8135hCKJs8oXN',
+        '2e3af84a-8f6f-4446-981c-f10bb2348216', // GPC Instantly campaign
+        JSON.stringify({
+          new_reply: '626aaea5-7a02-4634-a54a-f652fa4e2468',
+          qualified: '975e30cc-03f6-436b-ac42-0bbf06b01f66',
+          meeting_scheduled: 'd6e7a458-ac49-42c1-a656-fa002eb924a7',
+          meeting_completed: '562069cc-59d7-453f-b9af-dfd101d86337',
+          proposal_sent: 'c1061437-b448-45b4-bf14-8017ed6721e1',
+          won: 'aec87c1a-9f79-4b73-9d91-0224ada21f9c',
+          lost: '09d39d51-65f5-4a7d-bdcb-c57f49d022da',
+        }),
+        250000,
+      ]
+    );
+    console.log('[DB] Seeded GPC company_pipelines (Cold Email Response Pipeline)');
+  }
+
   // Seed BMN A/B test: Book a Call vs Brand Builder CTA
   const bmnAbTest = db.prepare("SELECT COUNT(*) as count FROM ab_tests WHERE company_id = 2 AND test_type = 'cta_style' AND status = 'active'");
   bmnAbTest.step();

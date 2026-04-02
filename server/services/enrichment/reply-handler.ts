@@ -6,9 +6,9 @@ import { wsServer } from '../../websocket/ws-server';
 import { getAvailableSlots, formatSlotsForMessage, bookMeeting } from '../meeting-scheduler';
 import { EnrichmentLead, CompanyPlaybook, ReplyThread, HandleReplyResult, InstantlySentiment } from './types';
 import { getCompanyConfig, logEvent, updateLead } from './helpers';
-import { getActiveCtaVariant, recordOutcome } from './ab-testing';
 import { createColdEmailOpportunity, loseOpportunity } from './opportunity-pipeline';
 import { getReplyStrategyInsights } from './feedback-loop';
+import { isBmnCompany, injectBmnBookingGoal, shouldSkipAutoBooking } from '../bmn/reply-handler';
 
 export async function handleReply(
   params: {
@@ -289,53 +289,17 @@ export async function handleReply(
   const enrichmentData = lead.enrichment_data ? JSON.parse(lead.enrichment_data) : {};
   const leadTags: string[] = lead.tags ? JSON.parse(lead.tags) : [];
 
-  // 12b. Get A/B test variant (if active) — adjusts CTA style
-  const abVariant = getActiveCtaVariant(lead.id, lead.company_id);
+  // 12b. Build conversation goals from playbook
   const conversationGoals: string[] = playbook.conversation_goals ? JSON.parse(playbook.conversation_goals) : [];
-  if (abVariant?.config?.cta_instruction) {
-    conversationGoals.push(`CTA STYLE (A/B test ${abVariant.variantName}): ${abVariant.config.cta_instruction}`);
-  }
 
-  // 12c. If prospect is interested or requesting a meeting, route by location/company
+  // 12c. If prospect is interested or requesting a meeting, route by company
   const meetingSentiments = ['interested', 'meeting_request'];
   if (meetingSentiments.includes(sentiment.sentiment)) {
-    if (lead.company_id === 2) {
-      // BMN: A/B test determines CTA — booking link vs Brand Builder application.
-      // The A/B variant cta_instruction (if active) already got pushed into conversationGoals above.
-      // Only add default booking link goal if no A/B variant is active.
-      if (!abVariant?.config?.cta_instruction) {
-        conversationGoals.push(
-          `MEETING BOOKING: The creator seems interested! Your #1 goal is to get them on a call. Share the booking link and encourage them to pick a time that works. Keep it casual and low-pressure — something like "Would love to walk you through how it works — grab a time here that works for you: [booking link]". Do NOT propose specific times yourself — let them self-schedule via the link.`
-        );
-      }
+    if (isBmnCompany(lead.company_id)) {
+      injectBmnBookingGoal(conversationGoals);
     } else {
-      const leadLocation = (enrichmentData.location || enrichmentData.location_name || enrichmentData.city || '').toLowerCase();
-      const isMiamiArea = /miami|fort lauderdale|ft\. lauderdale|boca raton|palm beach|coral gables|doral|aventura|hollywood, fl|broward|dade/.test(leadLocation);
-
-      // Yacht event invitations are GPC-ONLY (company_id=1)
-      if (isMiamiArea && lead.company_id === 1) {
-        // GPC Miami-area leads: offer yacht mixer invitation
-        try {
-          const upcomingEvent = queryOne(
-            `SELECT id, name, event_date, location, yacht_name FROM yacht_events WHERE status = 'upcoming' AND event_date >= date('now') ORDER BY event_date ASC LIMIT 1`,
-            []
-          );
-          if (upcomingEvent) {
-            conversationGoals.push(
-              `YACHT EVENT INVITATION: This prospect is in the Miami area and seems interested. Instead of a standard call, invite them to our exclusive yacht mixer: "${upcomingEvent.name}" on ${upcomingEvent.event_date} at ${upcomingEvent.location} aboard the ${upcomingEvent.yacht_name}. Frame it as: "We're hosting an intimate investor gathering aboard a private yacht in Miami — I'd love to have you join us. It's a great way to meet the team and other investors in a relaxed setting." If they accept, tell them you'll send a formal invitation with details. Do NOT share a booking link — just gauge interest.`
-            );
-          } else {
-            // No upcoming yacht event, fall back to standard meeting
-            await injectMeetingSlots(lead.company_id, conversationGoals);
-          }
-        } catch (err: any) {
-          console.warn('[AutoReply] Failed to check yacht events:', err.message);
-          await injectMeetingSlots(lead.company_id, conversationGoals);
-        }
-      } else {
-        // Non-Miami leads OR non-GPC companies: standard 1-on-1 meeting scheduling
-        await injectMeetingSlots(lead.company_id, conversationGoals);
-      }
+      // GPC and all other companies: standard 1-on-1 meeting scheduling
+      await injectMeetingSlots(lead.company_id, conversationGoals);
     }
   }
 
@@ -350,15 +314,6 @@ export async function handleReply(
       conversationGoals.push(
         `LEARNED FROM PAST PERFORMANCE: These reply strategies have converted best: ${winningStrategies}. Adapt your approach based on what has worked.`
       );
-    }
-  }
-  if (replyInsights?.abPerformance && replyInsights.abPerformance.length > 1) {
-    const abSummary = replyInsights.abPerformance
-      .filter(v => v.assigned >= 5)
-      .map(v => `${v.variant}: ${v.meetingRate}% meeting rate (n=${v.assigned})`)
-      .join(' vs ');
-    if (abSummary) {
-      conversationGoals.push(`A/B TEST STATUS: ${abSummary}. Lean into what is winning.`);
     }
   }
 
@@ -468,19 +423,16 @@ export async function handleReply(
   // 17. Update lead status to 'replied'
   updateLead(lead.id, { status: 'replied' });
 
-  // 18. Record A/B test outcome + push positive replies to GHL
-  recordOutcome(lead.id, 'reply');
+  // 18. Push positive replies to GHL
   const positiveSentiments = ['interested', 'question', 'meeting_request'];
   if (positiveSentiments.includes(sentiment.sentiment)) {
-    recordOutcome(lead.id, 'positive_reply');
     pushPositiveReplyToGhl(lead, sentiment.sentiment, replyText, thread.id).catch(err => {
       console.error(`[AutoReply] GHL push failed for lead ${lead.id}:`, err.message);
     });
 
     // 18b. Auto-book meeting for interested/meeting_request (if GHL contact exists)
-    // BMN (company_id=2) skips auto-booking — creators self-book via link in sequence copy
     const meetingAutoBook = ['interested', 'meeting_request'];
-    if (meetingAutoBook.includes(sentiment.sentiment) && lead.ghl_contact_id && lead.company_id !== 2) {
+    if (meetingAutoBook.includes(sentiment.sentiment) && lead.ghl_contact_id && !shouldSkipAutoBooking(lead.company_id)) {
       try {
         const slots = await getAvailableSlots(lead.company_id);
         if (slots.length > 0) {

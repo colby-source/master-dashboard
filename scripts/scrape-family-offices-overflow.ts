@@ -328,7 +328,7 @@ function deduplicateLeads(leads: Lead[]): Lead[] {
   const seen = new Set<string>();
   return leads.filter(lead => {
     const urlKey = lead.linkedInUrl ? lead.linkedInUrl.toLowerCase().replace(/\/$/, '') : '';
-    const nameKey = `${lead.firstName.toLowerCase()}-${lead.lastName.toLowerCase()}-${lead.company.toLowerCase()}`;
+    const nameKey = `${(lead.firstName||'').toLowerCase()}-${(lead.lastName||'').toLowerCase()}-${(lead.company||'').toLowerCase()}`;
     const key = urlKey || nameKey;
     if (!key || seen.has(key)) return false;
     seen.add(key);
@@ -340,10 +340,11 @@ function deduplicateLeads(leads: Lead[]): Lead[] {
 // ── CSV Export ───────────────────────────────────────────────
 
 function escapeCsvField(field: string): string {
-  if (field.includes(',') || field.includes('"') || field.includes('\n')) {
-    return `"${field.replace(/"/g, '""')}"`;
+  const f = field || '';
+  if (f.includes(',') || f.includes('"') || f.includes('\n')) {
+    return `"${f.replace(/"/g, '""')}"`;
   }
-  return field;
+  return f;
 }
 
 function leadsToCsv(leads: Lead[]): string {
