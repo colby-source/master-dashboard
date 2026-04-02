@@ -1,54 +1,6 @@
-const BASE = '/api';
+import { request, qs } from './client';
 
-async function request<T = any>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  });
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
-  return res.json();
-}
-
-function qs(params: Record<string, string | number | undefined>): string {
-  const entries = Object.entries(params).filter(([, v]) => v !== undefined);
-  return entries.length ? '?' + new URLSearchParams(entries.map(([k, v]) => [k, String(v)])).toString() : '';
-}
-
-export const api = {
-  getCompanies: () => request('/companies'),
-  getSummary: () => request('/metrics/summary'),
-  getMetrics: (companyId?: number) => request(`/metrics${companyId ? `?company_id=${companyId}` : ''}`),
-  getCampaigns: (companyId?: number) => request(`/campaigns${companyId ? `?company_id=${companyId}` : ''}`),
-  pauseCampaign: (id: number) => request(`/campaigns/${id}/pause`, { method: 'POST' }),
-  activateCampaign: (id: number) => request(`/campaigns/${id}/activate`, { method: 'POST' }),
-  getCampaignDetail: (id: number) => request(`/campaigns/${id}/detail`),
-  getTasks: (params?: Record<string, string>) => {
-    const q = params ? '?' + new URLSearchParams(params).toString() : '';
-    return request(`/tasks${q}`);
-  },
-  createTask: (task: any) => request('/tasks', { method: 'POST', body: JSON.stringify(task) }),
-  updateTask: (id: number, updates: any) => request(`/tasks/${id}`, { method: 'PUT', body: JSON.stringify(updates) }),
-  deleteTask: (id: number) => request(`/tasks/${id}`, { method: 'DELETE' }),
-  getAgents: (companyId?: number) => request(`/agents${companyId ? `?company_id=${companyId}` : ''}`),
-  getAlerts: () => request('/alerts?unacknowledged=true'),
-  acknowledgeAlert: (id: number) => request(`/alerts/${id}/acknowledge`, { method: 'POST' }),
-  bulkAcknowledgeAlerts: (filters?: { source?: string; type?: string }) =>
-    request('/alerts/bulk-acknowledge', { method: 'POST', body: JSON.stringify(filters ?? {}) }),
-
-  // ── OpenClaw ──────────────────────────────────────────────
-  getOpenClawHealth: () => request('/openclaw/health'),
-  getOpenClawStatus: () => request('/openclaw/status'),
-  openclawPing: () => request('/openclaw/ping'),
-  openclawSession: () => request('/openclaw/session'),
-  openclawListMachines: () => request('/openclaw/machines'),
-  openclawMachineStatus: (id: string) => request(`/openclaw/machines/${id}`),
-  openclawStartMachine: (id: string) => request(`/openclaw/machines/${id}/start`, { method: 'POST' }),
-  openclawStopMachine: (id: string) => request(`/openclaw/machines/${id}/stop`, { method: 'POST' }),
-  openclawRestartMachine: (id: string) => request(`/openclaw/machines/${id}/restart`, { method: 'POST' }),
-  openclawDiagnostics: (id: string) => request(`/openclaw/machines/${id}/diagnostics`, { method: 'POST' }),
-  openclawCommand: (command: string, payload?: any) =>
-    request('/openclaw/command', { method: 'POST', body: JSON.stringify({ command, payload }) }),
-
+export const integrationsApi = {
   // ── GHL ───────────────────────────────────────────────────
   getGhlStatus: () => request('/ghl/status'),
   getGhlContacts: (companyId?: number, query?: string) =>
@@ -94,129 +46,6 @@ export const api = {
     request(`/ghl/templates${qs({ company_id: companyId, type })}`),
   getGhlLocation: (companyId?: number) =>
     request(`/ghl/location${qs({ company_id: companyId })}`),
-
-  // ── AI Discoveries ────────────────────────────────────────
-  getDiscoveries: () => request('/ai-discoveries'),
-  saveDiscovery: (id: number) => request(`/ai-discoveries/${id}/save`, { method: 'POST' }),
-  dismissDiscovery: (id: number) => request(`/ai-discoveries/${id}`, { method: 'DELETE' }),
-
-  // ── AI features ───────────────────────────────────────────
-  generateCampaignVariations: (campaignId: number) =>
-    request('/ai/campaign-writer', { method: 'POST', body: JSON.stringify({ campaignId }) }),
-  queryDashboard: (question: string) =>
-    request('/ai/query', { method: 'POST', body: JSON.stringify({ question }) }),
-  getChatHistory: () => request('/ai/chat-history'),
-  clearChatHistory: () => request('/ai/chat-history?confirm=true', { method: 'DELETE' }),
-
-  // ── AI Assistant (tool-use chat) ────────────────────────
-  assistantChat: (message: string, conversationId?: string) =>
-    request('/ai-assistant/chat', {
-      method: 'POST',
-      body: JSON.stringify({ message, conversation_id: conversationId }),
-    }),
-  getAssistantHistory: (conversationId?: string) =>
-    request(`/ai-assistant/history${qs({ conversation_id: conversationId })}`),
-  clearAssistantHistory: (conversationId?: string) =>
-    request(`/ai-assistant/history${qs({ conversation_id: conversationId })}`, { method: 'DELETE' }),
-
-  // ── Meta Ads ──────────────────────────────────────────────
-  // Account
-  getMetaAdAccount: () => request('/meta-ads/account'),
-
-  // Account Insights
-  getMetaAdInsights: (datePreset?: string) =>
-    request(`/meta-ads/insights${qs({ date_preset: datePreset })}`),
-  getMetaAdInsightsBreakdown: (datePreset?: string, breakdown?: string) =>
-    request(`/meta-ads/insights/breakdown${qs({ date_preset: datePreset, breakdown })}`),
-  getMetaAdInsightsTimeSeries: (datePreset?: string, timeIncrement?: number) =>
-    request(`/meta-ads/insights/time-series${qs({ date_preset: datePreset, time_increment: timeIncrement })}`),
-
-  // Campaigns
-  getMetaAdCampaigns: () => request('/meta-ads/campaigns'),
-  getMetaAdCampaignsLive: (limit?: number) =>
-    request(`/meta-ads/campaigns/live${qs({ limit })}`),
-  createMetaAdCampaign: (payload: any) =>
-    request('/meta-ads/campaigns', { method: 'POST', body: JSON.stringify(payload) }),
-  updateMetaAdCampaign: (id: string, updates: any) =>
-    request(`/meta-ads/campaigns/${id}`, { method: 'PATCH', body: JSON.stringify(updates) }),
-  pauseMetaAdCampaign: (id: string) =>
-    request(`/meta-ads/campaigns/${id}/pause`, { method: 'POST' }),
-  activateMetaAdCampaign: (id: string) =>
-    request(`/meta-ads/campaigns/${id}/activate`, { method: 'POST' }),
-  deleteMetaAdCampaign: (id: string) =>
-    request(`/meta-ads/campaigns/${id}`, { method: 'DELETE' }),
-  getMetaAdCampaignInsights: (id: string, datePreset?: string) =>
-    request(`/meta-ads/campaigns/${id}/insights${qs({ date_preset: datePreset })}`),
-
-  // Ad Sets
-  getMetaAdSets: (campaignId?: string, limit?: number) =>
-    request(`/meta-ads/adsets${qs({ campaign_id: campaignId, limit })}`),
-  createMetaAdSet: (payload: any) =>
-    request('/meta-ads/adsets', { method: 'POST', body: JSON.stringify(payload) }),
-  updateMetaAdSet: (id: string, updates: any) =>
-    request(`/meta-ads/adsets/${id}`, { method: 'PATCH', body: JSON.stringify(updates) }),
-  pauseMetaAdSet: (id: string) =>
-    request(`/meta-ads/adsets/${id}/pause`, { method: 'POST' }),
-  activateMetaAdSet: (id: string) =>
-    request(`/meta-ads/adsets/${id}/activate`, { method: 'POST' }),
-  getMetaAdSetInsights: (id: string, datePreset?: string) =>
-    request(`/meta-ads/adsets/${id}/insights${qs({ date_preset: datePreset })}`),
-
-  // Ads
-  getMetaAds: (adSetId?: string, limit?: number) =>
-    request(`/meta-ads/ads${qs({ adset_id: adSetId, limit })}`),
-  createMetaAd: (payload: any) =>
-    request('/meta-ads/ads', { method: 'POST', body: JSON.stringify(payload) }),
-  updateMetaAd: (id: string, updates: any) =>
-    request(`/meta-ads/ads/${id}`, { method: 'PATCH', body: JSON.stringify(updates) }),
-  pauseMetaAd: (id: string) =>
-    request(`/meta-ads/ads/${id}/pause`, { method: 'POST' }),
-  activateMetaAd: (id: string) =>
-    request(`/meta-ads/ads/${id}/activate`, { method: 'POST' }),
-  getMetaAdInsightsById: (id: string, datePreset?: string) =>
-    request(`/meta-ads/ads/${id}/insights${qs({ date_preset: datePreset })}`),
-
-  // Creatives
-  getMetaAdCreatives: (limit?: number) =>
-    request(`/meta-ads/creatives${qs({ limit })}`),
-  createMetaAdCreative: (payload: any) =>
-    request('/meta-ads/creatives', { method: 'POST', body: JSON.stringify(payload) }),
-
-  // Audiences
-  getMetaAdAudiences: (limit?: number) =>
-    request(`/meta-ads/audiences${qs({ limit })}`),
-  createMetaAdAudience: (payload: any) =>
-    request('/meta-ads/audiences', { method: 'POST', body: JSON.stringify(payload) }),
-  deleteMetaAdAudience: (id: string) =>
-    request(`/meta-ads/audiences/${id}`, { method: 'DELETE' }),
-
-  // Images
-  getMetaAdImages: (limit?: number) =>
-    request(`/meta-ads/images${qs({ limit })}`),
-
-  // Targeting
-  searchMetaTargeting: (type: string, q: string) =>
-    request(`/meta-ads/targeting/search${qs({ type, q })}`),
-  browseMetaTargeting: () => request('/meta-ads/targeting/browse'),
-  getMetaReachEstimate: (targetingSpec: any) =>
-    request('/meta-ads/reach-estimate', { method: 'POST', body: JSON.stringify({ targeting_spec: targetingSpec }) }),
-
-  // ── Competitors ───────────────────────────────────────────
-  getCompetitors: () => request('/competitors'),
-  addCompetitor: (name: string, url: string) =>
-    request('/competitors', { method: 'POST', body: JSON.stringify({ name, url }) }),
-  removeCompetitor: (id: number) => request(`/competitors/${id}`, { method: 'DELETE' }),
-  getCompetitorChanges: (id: number) => request(`/competitors/${id}/changes`),
-
-  // ── Charts & analytics ────────────────────────────────────
-  getChartData: () => request('/metrics/charts'),
-
-  // ── Events ────────────────────────────────────────────────
-  getEvents: () => request('/events'),
-
-  // ── Agent runs ────────────────────────────────────────────
-  getAgentRuns: (agentId?: number) =>
-    request(`/agents/runs${agentId ? `?agent_id=${agentId}` : ''}`),
 
   // ── Instantly v2 Full API ─────────────────────────────────
   // Campaigns
@@ -320,6 +149,88 @@ export const api = {
   getInstantlyAccounts: () => request('/campaigns/accounts'),
   getInstantlyLeads: (campaignId: string) =>
     request(`/campaigns/leads?campaign_id=${campaignId}`),
+
+  // ── Meta Ads ──────────────────────────────────────────────
+  // Account
+  getMetaAdAccount: () => request('/meta-ads/account'),
+
+  // Account Insights
+  getMetaAdInsights: (datePreset?: string) =>
+    request(`/meta-ads/insights${qs({ date_preset: datePreset })}`),
+  getMetaAdInsightsBreakdown: (datePreset?: string, breakdown?: string) =>
+    request(`/meta-ads/insights/breakdown${qs({ date_preset: datePreset, breakdown })}`),
+  getMetaAdInsightsTimeSeries: (datePreset?: string, timeIncrement?: number) =>
+    request(`/meta-ads/insights/time-series${qs({ date_preset: datePreset, time_increment: timeIncrement })}`),
+
+  // Campaigns
+  getMetaAdCampaigns: () => request('/meta-ads/campaigns'),
+  getMetaAdCampaignsLive: (limit?: number) =>
+    request(`/meta-ads/campaigns/live${qs({ limit })}`),
+  createMetaAdCampaign: (payload: any) =>
+    request('/meta-ads/campaigns', { method: 'POST', body: JSON.stringify(payload) }),
+  updateMetaAdCampaign: (id: string, updates: any) =>
+    request(`/meta-ads/campaigns/${id}`, { method: 'PATCH', body: JSON.stringify(updates) }),
+  pauseMetaAdCampaign: (id: string) =>
+    request(`/meta-ads/campaigns/${id}/pause`, { method: 'POST' }),
+  activateMetaAdCampaign: (id: string) =>
+    request(`/meta-ads/campaigns/${id}/activate`, { method: 'POST' }),
+  deleteMetaAdCampaign: (id: string) =>
+    request(`/meta-ads/campaigns/${id}`, { method: 'DELETE' }),
+  getMetaAdCampaignInsights: (id: string, datePreset?: string) =>
+    request(`/meta-ads/campaigns/${id}/insights${qs({ date_preset: datePreset })}`),
+
+  // Ad Sets
+  getMetaAdSets: (campaignId?: string, limit?: number) =>
+    request(`/meta-ads/adsets${qs({ campaign_id: campaignId, limit })}`),
+  createMetaAdSet: (payload: any) =>
+    request('/meta-ads/adsets', { method: 'POST', body: JSON.stringify(payload) }),
+  updateMetaAdSet: (id: string, updates: any) =>
+    request(`/meta-ads/adsets/${id}`, { method: 'PATCH', body: JSON.stringify(updates) }),
+  pauseMetaAdSet: (id: string) =>
+    request(`/meta-ads/adsets/${id}/pause`, { method: 'POST' }),
+  activateMetaAdSet: (id: string) =>
+    request(`/meta-ads/adsets/${id}/activate`, { method: 'POST' }),
+  getMetaAdSetInsights: (id: string, datePreset?: string) =>
+    request(`/meta-ads/adsets/${id}/insights${qs({ date_preset: datePreset })}`),
+
+  // Ads
+  getMetaAds: (adSetId?: string, limit?: number) =>
+    request(`/meta-ads/ads${qs({ adset_id: adSetId, limit })}`),
+  createMetaAd: (payload: any) =>
+    request('/meta-ads/ads', { method: 'POST', body: JSON.stringify(payload) }),
+  updateMetaAd: (id: string, updates: any) =>
+    request(`/meta-ads/ads/${id}`, { method: 'PATCH', body: JSON.stringify(updates) }),
+  pauseMetaAd: (id: string) =>
+    request(`/meta-ads/ads/${id}/pause`, { method: 'POST' }),
+  activateMetaAd: (id: string) =>
+    request(`/meta-ads/ads/${id}/activate`, { method: 'POST' }),
+  getMetaAdInsightsById: (id: string, datePreset?: string) =>
+    request(`/meta-ads/ads/${id}/insights${qs({ date_preset: datePreset })}`),
+
+  // Creatives
+  getMetaAdCreatives: (limit?: number) =>
+    request(`/meta-ads/creatives${qs({ limit })}`),
+  createMetaAdCreative: (payload: any) =>
+    request('/meta-ads/creatives', { method: 'POST', body: JSON.stringify(payload) }),
+
+  // Audiences
+  getMetaAdAudiences: (limit?: number) =>
+    request(`/meta-ads/audiences${qs({ limit })}`),
+  createMetaAdAudience: (payload: any) =>
+    request('/meta-ads/audiences', { method: 'POST', body: JSON.stringify(payload) }),
+  deleteMetaAdAudience: (id: string) =>
+    request(`/meta-ads/audiences/${id}`, { method: 'DELETE' }),
+
+  // Images
+  getMetaAdImages: (limit?: number) =>
+    request(`/meta-ads/images${qs({ limit })}`),
+
+  // Targeting
+  searchMetaTargeting: (type: string, q: string) =>
+    request(`/meta-ads/targeting/search${qs({ type, q })}`),
+  browseMetaTargeting: () => request('/meta-ads/targeting/browse'),
+  getMetaReachEstimate: (targetingSpec: any) =>
+    request('/meta-ads/reach-estimate', { method: 'POST', body: JSON.stringify({ targeting_spec: targetingSpec }) }),
 
   // ── Apify / Scraping ─────────────────────────────────────────
   // Store & Actors
@@ -537,183 +448,19 @@ export const api = {
     request(`/instagram-dm/campaigns/${id}/pause`, { method: 'POST' }),
   igDmGetStats: (campaignId: number) => request(`/instagram-dm/campaigns/${campaignId}/stats`),
 
-  // ── Data Enrichment ──────────────────────────────────────────
-  // Leads
-  getEnrichmentLeads: (params?: { company_id?: number; status?: string; score_label?: string; source?: string; instantly_push_status?: string; tag?: string; limit?: number; offset?: number }) =>
-    request(`/enrichment/leads${qs(params as any ?? {})}`),
-  getEnrichmentLead: (id: number) => request(`/enrichment/leads/${id}`),
-  getEnrichmentLeadFull: (id: number) => request(`/enrichment/leads/${id}/full`),
-  searchEnrichmentLeads: (params?: { q?: string; company_id?: number; status?: string; score_label?: string; source?: string; instantly_push_status?: string; limit?: number; offset?: number }) =>
-    request(`/enrichment/leads/search${qs(params as any ?? {})}`),
-  createEnrichmentLead: (data: any) =>
-    request('/enrichment/leads', { method: 'POST', body: JSON.stringify(data) }),
-  triggerEnrich: (id: number) =>
-    request(`/enrichment/leads/${id}/enrich`, { method: 'POST' }),
-  triggerScore: (id: number) =>
-    request(`/enrichment/leads/${id}/score`, { method: 'POST' }),
-  triggerPushGhl: (id: number) =>
-    request(`/enrichment/leads/${id}/push-ghl`, { method: 'POST' }),
-  triggerProcess: (id: number) =>
-    request(`/enrichment/leads/${id}/process`, { method: 'POST' }),
-  approveColdEmail: (id: number, campaignId: string) =>
-    request(`/enrichment/leads/${id}/approve-cold-email`, { method: 'POST', body: JSON.stringify({ campaign_id: campaignId }) }),
-  excludeColdEmail: (id: number, reason?: string) =>
-    request(`/enrichment/leads/${id}/exclude-cold-email`, { method: 'POST', body: JSON.stringify({ reason }) }),
-
-  // Bulk actions
-  bulkApproveColdEmail: (leadIds: number[], campaignId: string) =>
-    request('/enrichment/bulk-approve-cold-email', { method: 'POST', body: JSON.stringify({ lead_ids: leadIds, campaign_id: campaignId }) }),
-  bulkEnrich: (ids: number[]) =>
-    request('/enrichment/bulk-enrich', { method: 'POST', body: JSON.stringify({ ids }) }),
-  bulkProcess: (ids: number[]) =>
-    request('/enrichment/bulk-process', { method: 'POST', body: JSON.stringify({ ids }) }),
-  bulkUpdateTags: (ids: number[], tags: string[], mode: 'add' | 'remove' | 'replace') =>
-    request('/enrichment/bulk-update-tags', { method: 'POST', body: JSON.stringify({ ids, tags, mode }) }),
-  updateLeadTags: (id: number, tags: string[]) =>
-    request(`/enrichment/leads/${id}/tags`, { method: 'PUT', body: JSON.stringify({ tags }) }),
-  getMatchingLeadIds: (params?: { company_id?: number; status?: string; score_label?: string; source?: string; instantly_push_status?: string; tag?: string }) =>
-    request(`/enrichment/leads/matching-ids${qs(params as any ?? {})}`),
-  getDistinctTags: () => request('/enrichment/tags'),
-  reEnrichStale: (companyId?: number) =>
-    request('/enrichment/re-enrich-stale', { method: 'POST', body: JSON.stringify({ company_id: companyId }) }),
-
-  // Stats & events
-  getEnrichmentStats: (companyId?: number) =>
-    request(`/enrichment/stats${qs({ company_id: companyId })}`),
-  getEnrichmentEvents: (params?: { company_id?: number; limit?: number }) =>
-    request(`/enrichment/events${qs(params as any ?? {})}`),
-
-  // Config
-  getEnrichmentConfig: (companyId: number) =>
-    request(`/enrichment/config/${companyId}`),
-  updateEnrichmentConfig: (companyId: number, data: any) =>
-    request(`/enrichment/config/${companyId}`, { method: 'PUT', body: JSON.stringify(data) }),
-
-  // Cold email rules
-  getColdEmailRules: (companyId?: number) =>
-    request(`/enrichment/cold-email-rules${qs({ company_id: companyId })}`),
-  createColdEmailRule: (data: any) =>
-    request('/enrichment/cold-email-rules', { method: 'POST', body: JSON.stringify(data) }),
-  deleteColdEmailRule: (id: number) =>
-    request(`/enrichment/cold-email-rules/${id}`, { method: 'DELETE' }),
-
-  // Known contacts
-  getKnownContacts: (params?: { company_id?: number; search?: string }) =>
-    request(`/enrichment/known-contacts${qs(params as any ?? {})}`),
-  createKnownContact: (data: any) =>
-    request('/enrichment/known-contacts', { method: 'POST', body: JSON.stringify(data) }),
-  deleteKnownContact: (id: number) =>
-    request(`/enrichment/known-contacts/${id}`, { method: 'DELETE' }),
-  importKnownContactsFromGhl: (companyId: number) =>
-    request('/enrichment/known-contacts/import-ghl', { method: 'POST', body: JSON.stringify({ company_id: companyId }) }),
-
-  // Reply threads
-  getReplyThreads: (params?: { company_id?: number; status?: string }) =>
-    request(`/enrichment/threads${qs(params as any ?? {})}`),
-  getReplyThread: (id: number) => request(`/enrichment/threads/${id}`),
-  sendManualReply: (threadId: number, body: string) =>
-    request(`/enrichment/threads/${threadId}/reply`, { method: 'POST', body: JSON.stringify({ body }) }),
-  updateThreadStatus: (threadId: number, status: string, escalation_reason?: string, conversion_type?: string) =>
-    request(`/enrichment/threads/${threadId}/status`, { method: 'PUT', body: JSON.stringify({ status, escalation_reason, conversion_type }) }),
-
-  // Playbooks
-  getPlaybook: (companyId: number) => request(`/enrichment/playbooks/${companyId}`),
-  updatePlaybook: (companyId: number, data: any) =>
-    request(`/enrichment/playbooks/${companyId}`, { method: 'PUT', body: JSON.stringify(data) }),
-
-  // Import from GHL
-  importFromGhl: (data: { company_id: number; query?: string; contact_ids?: string[]; auto_process?: boolean }) =>
-    request('/enrichment/import-from-ghl', { method: 'POST', body: JSON.stringify(data) }),
-
-  // Bulk CSV upload
-  bulkUploadLeads: (data: { company_id: number; file_name: string; leads: any[]; auto_process?: boolean; target_campaign_id?: string; column_mapping?: Record<string, string> }) =>
-    request('/enrichment/bulk-upload', { method: 'POST', body: JSON.stringify(data) }),
-  getBulkUploads: () => request('/enrichment/bulk-upload'),
-  getBulkUpload: (id: number) => request(`/enrichment/bulk-upload/${id}`),
-  cancelBulkUpload: (id: number) =>
-    request(`/enrichment/bulk-upload/${id}/cancel`, { method: 'POST' }),
-
-  // Audit log
-  getLeadAuditLog: (id: number) => request(`/enrichment/leads/${id}/audit-log`),
-
-  // Auto-reply stats
-  getAutoReplyStats: (companyId?: number) =>
-    request(`/enrichment/auto-reply-stats${qs({ company_id: companyId })}`),
-
-  // Reply draft review queue
-  getReplyDrafts: (params?: { company_id?: number; review_status?: string; limit?: number; offset?: number }) =>
-    request(`/enrichment/reply-drafts${qs(params as any ?? {})}`),
-  approveReplyDraft: (id: number) =>
-    request(`/enrichment/reply-drafts/${id}/approve`, { method: 'POST' }),
-  rejectReplyDraft: (id: number) =>
-    request(`/enrichment/reply-drafts/${id}/reject`, { method: 'POST' }),
-  bulkActionReplyDrafts: (ids: number[], action: 'approve' | 'reject') =>
-    request('/enrichment/reply-drafts/bulk-action', { method: 'POST', body: JSON.stringify({ ids, action }) }),
-  editReplyDraft: (id: number, body: string) =>
-    request(`/enrichment/reply-drafts/${id}`, { method: 'PATCH', body: JSON.stringify({ body }) }),
-
-  // ── BTR Conference ─────────────────────────────────────────
-  getBtrDashboard: () => request('/btr-conference/dashboard'),
-  updateBtrContactStatus: (contactId: string, status: string) =>
-    request(`/btr-conference/contacts/${contactId}/status`, { method: 'POST', body: JSON.stringify({ status }) }),
-  reassignBtrContact: (contactId: string, assignee: string) =>
-    request(`/btr-conference/contacts/${contactId}/assign`, { method: 'POST', body: JSON.stringify({ assignee }) }),
-
-  // ── Domain Health ─────────────────────────────────────────
-  getDomainHealthDomains: () => request('/domain-health/domains'),
-  getDomainHealthDomain: (domain: string, limit?: number) =>
-    request(`/domain-health/domains/${encodeURIComponent(domain)}${qs({ limit })}`),
-  getDomainHealthAccounts: () => request('/domain-health/accounts'),
-  getDomainHealthAccount: (email: string) =>
-    request(`/domain-health/accounts/${encodeURIComponent(email)}`),
-  enableWarmup: (email: string) =>
-    request(`/domain-health/accounts/${encodeURIComponent(email)}/warmup/enable`, { method: 'POST' }),
-  disableWarmup: (email: string) =>
-    request(`/domain-health/accounts/${encodeURIComponent(email)}/warmup/disable`, { method: 'POST' }),
-  pauseAccount: (email: string) =>
-    request(`/domain-health/accounts/${encodeURIComponent(email)}/pause`, { method: 'POST' }),
-  resumeAccount: (email: string) =>
-    request(`/domain-health/accounts/${encodeURIComponent(email)}/resume`, { method: 'POST' }),
-  checkDomainHealth: (domain: string) =>
-    request(`/domain-health/domains/${encodeURIComponent(domain)}/check`, { method: 'POST' }),
-  checkAllDomainHealth: () =>
-    request('/domain-health/check-all', { method: 'POST' }),
-  getWarmupStatus: () =>
-    request<any>('/domain-health/warmup-status'),
-  forceWarmupCheck: () =>
-    request<any>('/domain-health/warmup-check', { method: 'POST' }),
-  getDomainHealthConfig: () => request('/domain-health/config'),
-  updateDomainHealthConfig: (data: any) =>
-    request('/domain-health/config', { method: 'PUT', body: JSON.stringify(data) }),
-  getDomainHealthSummary: () => request('/domain-health/summary'),
-
-  // ── Settings & System Health ────────────────────────────────
-  getSystemHealth: () => request<{
-    integrations: any[];
-    webhooks: any[];
-    system: any;
-    summary: { total: number; configured: number; missing: number };
-  }>('/settings/health'),
-  getWebhookLog: (params?: { limit?: number; offset?: number; source?: string; event_type?: string }) =>
-    request<{ events: any[]; total: number; breakdown: any[] }>(`/settings/webhook-log${qs(params as any)}`),
-  getWebhookLogStats: () => request<{ hourly: any[]; daily: any[]; bySource: any[] }>('/settings/webhook-log/stats'),
-  pingService: (service: string) =>
-    request<{ ok: boolean; latencyMs: number; details?: string }>(`/settings/ping/${service}`, { method: 'POST' }),
-  getDbStats: () => request<{ tables: { table: string; count: number }[] }>('/settings/db-stats'),
-
-  // ── RB2B Visitors ───────────────────────────────────────────
-  getRb2bVisitors: (params?: { limit?: number; offset?: number; status?: string; company_id?: number; search?: string }) =>
-    request<{ visitors: any[]; total: number }>(`/rb2b/visitors${qs(params as any)}`),
-  getRb2bStats: (companyId?: number) =>
-    request<any>(`/rb2b/stats${qs({ company_id: companyId })}`),
-  getRb2bVisitor: (id: number) =>
-    request<{ visitor: any; events: any[] }>(`/rb2b/visitors/${id}`),
-
-  // ── Direct Person/Company Lookup ────────────────────────────
-  lookupPerson: (params: { email?: string; phone?: string; name?: string; company?: string }) =>
-    request<any>('/enrichment/lookup/person', { method: 'POST', body: JSON.stringify(params) }),
-  lookupCompany: (params: { domain?: string; name?: string }) =>
-    request<any>('/enrichment/lookup/company', { method: 'POST', body: JSON.stringify(params) }),
+  // ── OpenClaw ──────────────────────────────────────────────
+  getOpenClawHealth: () => request('/openclaw/health'),
+  getOpenClawStatus: () => request('/openclaw/status'),
+  openclawPing: () => request('/openclaw/ping'),
+  openclawSession: () => request('/openclaw/session'),
+  openclawListMachines: () => request('/openclaw/machines'),
+  openclawMachineStatus: (id: string) => request(`/openclaw/machines/${id}`),
+  openclawStartMachine: (id: string) => request(`/openclaw/machines/${id}/start`, { method: 'POST' }),
+  openclawStopMachine: (id: string) => request(`/openclaw/machines/${id}/stop`, { method: 'POST' }),
+  openclawRestartMachine: (id: string) => request(`/openclaw/machines/${id}/restart`, { method: 'POST' }),
+  openclawDiagnostics: (id: string) => request(`/openclaw/machines/${id}/diagnostics`, { method: 'POST' }),
+  openclawCommand: (command: string, payload?: any) =>
+    request('/openclaw/command', { method: 'POST', body: JSON.stringify({ command, payload }) }),
 
   // ── Anymailfinder ────────────────────────────────────────────
   amfFindPersonEmail: (params: { domain?: string; company_name?: string; full_name?: string; first_name?: string; last_name?: string }) =>
@@ -725,33 +472,18 @@ export const api = {
   amfStatus: () =>
     request<{ available: boolean }>('/anymailfinder/status'),
 
-  // ── A/B Testing ─────────────────────────────────────────────
-  getAbTests: (companyId?: number) =>
-    request<any[]>(`/enrichment/ab-tests${qs({ company_id: companyId })}`),
-  getAbTest: (id: number) =>
-    request<any>(`/enrichment/ab-tests/${id}`),
-  createAbTest: (data: { name: string; test_type: string; company_id?: number; variants?: any[] }) =>
-    request<any>('/enrichment/ab-tests', { method: 'POST', body: JSON.stringify(data) }),
-  updateAbTestStatus: (id: number, status: string) =>
-    request<any>(`/enrichment/ab-tests/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
-  getAbTestWinner: (id: number) =>
-    request<{ winner: any }>(`/enrichment/ab-tests/${id}/winner`),
+  // ── BTR Conference ─────────────────────────────────────────
+  getBtrDashboard: () => request('/btr-conference/dashboard'),
+  updateBtrContactStatus: (contactId: string, status: string) =>
+    request(`/btr-conference/contacts/${contactId}/status`, { method: 'POST', body: JSON.stringify({ status }) }),
+  reassignBtrContact: (contactId: string, assignee: string) =>
+    request(`/btr-conference/contacts/${contactId}/assign`, { method: 'POST', body: JSON.stringify({ assignee }) }),
 
-  // ── Meeting Transcripts ────────────────────────────────────
-  getMeetingTranscripts: (companyId?: number) =>
-    request<any[]>(`/enrichment/meeting-transcripts${qs({ company_id: companyId })}`),
-  getMeetingTranscript: (id: number) =>
-    request<any>(`/enrichment/meeting-transcripts/${id}`),
-  reprocessMeetingTranscript: (id: number) =>
-    request<{ queued: boolean }>(`/enrichment/meeting-transcripts/${id}/reprocess`, { method: 'POST' }),
-
-  // ── Daily Reports ────────────────────────────────────────────
-  getReports: (limit?: number) =>
-    request(`/reports${qs({ limit })}`),
-  getReport: (id: number) =>
-    request(`/reports/${id}`),
-  getReportPreview: (type?: string) =>
-    request(`/reports/preview${qs({ type })}`),
-  sendReport: (type: string) =>
-    request('/reports/send-now', { method: 'POST', body: JSON.stringify({ type }) }),
+  // ── RB2B Visitors ───────────────────────────────────────────
+  getRb2bVisitors: (params?: { limit?: number; offset?: number; status?: string; company_id?: number; search?: string }) =>
+    request<{ visitors: any[]; total: number }>(`/rb2b/visitors${qs(params as any)}`),
+  getRb2bStats: (companyId?: number) =>
+    request<any>(`/rb2b/stats${qs({ company_id: companyId })}`),
+  getRb2bVisitor: (id: number) =>
+    request<{ visitor: any; events: any[] }>(`/rb2b/visitors/${id}`),
 };
