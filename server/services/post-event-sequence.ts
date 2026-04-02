@@ -16,7 +16,7 @@ import path from 'path';
 // other company. BMN will need its own event sequence module with
 // creator-specific language and flows if/when needed.
 // ═══════════════════════════════════════════════════════════════
-const GPC_COMPANY_ID = 1;
+import { GPC_COMPANY_ID } from './gpc/config';
 
 // ── Types ────────────────────────────────────────────────────
 

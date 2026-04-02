@@ -1,5 +1,6 @@
 import dns from 'dns';
 import { promisify } from 'util';
+import { BMN_COMPANY_ID } from '../bmn/config';
 
 const resolveMx = promisify(dns.resolveMx);
 
@@ -87,7 +88,7 @@ export async function prefilterEmail(email: string, options?: { companyId?: numb
   // Check personal email domains — skip for BMN (company_id=2) since creators
   // use personal emails (Gmail, Yahoo, etc.) and should never be disqualified for it
   const isPersonal = PERSONAL_DOMAINS.has(domain);
-  if (isPersonal && options?.companyId !== 2) {
+  if (isPersonal && options?.companyId !== BMN_COMPANY_ID) {
     return {
       passed: false,
       reason: 'personal_email',

@@ -6,6 +6,7 @@ data/*.db-shm
 data/*.bak-*
 data/*.json
 data/family-office-scrape/
+data/temp/
 backups/
 .env
 .env.*

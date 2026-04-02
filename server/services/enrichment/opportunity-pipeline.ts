@@ -2,6 +2,8 @@ import { queryOne, queryAll, runSql, saveDb } from '../../db';
 import { ghlService } from '../ghl-service';
 import { GhlPipelineStageMap, AnyStageMap, CompanyPipeline } from './types';
 import { getCompanyConfig, logEvent } from './helpers';
+import { GPC_COMPANY_ID, GPC_MONETARY_VALUE } from '../gpc/config';
+import { BMN_COMPANY_ID } from '../bmn/config';
 import { wsServer } from '../../websocket/ws-server';
 
 // ── Pipeline Resolution ────────────────────────────────────────
@@ -63,7 +65,7 @@ function getLegacyPipelineConfig(companyId: number): { pipelineId: string; stage
   if (!cfg?.ghl_pipeline_id || !cfg?.ghl_pipeline_stages) return null;
 
   // Per-company monetary value: GPC fund deals ~$250K, BMN creator deals ~$500
-  const MONETARY_VALUES: Record<number, number> = { 1: 250000, 2: 500 };
+  const MONETARY_VALUES: Record<number, number> = { [GPC_COMPANY_ID]: GPC_MONETARY_VALUE, [BMN_COMPANY_ID]: 500 };
   const monetaryValue = MONETARY_VALUES[companyId] ?? 1000;
 
   try {

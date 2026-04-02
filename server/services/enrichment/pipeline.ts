@@ -17,14 +17,15 @@ import { syncOpportunityStage } from './opportunity-pipeline';
 import { prefilterEmail } from './email-prefilter';
 import { claudeService } from '../claude-service';
 import { generateEmailSequence, sequenceToCustomVariables } from './email-generator';
+import { BMN_COMPANY_ID } from '../bmn/config';
 
 export async function enrichLead(leadId: number): Promise<boolean> {
   const lead = queryOne('SELECT * FROM enrichment_leads WHERE id = ?', [leadId]) as EnrichmentLead | null;
   if (!lead) return false;
 
-  // BMN (company_id=2) NEVER runs through enrichment — creators use personal
+  // BMN NEVER runs through enrichment — creators use personal
   // emails and don't need B2B enrichment/scoring. They flow: Instantly → GHL directly.
-  if (lead.company_id === 2) {
+  if (lead.company_id === BMN_COMPANY_ID) {
     console.log(`[Enrichment] Skipping enrichment for BMN lead ${leadId} (${lead.email})`);
     return false;
   }
@@ -762,9 +763,9 @@ export function excludeFromColdEmail(leadId: number, reason?: string): void {
 }
 
 export async function processLead(leadId: number): Promise<boolean> {
-  // BMN (company_id=2) NEVER runs through the enrichment pipeline
+  // BMN NEVER runs through the enrichment pipeline
   const checkLead = queryOne('SELECT company_id FROM enrichment_leads WHERE id = ?', [leadId]);
-  if (checkLead?.company_id === 2) {
+  if (checkLead?.company_id === BMN_COMPANY_ID) {
     console.log(`[Enrichment] Skipping processLead for BMN lead ${leadId}`);
     return false;
   }
