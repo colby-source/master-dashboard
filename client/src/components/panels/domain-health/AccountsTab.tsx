@@ -9,7 +9,6 @@ import {
   Pause,
   Flame,
   FlameKindling,
-  RefreshCw,
 } from "lucide-react";
 import { WarmupBadge } from "../../domain-health/WarmupBadge";
 import { cn } from "@/lib/utils";
