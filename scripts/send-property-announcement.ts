@@ -493,14 +493,16 @@ async function main(): Promise<void> {
   if (smsQueue.length > 0) {
     // Wait for 2.5 hours after earliest email send time so the first contacts
     // have the required gap. In dry-run we skip the wait.
-    if (IS_LIVE) {
+    if (IS_LIVE && emailSentTimestamps.size > 0) {
       const earliestEmail = Math.min(...Array.from(emailSentTimestamps.values()));
       const smsStartTime = earliestEmail + SMS_DELAY_AFTER_EMAIL_MS;
       const waitMs = smsStartTime - Date.now();
-      if (waitMs > 0) {
+      if (waitMs > 0 && isFinite(waitMs)) {
         log(`Waiting ${Math.ceil(waitMs / 60_000)} min before SMS phase (2.5h after first email)...`);
         await sleep(waitMs);
       }
+    } else if (IS_LIVE && emailSentTimestamps.size === 0) {
+      log(`No emails sent this run. Proceeding to SMS immediately.`);
     }
 
     await processBatch(
