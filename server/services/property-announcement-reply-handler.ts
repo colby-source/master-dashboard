@@ -18,7 +18,7 @@ const NOT_INTERESTED_STAGE_ID = 'f287eacd-8301-434d-8b84-789529def681';
 
 const LOG_FILE = path.resolve('data/property-announcement-replies.json');
 
-const EMAIL_SUBJECT = 'Re: we just closed on two new ones';
+const EMAIL_SUBJECT = 'Re: Two new properties on the table for Fund II';
 
 const OPT_OUT_HTML = [
   '<p>Got it, you\'re off the list. If anything changes down the road feel free to reach out anytime.</p>',

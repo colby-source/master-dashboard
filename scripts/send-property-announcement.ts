@@ -324,7 +324,7 @@ function buildEmailHtml(firstName: string): string {
 
 <p>It's Colby. Wanted to give you a heads up before we announce this more broadly.</p>
 
-<p>We just locked in two new acquisitions for Fund II. A 175+ unit community in the Nashville metro and a 200+ unit stabilized asset in Omaha. Both government-backed, both cash-flowing from close, and both fit the exact thesis I walked through at the mixer.</p>
+<p>We've identified two new acquisitions for Fund II. A 175+ unit community in the Nashville metro and a 200+ unit stabilized asset in Omaha. Both government-backed, both projected to cash-flow from close, and both fit the exact thesis I walked through at the mixer.</p>
 
 <p>The Nashville deal has meaningful rent upside still sitting on the table. The Omaha property has 60% voucher-backed income. Essentially a government check every month regardless of market conditions.</p>
 
@@ -349,9 +349,9 @@ Fund Manager | Granite Park Capital<br/>
 function buildSmsMessage(firstName: string): string {
   const name = firstName.trim();
   if (name) {
-    return `${name}, it's Colby from Granite Park. Just locked in two new properties for Fund II. Nashville + Omaha, both government-backed. A few people from the mixer already moved forward. Want the details?`;
+    return `${name}, it's Colby from Granite Park. We've identified two new properties for Fund II. Nashville + Omaha, both government-backed. A few people from the mixer already moved forward. Want the details?`;
   }
-  return `Hey, it's Colby from Granite Park. Just locked in two new properties for Fund II. Nashville + Omaha, both government-backed. A few people from the mixer already moved forward. Want the details?`;
+  return `Hey, it's Colby from Granite Park. We've identified two new properties for Fund II. Nashville + Omaha, both government-backed. A few people from the mixer already moved forward. Want the details?`;
 }
 
 // ---------------------------------------------------------------------------
@@ -363,7 +363,7 @@ async function sendEmail(client: AxiosInstance, contact: Contact): Promise<void>
   await client.post('/conversations/messages', {
     type: 'Email',
     contactId: contact.contactId,
-    subject: 'we just closed on two new ones',
+    subject: 'Two new properties on the table for Fund II',
     html: buildEmailHtml(contact.firstName),
   });
 }
