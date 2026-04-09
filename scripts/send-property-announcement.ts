@@ -15,7 +15,37 @@ const TAG = 'property-announcement-apr-2026';
 const PROGRESS_PATH = path.resolve(__dirname, '..', 'data', 'property-announcement-progress.json');
 
 const IS_LIVE = process.argv.includes('--live');
+const SEND_NOW = process.argv.includes('--now');
 const MODE_LABEL = IS_LIVE ? 'LIVE' : 'DRY-RUN';
+
+// Optimal send window: Tuesday 10 AM ET is #1, Wednesday 10 AM ET is #2, Thursday 10 AM ET is #3
+// Script will wait until the next optimal window unless --now is passed
+function getNextOptimalSendTime(): Date {
+  const now = new Date();
+  const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const utcOffset = now.getTime() - et.getTime();
+
+  // Try to find the next Tue/Wed/Thu at 10:00 AM ET
+  const OPTIMAL_DAYS = [2, 3, 4]; // Tue, Wed, Thu
+  const OPTIMAL_HOUR = 10; // 10 AM ET
+
+  for (let daysAhead = 0; daysAhead <= 7; daysAhead++) {
+    const candidate = new Date(et);
+    candidate.setDate(candidate.getDate() + daysAhead);
+    candidate.setHours(OPTIMAL_HOUR, 0, 0, 0);
+
+    const candidateUtc = new Date(candidate.getTime() + utcOffset);
+
+    if (OPTIMAL_DAYS.includes(candidate.getDay()) && candidateUtc > now) {
+      return candidateUtc;
+    }
+  }
+  // Fallback: tomorrow at 10 AM ET
+  const fallback = new Date(et);
+  fallback.setDate(fallback.getDate() + 1);
+  fallback.setHours(OPTIMAL_HOUR, 0, 0, 0);
+  return new Date(fallback.getTime() + utcOffset);
+}
 
 // Stage IDs
 const EXCLUDED_STAGES = new Set([
@@ -354,6 +384,20 @@ async function processBatch<T>(
 async function main(): Promise<void> {
   log(`=== Property Announcement Campaign ===`);
   log(`Mode: ${MODE_LABEL}`);
+
+  // Wait for optimal send window unless --now or --dry-run
+  if (IS_LIVE && !SEND_NOW) {
+    const sendTime = getNextOptimalSendTime();
+    const waitMs = sendTime.getTime() - Date.now();
+    if (waitMs > 0) {
+      const etString = sendTime.toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'full', timeStyle: 'short' });
+      log(`Scheduled to send at: ${etString} ET`);
+      log(`Waiting ${Math.ceil(waitMs / 60_000)} minutes (${(waitMs / 3_600_000).toFixed(1)} hours)...`);
+      log(`To skip the wait and send immediately, restart with --now flag`);
+      await sleep(waitMs);
+      log(`Send window reached. Starting campaign...`);
+    }
+  }
 
   const client = createClient();
   const contacts = await fetchAllContacts(client);
