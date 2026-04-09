@@ -41,6 +41,7 @@ import settingsRouter from './routes/settings';
 import rb2bRouter from './routes/rb2b';
 import anymailfinderRouter from './routes/anymailfinder';
 import reportsRouter from './routes/reports';
+import propertyAnnouncementWebhookRouter from './routes/property-announcement-webhook';
 import { yachtCheckinPageRouter, yachtCheckinRouter, yachtEventsRouter } from './routes/yacht-events';
 import { reportScheduler } from './services/report-scheduler';
 import { initMeetingScheduler } from './services/meeting-scheduler';
@@ -94,6 +95,7 @@ async function main() {
   // Webhook routes — mounted BEFORE auth middleware (they have their own verification)
   app.use('/api/enrichment', enrichmentWebhooksRouter);
   app.use('/api/whatsapp', whatsappRouter);
+  app.use('/api/property-announcement', propertyAnnouncementWebhookRouter);
 
   // Yacht check-in — public routes (no auth, guests scan QR)
   app.use('/yacht-checkin', yachtCheckinPageRouter);     // HTML page
