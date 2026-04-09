@@ -42,6 +42,7 @@ import rb2bRouter from './routes/rb2b';
 import anymailfinderRouter from './routes/anymailfinder';
 import reportsRouter from './routes/reports';
 import propertyAnnouncementWebhookRouter from './routes/property-announcement-webhook';
+import { startPropertyAnnouncementPoller } from './services/property-announcement-poller';
 import { yachtCheckinPageRouter, yachtCheckinRouter, yachtEventsRouter } from './routes/yacht-events';
 import { reportScheduler } from './services/report-scheduler';
 import { initMeetingScheduler } from './services/meeting-scheduler';
@@ -171,6 +172,9 @@ async function main() {
   initMeetingScheduler().catch(err => {
     console.error('[Server] Meeting scheduler init failed:', err.message);
   });
+
+  // Start property announcement reply poller (every 2 min)
+  startPropertyAnnouncementPoller();
 
   server.listen(config.port, () => {
     console.log(`[Server] Running on http://localhost:${config.port}`);
