@@ -18,14 +18,50 @@ const IS_LIVE = process.argv.includes('--live');
 const SEND_NOW = process.argv.includes('--now');
 const MODE_LABEL = IS_LIVE ? 'LIVE' : 'DRY-RUN';
 
-// Optimal send window: Tuesday 10 AM ET is #1, Wednesday 10 AM ET is #2, Thursday 10 AM ET is #3
-// Script will wait until the next optimal window unless --now is passed
+// Parse --day flag (1, 2, or 3). Defaults to 1.
+const dayArg = process.argv.find(a => a.startsWith('--day'));
+const SEND_DAY = dayArg ? parseInt(dayArg.replace('--day', '').replace('=', '').trim() || '1') : 1;
+
+// 3-day send plan (optimized for deliverability + engagement):
+//   Day 1 (Thu Apr 10): Warmest — Attended Mixer, 1-on-1, Due Diligence (~180)
+//   Day 2 (Tue Apr 14): Mid-tier — Warm Nurture, Registered, Approved, Didn't Attend (~195)
+//   Day 3 (Wed Apr 15): Coldest — Waitlist, Not Interested, Needs More Time (~108)
+//
+// Keeps daily volume under 200 (shared IP ramp guideline: 250 max day 1-3)
+// Avoids Friday (37% auto-reply rate), skips weekend, hits Tue+Wed (best days)
+
+const DAY_1_STAGES = new Set([
+  '7bff2aff-62ef-46aa-b1bb-1ed7c9c8d08c', // Attended Mixer
+  '450dd1b9-6ab2-4c86-af74-ed9f8e5ec373', // 1 on 1 scheduled
+  'baac325b-4fc1-44f2-8ce4-1b59b401643d', // Due Diligence
+]);
+
+const DAY_2_STAGES = new Set([
+  '690b47f0-2dfe-4bf5-8fc1-93b7c439ca79', // Colby Warm Nurture
+  'b76428d2-1a06-4b21-b864-cce89cad682d', // Registered
+  'c50a0f7d-89c7-4998-9de9-36e5c8885992', // Approved For Event
+  'bca99fa3-6655-410e-b589-9f603a9b2b7e', // Didn't attend mixer
+]);
+
+const DAY_3_STAGES = new Set([
+  '751ca568-5aca-4aec-a201-8084d29bc3ef', // Waitlist
+  'f287eacd-8301-434d-8b84-789529def681', // Not Interested
+  '39f7b226-bdf6-4bcb-8fea-66c9d6fde441', // Needs More Time / Nurture
+]);
+
+const DAY_STAGE_MAP: Record<number, Set<string>> = { 1: DAY_1_STAGES, 2: DAY_2_STAGES, 3: DAY_3_STAGES };
+const DAY_LABELS: Record<number, string> = {
+  1: 'Day 1 (Warmest: Attended Mixer, 1-on-1, Due Diligence)',
+  2: 'Day 2 (Mid-tier: Warm Nurture, Registered, Approved, Didn\'t Attend)',
+  3: 'Day 3 (Coldest: Waitlist, Not Interested, Needs More Time)',
+};
+
+// Optimal send window: Tue/Wed/Thu at 10 AM ET
 function getNextOptimalSendTime(): Date {
   const now = new Date();
   const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
   const utcOffset = now.getTime() - et.getTime();
 
-  // Try to find the next Tue/Wed/Thu at 10:00 AM ET
   const OPTIMAL_DAYS = [2, 3, 4]; // Tue, Wed, Thu
   const OPTIMAL_HOUR = 10; // 10 AM ET
 
@@ -384,6 +420,12 @@ async function processBatch<T>(
 async function main(): Promise<void> {
   log(`=== Property Announcement Campaign ===`);
   log(`Mode: ${MODE_LABEL}`);
+  log(`Send day: ${SEND_DAY}/3 — ${DAY_LABELS[SEND_DAY] || 'Unknown'}`);
+
+  if (!DAY_STAGE_MAP[SEND_DAY]) {
+    log(`ERROR: Invalid --day value. Use --day=1, --day=2, or --day=3`);
+    process.exit(1);
+  }
 
   // Wait for optimal send window unless --now or --dry-run
   if (IS_LIVE && !SEND_NOW) {
@@ -400,7 +442,12 @@ async function main(): Promise<void> {
   }
 
   const client = createClient();
-  const contacts = await fetchAllContacts(client);
+  const allContacts = await fetchAllContacts(client);
+
+  // Filter to only this day's stages
+  const todayStages = DAY_STAGE_MAP[SEND_DAY]!;
+  const contacts = allContacts.filter((c) => todayStages.has(c.stageId));
+  log(`Filtered to ${contacts.length} contacts for day ${SEND_DAY} (of ${allContacts.length} total eligible)`);
   const progress = loadProgress();
   progress.totalContacts = contacts.length;
 
@@ -426,14 +473,14 @@ async function main(): Promise<void> {
           await addTag(client, contact.contactId);
         }
         emailSentTimestamps.set(contact.contactId, Date.now());
-        progress.emailsSent.push(contact.contactId);
+        if (IS_LIVE) progress.emailsSent.push(contact.contactId);
         log(`EMAIL ${IS_LIVE ? 'SENT' : 'WOULD SEND'} → ${contact.firstName || '(no name)'} <${contact.email}> [${contact.stageName}]`);
       } catch (err: any) {
         const errorMsg = err?.response?.data?.message ?? err?.message ?? String(err);
-        progress.errors.push({ contactId: contact.contactId, error: errorMsg, type: 'email' });
+        if (IS_LIVE) progress.errors.push({ contactId: contact.contactId, error: errorMsg, type: 'email' });
         log(`EMAIL ERROR → ${contact.firstName || '(no name)'} <${contact.email}>: ${errorMsg}`);
       }
-      saveProgress(progress);
+      if (IS_LIVE) saveProgress(progress);
     },
   );
 
@@ -478,14 +525,14 @@ async function main(): Promise<void> {
           if (IS_LIVE) {
             await sendSms(client, contact);
           }
-          progress.smsSent.push(contact.contactId);
+          if (IS_LIVE) progress.smsSent.push(contact.contactId);
           log(`SMS ${IS_LIVE ? 'SENT' : 'WOULD SEND'} → ${contact.firstName || '(no name)'} ${contact.phone} [${contact.stageName}]`);
         } catch (err: any) {
           const errorMsg = err?.response?.data?.message ?? err?.message ?? String(err);
-          progress.errors.push({ contactId: contact.contactId, error: errorMsg, type: 'sms' });
+          if (IS_LIVE) progress.errors.push({ contactId: contact.contactId, error: errorMsg, type: 'sms' });
           log(`SMS ERROR → ${contact.firstName || '(no name)'} ${contact.phone}: ${errorMsg}`);
         }
-        saveProgress(progress);
+        if (IS_LIVE) saveProgress(progress);
       },
     );
   }
