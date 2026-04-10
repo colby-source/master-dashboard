@@ -53,22 +53,22 @@ describe('injectBmnBookingGoal', () => {
     expect(goals).toHaveLength(1);
   });
 
-  it('the injected goal contains the MEETING BOOKING header', () => {
+  it('the injected goal contains the BRAND BUILDER FUNNEL header', () => {
     const goals: string[] = [];
     injectBmnBookingGoal(goals);
-    expect(goals[0]).toContain('MEETING BOOKING');
+    expect(goals[0]).toContain('BRAND BUILDER FUNNEL');
   });
 
-  it('the injected goal instructs sharing a booking link', () => {
+  it('the injected goal instructs sharing the Brand Builder funnel link', () => {
     const goals: string[] = [];
     injectBmnBookingGoal(goals);
-    expect(goals[0]).toContain('booking link');
+    expect(goals[0]).toContain('apply.brandmenow.ai/influencer-video-funnel');
   });
 
-  it('the injected goal explicitly forbids proposing specific times', () => {
+  it('the injected goal explicitly forbids suggesting booking a call', () => {
     const goals: string[] = [];
     injectBmnBookingGoal(goals);
-    expect(goals[0]).toContain('Do NOT propose specific times');
+    expect(goals[0]).toContain('do NOT suggest booking a call');
   });
 
   it('appends to a pre-populated goals array without modifying existing entries', () => {
