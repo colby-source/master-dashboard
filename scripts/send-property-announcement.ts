@@ -317,41 +317,52 @@ async function fetchAllContacts(client: AxiosInstance): Promise<Contact[]> {
 // Content builders
 // ---------------------------------------------------------------------------
 
+// Spintax resolver: picks a random variant from each {A|B|C} block
+function resolveSpintax(text: string): string {
+  return text.replace(/\{([^}]+)\}/g, (_match, group: string) => {
+    const options = group.split('|');
+    return options[Math.floor(Math.random() * options.length)]!;
+  });
+}
+
 function buildEmailHtml(firstName: string): string {
   const name = firstName.trim() || 'there';
-  return `<div style="font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.6; color: #1a1a1a; max-width: 600px;">
-<p>${name},</p>
 
-<p>It's Colby. Wanted to give you a heads up before we announce this more broadly.</p>
+  // Plain text email, minimal HTML — no styled links, no images, no tracking-heavy markup
+  // Under 80 words. No links. Reply-only CTA. Spintax for uniqueness.
+  const template = `${name},
 
-<p>We've identified two new acquisitions for Fund II. A 175+ unit community in the Nashville metro and a 200+ unit stabilized asset in Omaha. Both government-backed, both projected to cash-flow from close, and both fit the exact thesis I walked through at the mixer.</p>
+{Colby here.|It's Colby.} {Been meaning to follow up since the mixer.|Wanted to reach out since we connected at the event.}
 
-<p>The Nashville deal has meaningful rent upside still sitting on the table. The Omaha property has 60% voucher-backed income. Essentially a government check every month regardless of market conditions.</p>
+We've got two new government-backed properties on the table for Fund II. One in Nashville, one in Omaha. Both fit the thesis {I walked through that night.|we discussed at the mixer.}
 
-<p>Fund II is filling faster than Fund I did. A few of the people from the mixer have already committed and I didn't want you to miss the window.</p>
+A few {attendees|people from the event} have already moved forward and I wanted to make sure you had a chance to look before we {open it up more broadly.|announce more widely.}
 
-<p>If you want to see both deals and where the fund stands, just reply "interested" and I'll send over everything.</p>
+{Want me to send over the details?|Interested in seeing the breakdown?}
 
-<p>Or if you're ready to talk, grab 15 minutes here:<br/>
-<a href="https://api.leadconnectorhq.com/widget/bookings/granite-park-capital-1-1" style="color: #0066cc;">https://api.leadconnectorhq.com/widget/bookings/granite-park-capital-1-1</a></p>
+Colby Watkins
+Fund Manager | Granite Park Capital
+(508) 397-3792`;
 
-<p>Talk soon,</p>
+  const resolved = resolveSpintax(template);
 
-<p>Colby Watkins<br/>
-Fund Manager | Granite Park Capital<br/>
-<a href="https://granitepark.co" style="color: #0066cc;">granitepark.co</a><br/>
-(508) 397-3792</p>
+  // Wrap in minimal div, convert newlines to <br/> — looks like plain text in email clients
+  const htmlBody = resolved
+    .split('\n')
+    .map((line) => (line.trim() === '' ? '<br/>' : line))
+    .join('<br/>');
 
-<p style="font-size: 14px; color: #555;">P.S. I can also send over the updated deck with both properties included if you'd rather review first. Just reply "send it" and I'll shoot it over.</p>
-</div>`;
+  return `<div style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.5; color: #333;">${htmlBody}</div>`;
 }
 
 function buildSmsMessage(firstName: string): string {
   const name = firstName.trim();
-  if (name) {
-    return `${name}, it's Colby from Granite Park. We've identified two new properties for Fund II. Nashville + Omaha, both government-backed. A few people from the mixer already moved forward. Want the details?`;
-  }
-  return `Hey, it's Colby from Granite Park. We've identified two new properties for Fund II. Nashville + Omaha, both government-backed. A few people from the mixer already moved forward. Want the details?`;
+  const templates = [
+    `${name || 'Hey'}, it's Colby from Granite Park. Two new government-backed properties on the table for Fund II. Nashville + Omaha. Want me to send over the details?`,
+    `${name || 'Hey'}, Colby from Granite Park. Quick update on Fund II. We've got two new deals lined up, Nashville and Omaha. Interested in seeing the breakdown?`,
+    `${name || 'Hey'}, it's Colby. Following up from the mixer. Two new properties for Fund II, both government-backed. Want the details?`,
+  ];
+  return templates[Math.floor(Math.random() * templates.length)]!;
 }
 
 // ---------------------------------------------------------------------------
@@ -363,7 +374,7 @@ async function sendEmail(client: AxiosInstance, contact: Contact): Promise<void>
   await client.post('/conversations/messages', {
     type: 'Email',
     contactId: contact.contactId,
-    subject: 'Two new properties on the table for Fund II',
+    subject: resolveSpintax('{quick update from the mixer|following up from the event|quick note from Colby}'),
     html: buildEmailHtml(contact.firstName),
   });
 }
