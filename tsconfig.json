@@ -9,7 +9,8 @@
     "rootDir": ".",
     "resolveJsonModule": true,
     "declaration": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["vitest/globals"]
   },
   "include": ["server/**/*", "database/**/*"],
   "exclude": ["node_modules", "client", "dist"]

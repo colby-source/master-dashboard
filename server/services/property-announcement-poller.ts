@@ -5,12 +5,10 @@
 
 import fs from 'fs';
 import path from 'path';
-import { config } from '../config';
 import { ghlService } from './ghl-service';
 import { handlePropertyAnnouncementReply } from './property-announcement-reply-handler';
 
 const GPC_COMPANY_ID = 1;
-const REQUIRED_TAG = 'property-announcement-apr-2026';
 const POLL_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
 const SEEN_FILE = path.resolve('data/property-announcement-seen-messages.json');
 
