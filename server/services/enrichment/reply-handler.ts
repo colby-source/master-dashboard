@@ -9,6 +9,30 @@ import { getCompanyConfig, logEvent, updateLead } from './helpers';
 import { createColdEmailOpportunity, loseOpportunity } from './opportunity-pipeline';
 import { getReplyStrategyInsights } from './feedback-loop';
 import { isBmnCompany, injectBmnBookingGoal, shouldSkipAutoBooking } from '../bmn/reply-handler';
+import { sendEmailToOperator } from '../sms-notifications';
+
+// ── Escalation Notification ──────────────────────────────
+// Sends email to jamie@brandmenow.ai (BMN) or the company operator when a thread escalates
+function notifyEscalation(lead: EnrichmentLead, threadId: number, reason: string): void {
+  const leadName = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || lead.email;
+  const subject = `🚨 Escalated Thread: ${leadName}`;
+  const body = [
+    `A reply thread has been escalated and needs human follow-up.`,
+    ``,
+    `Lead: ${leadName} (${lead.email})`,
+    `Thread ID: ${threadId}`,
+    `Reason: ${reason}`,
+    ``,
+    `Review the thread in the Master Dashboard:`,
+    `Reply Review Queue → filter by "escalated"`,
+    ``,
+    `— BMN Auto-Reply System`,
+  ].join('\n');
+
+  sendEmailToOperator(lead.company_id, subject, body).catch(err => {
+    console.error(`[Escalation] Email notification failed for thread ${threadId}:`, err.message);
+  });
+}
 
 export async function handleReply(
   params: {
@@ -252,6 +276,25 @@ export async function handleReply(
     [sentiment.sentiment, thread.id]
   );
 
+  // 8b. Skip auto-reply if a human already replied on this thread
+  //     (e.g. replied via Instantly UI — the poller records these as generated_by='human')
+  //     Only applies to active/paused threads — escalated/closed threads fall through
+  //     to the max_auto_replies / escalation logic below.
+  if (thread.thread_status === 'active' || thread.thread_status === 'paused') {
+    const lastOutbound = queryOne(
+      `SELECT generated_by, created_at FROM reply_messages WHERE thread_id = ? AND direction = 'outbound' ORDER BY created_at DESC, id DESC LIMIT 1`,
+      [thread.id]
+    ) as { generated_by: string; created_at: string } | null;
+
+    if (lastOutbound?.generated_by === 'human') {
+      logEvent(lead.id, lead.company_id, 'auto_reply_skipped', {
+        reason: 'human_already_replied',
+        humanReplyAt: lastOutbound.created_at,
+      });
+      return { action: 'skipped', reason: 'human_already_replied', threadId: thread.id, sentiment: sentiment.sentiment };
+    }
+  }
+
   // 9. Load playbook
   const playbook = getPlaybook(lead.company_id);
   if (!playbook) {
@@ -275,6 +318,7 @@ export async function handleReply(
       email,
       reason: 'Max auto-replies reached',
     });
+    notifyEscalation(lead, thread.id, `Max auto-replies reached (${thread.auto_reply_count} sent). Creator is still engaged — needs human follow-up.`);
 
     return { action: 'escalated', reason: 'max_replies_reached', threadId: thread.id, sentiment: sentiment.sentiment };
   }
@@ -371,6 +415,7 @@ export async function handleReply(
       email,
       reason: result.escalationReason || 'Escalation recommended',
     });
+    notifyEscalation(lead, thread.id, result.escalationReason || 'Claude recommended escalation');
 
     return {
       action: 'escalated',
@@ -385,12 +430,42 @@ export async function handleReply(
     return { action: 'skipped', reason: 'empty_reply', threadId: thread.id, sentiment: sentiment.sentiment };
   }
 
+  // 15b. Replace placeholder tokens with actual URLs
+  // Claude sometimes outputs "[booking link]" or "[Brand Builder]" instead of the real URL
+  let replyBody = result.reply;
+  if (isBmnCompany(lead.company_id)) {
+    // BMN: Brand Builder funnel is the PRIMARY CTA — replace ALL link placeholders with it
+    const { BMN_BRAND_BUILDER_URL } = require('../bmn/config');
+    replyBody = replyBody
+      .replace(/\[Brand Builder(?:\s+(?:Application|link|url|funnel))?\]/gi, BMN_BRAND_BUILDER_URL)
+      .replace(/\[brand builder link\]/gi, BMN_BRAND_BUILDER_URL)
+      .replace(/\[apply link\]/gi, BMN_BRAND_BUILDER_URL)
+      .replace(/\[funnel link\]/gi, BMN_BRAND_BUILDER_URL)
+      .replace(/\[booking link\]/gi, BMN_BRAND_BUILDER_URL)
+      .replace(/\[booking url\]/gi, BMN_BRAND_BUILDER_URL)
+      .replace(/\[book a call\]/gi, BMN_BRAND_BUILDER_URL)
+      .replace(/\[calendar link\]/gi, BMN_BRAND_BUILDER_URL)
+      .replace(/\[link\]/gi, BMN_BRAND_BUILDER_URL)
+      .replace(/\[here\]/gi, BMN_BRAND_BUILDER_URL);
+    // Also replace the old apply.brandmenow.ai URL with the new funnel URL
+    replyBody = replyBody.replace(/https?:\/\/apply\.brandmenow\.ai\/?(?!\S*influencer-video-funnel)/gi, BMN_BRAND_BUILDER_URL);
+  } else if (playbook.booking_url) {
+    // Non-BMN companies: use the playbook booking URL
+    replyBody = replyBody
+      .replace(/\[booking link\]/gi, playbook.booking_url)
+      .replace(/\[booking url\]/gi, playbook.booking_url)
+      .replace(/\[book a call\]/gi, playbook.booking_url)
+      .replace(/\[calendar link\]/gi, playbook.booking_url)
+      .replace(/\[link\]/gi, playbook.booking_url)
+      .replace(/\[here\]/gi, playbook.booking_url);
+  }
+
   const delayMs = 120000 + Math.floor(Math.random() * 180000); // 2-5 min
   const scheduledAt = new Date(Date.now() + delayMs).toISOString();
 
   runSql(
     `INSERT INTO reply_messages (thread_id, direction, body, sentiment, generated_by, instantly_email_id, strategy, scheduled_at, sent, review_status) VALUES (?, 'outbound', ?, ?, 'claude', ?, ?, ?, 0, 'pending_review')`,
-    [thread.id, result.reply, sentiment.sentiment, instantlyEmailId || null, result.strategy, scheduledAt]
+    [thread.id, replyBody, sentiment.sentiment, instantlyEmailId || null, result.strategy, scheduledAt]
   );
 
   // 16. Update thread counts
@@ -690,46 +765,132 @@ export async function processScheduledReplies(): Promise<number> {
 
 /**
  * Process stalled positive threads — if a prospect replied positively but
- * no meeting was booked within 3 business days, send a warm nurture follow-up.
- * Call on a cron interval (e.g., every hour during business hours).
+ * no meeting was booked within 5 days, generate a Claude-powered follow-up.
+ * Uses full conversation context to craft a personalized nudge (not a template).
+ * Call on a cron interval (e.g., every 30 minutes during business hours).
  */
 export async function processWarmNurture(): Promise<number> {
   // Find threads where last sentiment was positive, no meeting booked,
-  // and last message was 3+ days ago with no pending outbound
+  // and last message was 5+ days ago with no pending outbound
   const stalledThreads = queryAll(
-    `SELECT rt.*, el.first_name, el.email, el.company_id, el.status as lead_status
+    `SELECT rt.*, el.first_name, el.last_name, el.email, el.company_id, el.status as lead_status,
+            el.enrichment_data, el.score, el.score_label, el.tags
      FROM reply_threads rt
      JOIN enrichment_leads el ON rt.enrichment_lead_id = el.id
      WHERE rt.thread_status = 'active'
        AND rt.last_sentiment IN ('interested', 'question', 'meeting_request')
        AND el.status NOT IN ('meeting_set', 'not_interested', 'failed')
-       AND rt.last_message_at <= datetime('now', '-3 days')
+       AND rt.last_message_at <= datetime('now', '-5 days')
        AND NOT EXISTS (
          SELECT 1 FROM reply_messages rm
          WHERE rm.thread_id = rt.id AND rm.direction = 'outbound' AND rm.sent = 0
        )
+       AND NOT EXISTS (
+         SELECT 1 FROM reply_messages rm2
+         WHERE rm2.thread_id = rt.id AND rm2.direction = 'outbound'
+           AND rm2.generated_by = 'human'
+       )
        AND rt.auto_reply_count < COALESCE(
-         (SELECT max_auto_replies FROM company_playbooks WHERE company_id = rt.company_id LIMIT 1), 3
+         (SELECT max_auto_replies FROM company_playbooks WHERE company_id = rt.company_id LIMIT 1), 5
        )
      ORDER BY rt.last_message_at ASC
-     LIMIT 5`
+     LIMIT 3`
   );
 
   let nurtured = 0;
   for (const thread of stalledThreads) {
     try {
-      const slots = await getAvailableSlots(thread.company_id, 3);
-      const slotText = slots.length > 0
-        ? ` I have availability ${slots.map(s => s.displayTime).join(', ')} — would any of those work for a quick 30-minute call?`
-        : ' Would love to find a time that works for a brief call — just let me know your availability.';
+      // Load full conversation history
+      const messages = queryAll(
+        'SELECT direction, body FROM reply_messages WHERE thread_id = ? ORDER BY created_at ASC',
+        [thread.id]
+      );
 
-      const body = `Hi ${thread.first_name || 'there'} — just wanted to follow up on our conversation. I know schedules get busy.${slotText}`;
+      // Load playbook
+      const playbook = getPlaybook(thread.company_id);
+      if (!playbook) {
+        console.log(`[WarmNurture] No playbook for company ${thread.company_id}, skipping thread ${thread.id}`);
+        continue;
+      }
 
-      const scheduledAt = new Date(Date.now() + 120000 + Math.floor(Math.random() * 180000)).toISOString(); // 2-5 min delay
+      // Build conversation goals for warm nurture
+      const conversationGoals: string[] = playbook.conversation_goals ? JSON.parse(playbook.conversation_goals) : [];
+      conversationGoals.push(
+        'WARM NURTURE: This prospect replied positively days ago but went quiet. Your goal is to re-engage with a SHORT, low-pressure follow-up that adds new value or a different angle — NOT a repeat of what was already said. Do NOT just ask "are you still interested?" or propose calendar times. Instead, offer something new: a relevant insight, a case study snippet, or ask a question that moves the conversation forward.'
+      );
+
+      // Inject BMN booking goal if applicable
+      if (isBmnCompany(thread.company_id)) {
+        injectBmnBookingGoal(conversationGoals);
+      }
+
+      // Parse enrichment data
+      const enrichmentData = thread.enrichment_data ? JSON.parse(thread.enrichment_data) : {};
+      const leadTags: string[] = thread.tags ? JSON.parse(thread.tags) : [];
+
+      // Generate Claude-powered follow-up
+      const result = await claudeService.generateIntelligentReply({
+        replyText: '(No new reply — this is a warm nurture follow-up for a stalled thread)',
+        sentiment: 'warm_nurture',
+        conversationHistory: messages.map((m: any) => ({ direction: m.direction, body: m.body })),
+        enrichmentData,
+        lead: {
+          first_name: thread.first_name,
+          score: thread.score,
+          score_label: thread.score_label,
+          tags: leadTags,
+        },
+        playbook: {
+          company_description: playbook.company_description,
+          value_propositions: JSON.parse(playbook.value_propositions),
+          target_icp: playbook.target_icp,
+          tone: playbook.tone,
+          objection_handlers: playbook.objection_handlers ? JSON.parse(playbook.objection_handlers) : {},
+          conversation_goals: conversationGoals,
+          escalation_triggers: playbook.escalation_triggers ? JSON.parse(playbook.escalation_triggers) : [],
+          do_not_mention: playbook.do_not_mention ? JSON.parse(playbook.do_not_mention) : [],
+          booking_url: playbook.booking_url,
+          max_auto_replies: playbook.max_auto_replies,
+        },
+        autoReplyCount: thread.auto_reply_count,
+      });
+
+      if (!result.reply || result.shouldEscalate) {
+        console.log(`[WarmNurture] Claude skipped/escalated thread ${thread.id}: ${result.escalationReason || 'empty reply'}`);
+        continue;
+      }
+
+      // Apply placeholder replacements (same as fresh replies)
+      let replyBody = result.reply;
+      if (isBmnCompany(thread.company_id)) {
+        const { BMN_BRAND_BUILDER_URL } = require('../bmn/config');
+        replyBody = replyBody
+          .replace(/\[Brand Builder(?:\s+(?:Application|link|url|funnel))?\]/gi, BMN_BRAND_BUILDER_URL)
+          .replace(/\[brand builder link\]/gi, BMN_BRAND_BUILDER_URL)
+          .replace(/\[apply link\]/gi, BMN_BRAND_BUILDER_URL)
+          .replace(/\[funnel link\]/gi, BMN_BRAND_BUILDER_URL)
+          .replace(/\[booking link\]/gi, BMN_BRAND_BUILDER_URL)
+          .replace(/\[booking url\]/gi, BMN_BRAND_BUILDER_URL)
+          .replace(/\[book a call\]/gi, BMN_BRAND_BUILDER_URL)
+          .replace(/\[calendar link\]/gi, BMN_BRAND_BUILDER_URL)
+          .replace(/\[link\]/gi, BMN_BRAND_BUILDER_URL)
+          .replace(/\[here\]/gi, BMN_BRAND_BUILDER_URL);
+        replyBody = replyBody.replace(/https?:\/\/apply\.brandmenow\.ai\/?(?!\S*influencer-video-funnel)/gi, BMN_BRAND_BUILDER_URL);
+      } else if (playbook.booking_url) {
+        replyBody = replyBody
+          .replace(/\[booking link\]/gi, playbook.booking_url)
+          .replace(/\[booking url\]/gi, playbook.booking_url)
+          .replace(/\[book a call\]/gi, playbook.booking_url)
+          .replace(/\[calendar link\]/gi, playbook.booking_url)
+          .replace(/\[link\]/gi, playbook.booking_url)
+          .replace(/\[here\]/gi, playbook.booking_url);
+      }
+
+      const scheduledAt = new Date(Date.now() + 120000 + Math.floor(Math.random() * 180000)).toISOString();
 
       runSql(
-        `INSERT INTO reply_messages (thread_id, direction, body, sentiment, generated_by, strategy, scheduled_at, sent, review_status) VALUES (?, 'outbound', ?, 'warm_nurture', 'system', 'Warm nurture: positive reply but no meeting booked after 3 days', ?, 0, 'pending_review')`,
-        [thread.id, body, scheduledAt]
+        `INSERT INTO reply_messages (thread_id, direction, body, sentiment, generated_by, strategy, scheduled_at, sent, review_status) VALUES (?, 'outbound', ?, 'warm_nurture', 'claude', ?, ?, 0, 'pending_review')`,
+        [thread.id, replyBody, result.strategy || 'Claude warm nurture follow-up', scheduledAt]
       );
 
       runSql(
@@ -739,11 +900,12 @@ export async function processWarmNurture(): Promise<number> {
 
       logEvent(thread.enrichment_lead_id, thread.company_id, 'warm_nurture_scheduled', {
         threadId: thread.id,
+        strategy: result.strategy,
         scheduledAt,
       });
 
       nurtured++;
-      console.log(`[WarmNurture] Follow-up scheduled for thread ${thread.id} (${thread.email})`);
+      console.log(`[WarmNurture] Claude follow-up scheduled for thread ${thread.id} (${thread.email}): ${result.strategy}`);
     } catch (err: any) {
       console.error(`[WarmNurture] Failed for thread ${thread.id}:`, err.message);
     }

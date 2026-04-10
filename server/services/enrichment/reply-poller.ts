@@ -15,15 +15,28 @@ import { enrichmentService } from './index';
  */
 export async function pollInstantlyReplies(): Promise<number> {
   try {
-    // Fetch recent unread reply emails from Instantly Unibox
-    const result = await instantlyService.listEmails({
-      limit: 50,
-      is_unread: true,
-      email_type: 'reply',
-    });
+    // Poll both inbound replies AND sent emails (catches manual replies from Instantly UI)
+    // Note: sent emails may not have an unread state in Instantly, so we omit is_unread
+    // and rely on instantly_email_id dedup in recordManualOutboundReplies to avoid reprocessing
+    const [inboundResult, sentResult] = await Promise.all([
+      instantlyService.listEmails({ limit: 50, is_unread: true, email_type: 'reply' }),
+      instantlyService.listEmails({ limit: 20, email_type: 'sent' }),
+    ]);
 
-    const items = result?.items ?? result ?? [];
-    if (!Array.isArray(items) || items.length === 0) {
+    const inboundItems = inboundResult?.items ?? inboundResult ?? [];
+    const sentItems = sentResult?.items ?? sentResult ?? [];
+
+    // Record any manual outbound replies first — so when we process the inbound,
+    // the human-reply check in handleIncomingReply sees the outbound already logged
+    const recordedOutbound = await recordManualOutboundReplies(
+      Array.isArray(sentItems) ? sentItems : []
+    );
+    if (recordedOutbound > 0) {
+      console.log(`[ReplyPoller] Recorded ${recordedOutbound} manual outbound replies from Instantly UI`);
+    }
+
+    const items = Array.isArray(inboundItems) ? inboundItems : [];
+    if (items.length === 0) {
       return 0;
     }
 
@@ -66,6 +79,22 @@ export async function pollInstantlyReplies(): Promise<number> {
         [`%"instantlyEmailId":"${emailId}"%`]
       );
       if (alreadyInEvents) {
+        await markRead(emailId, threadId);
+        continue;
+      }
+
+      // Extra dedup: skip if we already have an inbound message from this lead
+      // within the last 5 minutes (prevents duplicate threads from race conditions
+      // between the poller and webhook, or from the same email appearing across polls)
+      const recentFromSameLead = queryOne(
+        `SELECT rm.id FROM reply_messages rm
+         JOIN reply_threads rt ON rm.thread_id = rt.id
+         WHERE rt.email = ? AND rm.direction = 'inbound'
+           AND rm.created_at >= datetime('now', '-5 minutes')
+         LIMIT 1`,
+        [leadEmail.toLowerCase()]
+      );
+      if (recentFromSameLead) {
         await markRead(emailId, threadId);
         continue;
       }
@@ -113,6 +142,75 @@ export async function pollInstantlyReplies(): Promise<number> {
     console.error('[ReplyPoller] Poll error:', err.message);
     return 0;
   }
+}
+
+/**
+ * Record outbound emails sent via the Instantly UI as human replies.
+ * This ensures handleIncomingReply sees the human outbound and skips auto-reply.
+ */
+async function recordManualOutboundReplies(sentEmails: any[]): Promise<number> {
+  let recorded = 0;
+
+  for (const email of sentEmails) {
+    const emailId = email.id;
+    const threadId = email.thread_id;
+    const leadEmail = (email.lead_email || email.to_address_email || email.to?.email || '').toLowerCase();
+    const body = email.body?.text || email.body?.html || email.body || '';
+    const campaignId = email.campaign_id;
+
+    if (!leadEmail || !emailId) {
+      await markRead(emailId, threadId);
+      continue;
+    }
+
+    // Already recorded this outbound
+    const alreadyRecorded = queryOne(
+      `SELECT id FROM reply_messages WHERE instantly_email_id = ? AND direction = 'outbound'`,
+      [emailId]
+    );
+    if (alreadyRecorded) {
+      await markRead(emailId, threadId);
+      continue;
+    }
+
+    // Find the reply thread for this lead
+    const lead = queryOne(
+      'SELECT id, company_id FROM enrichment_leads WHERE email = ? ORDER BY created_at DESC LIMIT 1',
+      [leadEmail]
+    ) as { id: number; company_id: number } | null;
+
+    if (!lead) {
+      // Don't markRead — lead may be created by the inbound poll; retry next cycle
+      continue;
+    }
+
+    const replyThread = queryOne(
+      `SELECT id FROM reply_threads WHERE enrichment_lead_id = ? AND thread_status IN ('active', 'paused', 'escalated') ORDER BY updated_at DESC LIMIT 1`,
+      [lead.id]
+    ) as { id: number } | null;
+
+    if (!replyThread) {
+      // Don't markRead — thread may be created when the inbound is processed; retry next cycle
+      continue;
+    }
+
+    // Record as human outbound reply
+    runSql(
+      `INSERT INTO reply_messages (thread_id, direction, body, generated_by, instantly_email_id, sent) VALUES (?, 'outbound', ?, 'human', ?, 1)`,
+      [replyThread.id, body, emailId]
+    );
+    runSql(
+      `UPDATE reply_threads SET message_count = message_count + 1, last_message_at = datetime('now'), updated_at = datetime('now') WHERE id = ?`,
+      [replyThread.id]
+    );
+    saveDb();
+
+    console.log(`[ReplyPoller] Recorded manual outbound reply to ${leadEmail} (thread ${replyThread.id})`);
+    await markRead(emailId, threadId);
+    recorded++;
+  }
+
+  return recorded;
 }
 
 /**
