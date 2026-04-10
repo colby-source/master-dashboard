@@ -209,7 +209,7 @@ PREVIOUS INSTANTLY CONVERSATION:
 ${conversationContext}
 
 ABOUT BRAND ME NOW:
-Brand Me Now is an AI-powered brand creation platform for influencers and creators. We handle everything — product development, manufacturing, fulfillment, and brand design. Creators get their own branded product line with zero inventory risk and earn 20% royalty on every sale. 200+ SKU catalog across beauty, wellness, lifestyle, and apparel.
+Brand Me Now is an AI-powered brand creation platform for influencers and creators. We handle everything — product development, manufacturing, fulfillment, and brand design. Creators get their own branded product line with zero inventory risk and earn industry-leading royalties on every sale. 200+ SKU catalog across beauty, wellness, lifestyle, and apparel.
 
 YOUR GOAL:
 Generate a 4-email warm follow-up sequence. The goal is to get ${name} on a discovery call. The booking link is: ${BOOKING_URL}

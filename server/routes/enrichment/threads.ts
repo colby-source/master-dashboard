@@ -170,6 +170,28 @@ router.post('/reply-drafts/bulk-action', async (req, res) => {
   } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
+// Create a new draft for a thread (pending_review — does NOT send)
+router.post('/threads/:id/draft', async (req, res) => {
+  try {
+    const threadId = parseInt(req.params.id);
+    const { body, strategy } = req.body;
+    if (!body || typeof body !== 'string') {
+      return res.status(400).json({ error: 'body (string) required' });
+    }
+    const thread = queryOne('SELECT * FROM reply_threads WHERE id = ?', [threadId]);
+    if (!thread) return res.status(404).json({ error: 'Thread not found' });
+
+    const scheduledAt = new Date(Date.now() + 60000).toISOString();
+    runSql(
+      `INSERT INTO reply_messages (thread_id, direction, body, sentiment, generated_by, strategy, scheduled_at, sent, review_status) VALUES (?, 'outbound', ?, 'interested', 'human', ?, ?, 0, 'pending_review')`,
+      [threadId, body, strategy || 'Manual draft with Brand Builder CTA', scheduledAt]
+    );
+    saveDb();
+    const draft = queryOne('SELECT * FROM reply_messages WHERE thread_id = ? AND direction = ? ORDER BY id DESC LIMIT 1', [threadId, 'outbound']);
+    res.json({ success: true, draftId: draft?.id });
+  } catch (err: any) { res.status(500).json({ error: err.message }); }
+});
+
 // Edit a draft reply body before approving
 router.patch('/reply-drafts/:id', async (req, res) => {
   try {

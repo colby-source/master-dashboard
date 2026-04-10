@@ -111,12 +111,12 @@ function seedCompanyPlaybooks(db: Database): void {
     db.run(`INSERT INTO company_playbooks (company_id, company_name, sender_name, company_description, value_propositions, target_icp, tone, objection_handlers, conversation_goals, escalation_triggers, do_not_mention, compliance_rules, booking_url, max_auto_replies) VALUES (2, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
       'Brand Me Now',
       'Ryan',
-      'Brand Me Now is an AI-powered brand creation platform for influencers and creators. We handle everything — product development, manufacturing, fulfillment, and brand design. Creators get their own branded product line with zero inventory risk and earn 20% royalty on every sale.',
+      'Brand Me Now is an AI-powered brand creation platform for influencers and creators. We handle everything — product development, manufacturing, fulfillment, and brand design. Creators get their own branded product line with zero inventory risk and earn industry-leading royalties on every sale.',
       JSON.stringify([
         'Zero inventory risk — we handle manufacturing and fulfillment',
         'Your own branded product line, not generic merch',
         '200+ SKU catalog across beauty, wellness, lifestyle, and apparel',
-        '20% royalty on every sale — true passive income',
+        'Industry-leading royalties on every sale — true passive income',
         'AI-powered brand design tailored to your audience',
         'Full-service: product development to customer shipping'
       ]),
@@ -125,13 +125,13 @@ function seedCompanyPlaybooks(db: Database): void {
       JSON.stringify({
         'already_have_merch': 'We are different from merch — we create an actual branded product line (beauty, wellness, lifestyle) that reflects your personal brand. Think of it as launching your own brand, not just slapping a logo on a t-shirt.',
         'too_busy': 'That is exactly why we built this — it is fully managed. We handle product development, manufacturing, and fulfillment. You just promote to your audience like you already do.',
-        'sounds_too_good': 'We make money when you make money — our model is built on the margin between manufacturing and retail. Your 20% royalty is baked into every sale automatically.',
+        'sounds_too_good': 'We make money when you make money — our model is built on the margin between manufacturing and retail. Your royalties are baked into every sale automatically, and the rates are extremely competitive compared to anything else in the creator space.',
         'not_enough_followers': 'We have seen creators with engaged audiences of 10K+ do really well. It is about engagement quality, not just follower count.',
         'not_interested': 'Totally understand! If you ever want to explore launching your own product line, we are here. No pressure at all.'
       }),
       JSON.stringify(['schedule_platform_demo', 'get_creator_social_handles', 'qualify_audience_size', 'send_case_studies']),
       JSON.stringify(['specific_contract_terms', 'legal_questions', 'specific_date_time_meeting', 'complaint_or_threat']),
-      JSON.stringify(['specific_revenue_guarantees', 'other_creator_earnings', 'internal_margins']),
+      JSON.stringify(['specific_revenue_guarantees', 'other_creator_earnings', 'internal_margins', 'specific_royalty_percentages', '20%', 'twenty percent', 'exact_commission_rates']),
       null, // no compliance rules for BMN
       'https://api.leadconnectorhq.com/widget/bookings/brand-me-now-sales',
       3
@@ -249,7 +249,58 @@ function seedBmnPipelines(db: Database): void {
       ]
     );
 
-    console.log('[DB] Seeded BMN company_pipelines (Creator Investment + Agency Partner funnels)');
+    // Creator Investment Funnel v2 — mapped to Influencer 2 Campaign (Skin Care)
+    db.run(
+      `INSERT INTO company_pipelines (company_id, pipeline_name, ghl_pipeline_id, instantly_campaign_id, stage_map, monetary_value, is_default) VALUES (2, ?, ?, ?, ?, ?, 0)`,
+      [
+        'Creator Investment Funnel',
+        'By4LcF6zNdTaxAC1O8Ad',
+        '08c32856-d624-4e3a-b7da-04d7357b8e54', // Influencer 2 Campaign (Skin Care)
+        JSON.stringify({
+          positive_reply: '75c0a71b-bba7-45fe-abdb-b751317afa30',
+          appt_booked: '6f44609d-7bf2-426e-ad37-50b83e0a0ac4',
+          application_received: '87f935a4-485d-4f00-800e-14ff73494459',
+          brand_builder_started: '353d6b67-e8fb-4872-87ed-5a5dc827b864',
+          brand_builder_finished: '94938168-7775-48f7-8030-049e8c2c693b',
+          manual_review: 'babecf3c-b51a-4174-9c75-65344266d732',
+          approved: 'e4710b8c-ba21-4043-97fd-9ed6ef85a95e',
+          rejected: '3c5e2aaf-1896-405f-a49e-0736a17ecef1',
+        }),
+        0,
+      ]
+    );
+
+    console.log('[DB] Seeded BMN company_pipelines (Creator Investment + Agency Partner + Influencer 2 funnels)');
+  }
+
+  // Ensure Influencer 2 Campaign mapping exists (added after initial seed)
+  const bmn2Check = db.prepare(
+    "SELECT id FROM company_pipelines WHERE instantly_campaign_id = '08c32856-d624-4e3a-b7da-04d7357b8e54'"
+  );
+  const hasBmn2 = bmn2Check.step();
+  bmn2Check.free();
+
+  if (!hasBmn2) {
+    db.run(
+      `INSERT INTO company_pipelines (company_id, pipeline_name, ghl_pipeline_id, instantly_campaign_id, stage_map, monetary_value, is_default) VALUES (2, ?, ?, ?, ?, ?, 0)`,
+      [
+        'Creator Investment Funnel',
+        'By4LcF6zNdTaxAC1O8Ad',
+        '08c32856-d624-4e3a-b7da-04d7357b8e54',
+        JSON.stringify({
+          positive_reply: '75c0a71b-bba7-45fe-abdb-b751317afa30',
+          appt_booked: '6f44609d-7bf2-426e-ad37-50b83e0a0ac4',
+          application_received: '87f935a4-485d-4f00-800e-14ff73494459',
+          brand_builder_started: '353d6b67-e8fb-4872-87ed-5a5dc827b864',
+          brand_builder_finished: '94938168-7775-48f7-8030-049e8c2c693b',
+          manual_review: 'babecf3c-b51a-4174-9c75-65344266d732',
+          approved: 'e4710b8c-ba21-4043-97fd-9ed6ef85a95e',
+          rejected: '3c5e2aaf-1896-405f-a49e-0736a17ecef1',
+        }),
+        0,
+      ]
+    );
+    console.log('[DB] Added BMN Influencer 2 Campaign pipeline mapping');
   }
 }
 

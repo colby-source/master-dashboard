@@ -12,7 +12,7 @@ export const BMN_CALENDAR_ID = 'XAwrLg5ivvFQJQZxj5uT';
 
 // URLs
 export const BMN_BOOKING_URL = 'https://api.leadconnectorhq.com/widget/bookings/brand-me-now-sales';
-export const BMN_BRAND_BUILDER_URL = 'https://apply.brandmenow.ai';
+export const BMN_BRAND_BUILDER_URL = 'https://apply.brandmenow.ai/influencer-video-funnel';
 
 // Cadence settings
 export const BMN_MAX_FOLLOWUP_EMAILS = 4;

@@ -24,6 +24,19 @@ const OPERATOR_MAP: Record<number, SmsRecipient> = {
 // Fallback: Colby gets alerts for any company without a dedicated operator
 const DEFAULT_RECIPIENT: SmsRecipient = { companyId: 1, ghlContactId: 'cIHEhSgoSQdFZJ9A8cnY' };
 
+// ── Direct Email Recipients (per company) ─────────────────
+// For daily digest and escalation alerts — sent via Instantly test email
+const DIRECT_EMAIL_RECIPIENTS: Record<number, string[]> = {
+  1: ['colby@brandmenow.ai'],                                     // GPC
+  2: ['colby@brandmenow.ai', 'ryan@brandmenow.ai', 'jaime@brandmenow.ai'],  // BMN
+};
+
+// Sending account used for digest emails (must be warmed + active)
+const DIGEST_SENDER = 'colby@brandmenow.co';
+
+// Dashboard URL for approval links
+const DASHBOARD_URL = 'https://master-dashboard-production-263e.up.railway.app';
+
 interface SmsCompanyConfig {
   companyId: number;
   campaignId: string;
@@ -74,12 +87,49 @@ async function sendEmailToOperator(companyId: number, subject: string, message: 
   }
 }
 
+// ── Send Direct Email via Instantly ───────────────────────
+// Sends to all DIRECT_EMAIL_RECIPIENTS for a company (no GHL contact needed)
+async function sendDirectEmailToTeam(companyId: number, subject: string, htmlBody: string): Promise<boolean> {
+  const recipients = DIRECT_EMAIL_RECIPIENTS[companyId] || DIRECT_EMAIL_RECIPIENTS[1] || [];
+  if (recipients.length === 0) return false;
+
+  let sent = 0;
+  for (const recipientEmail of recipients) {
+    try {
+      await instantlyService.sendTestEmail({
+        from: DIGEST_SENDER,
+        to: recipientEmail,
+        subject,
+        body: htmlBody,
+      });
+      sent++;
+      console.log(`[Notify] Direct email sent to ${recipientEmail}: ${subject}`);
+    } catch (err: any) {
+      console.error(`[Notify] Direct email to ${recipientEmail} failed:`, err.message);
+    }
+  }
+  return sent > 0;
+}
+
 // Legacy-compatible wrapper: sends email instead of SMS
 async function sendSmsToOperator(companyId: number, message: string): Promise<boolean> {
   // Extract first line as subject, rest as body
   const lines = message.split('\n');
   const subject = lines[0] || 'Dashboard Alert';
-  return sendEmailToOperator(companyId, subject, message);
+
+  // Convert plain text to HTML for direct email
+  const html = message
+    .split('\n')
+    .map(line => line.trim() === '' ? '<br/>' : `<p style="margin:2px 0;font-family:Arial,sans-serif;font-size:14px">${line}</p>`)
+    .join('\n');
+
+  // Send via Instantly directly to all team members
+  const directSent = await sendDirectEmailToTeam(companyId, subject, html);
+
+  // Also send via GHL as backup
+  const ghlSent = await sendEmailToOperator(companyId, subject, message);
+
+  return directSent || ghlSent;
 }
 
 // Legacy: send to Colby (backward compat for non-company-specific messages)
@@ -130,6 +180,47 @@ async function sendDailyCampaignReport(): Promise<void> {
         `Pipeline: ${pipeline.total} total | ${pipeline.pushed} pushed | ${pipeline.hot} hot | ${pipeline.replied} replied | ${pipeline.meetings} mtgs`,
         `24h: ${last24h.newLeads} new leads | ${last24h.newReplies} new replies`,
       ].join('\n'));
+    }
+
+    // ── Reply Queue Digest (per company) ──
+    for (const co of companies) {
+      const escalatedCount = queryOne(
+        "SELECT COUNT(*) as c FROM reply_threads WHERE company_id = ? AND thread_status = 'escalated'",
+        [co.companyId]
+      )?.c || 0;
+
+      const pendingDrafts = queryOne(
+        `SELECT COUNT(*) as c FROM reply_messages rm
+         JOIN reply_threads rt ON rm.thread_id = rt.id
+         WHERE rt.company_id = ? AND rm.direction = 'outbound' AND rm.review_status = 'pending_review' AND rm.sent = 0`,
+        [co.companyId]
+      )?.c || 0;
+
+      const activeThreads = queryOne(
+        "SELECT COUNT(*) as c FROM reply_threads WHERE company_id = ? AND thread_status = 'active'",
+        [co.companyId]
+      )?.c || 0;
+
+      const repliesLast24h = queryOne(
+        `SELECT COUNT(*) as c FROM reply_messages rm
+         JOIN reply_threads rt ON rm.thread_id = rt.id
+         WHERE rt.company_id = ? AND rm.direction = 'inbound' AND rm.created_at >= datetime('now', '-1 day')`,
+        [co.companyId]
+      )?.c || 0;
+
+      if (escalatedCount > 0 || pendingDrafts > 0 || repliesLast24h > 0) {
+        const idx = companies.indexOf(co);
+        const replyDigest = [
+          `Reply Queue:`,
+          `  ${pendingDrafts > 0 ? '⚠️' : '✓'} ${pendingDrafts} drafts awaiting approval`,
+          `  ${escalatedCount > 0 ? '🚨' : '✓'} ${escalatedCount} escalated threads need human follow-up`,
+          `  ${activeThreads} active conversations | ${repliesLast24h} new replies (24h)`,
+          ``,
+          `  → Approve replies: ${DASHBOARD_URL}/reply-review`,
+          escalatedCount > 0 ? `  → Handle escalations: ${DASHBOARD_URL}/reply-review` : '',
+        ].filter(Boolean).join('\n');
+        sections[idx] = sections[idx] + '\n' + replyDigest;
+      }
     }
 
     // Group sections by operator and send each operator their companies' reports
@@ -293,4 +384,4 @@ export function initSmsNotifications(): void {
 }
 
 // Export for manual testing and other services
-export { sendDailyCampaignReport, sendSms, sendSmsToOperator, sendEmailToOperator };
+export { sendDailyCampaignReport, sendSms, sendSmsToOperator, sendEmailToOperator, sendDirectEmailToTeam };
