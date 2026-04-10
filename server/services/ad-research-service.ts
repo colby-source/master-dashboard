@@ -451,7 +451,7 @@ function extractJson<T>(text: string): T | null {
   }
 
   // Try finding first JSON structure
-  const jsonMatch = text.match(/[\[{][\s\S]*[\]}]/);
+  const jsonMatch = text.match(/[[{][\s\S]*[\]}]/);
   if (jsonMatch) {
     try {
       return JSON.parse(jsonMatch[0]) as T;

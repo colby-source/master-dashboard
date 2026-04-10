@@ -87,7 +87,7 @@ class DiscoverySync {
             topReply = { ...c, stats };
           }
         }
-      } catch {}
+      } catch { /* expected */ }
     }
 
     // Global email stats
@@ -129,7 +129,7 @@ class DiscoverySync {
           });
           break; // Only show the worst one
         }
-      } catch {}
+      } catch { /* expected */ }
     }
 
     // High bounce rate campaigns
@@ -148,7 +148,7 @@ class DiscoverySync {
             break;
           }
         }
-      } catch {}
+      } catch { /* expected */ }
     }
 
     return results;

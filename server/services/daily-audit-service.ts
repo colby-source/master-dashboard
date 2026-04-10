@@ -207,6 +207,7 @@ function checkSyncStatuses(): SyncCheck[] {
 function checkDatabase(): AuditResult['database'] {
   try {
     const tables = queryAll(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'`);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const fs = require('fs');
     let sizeBytes = 0;
     try { sizeBytes = fs.statSync(config.dbPath).size; } catch { /* file may not exist yet */ }

@@ -265,7 +265,9 @@ router.get('/outreach/status', async (_req, res) => {
       ready: linkedInService.outreachReady,
       browserStatus: linkedInService.browserStatus,
       authenticated,
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       autoSendEnabled: require('../config').config.linkedinAutoSendEnabled,
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       dailyLimit: require('../config').config.linkedinDailyLimit,
     });
   } catch (e: any) { res.status(500).json({ error: e.message }); }

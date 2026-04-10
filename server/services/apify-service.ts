@@ -329,6 +329,24 @@ class ApifyService {
     }, { waitForFinish: 120 });
   }
 
+  /** Scrape Meta Ad Library for competitor ads */
+  async scrapeMetaAdLibrary(keyword: string, opts?: {
+    country?: string;
+    adActiveStatus?: string;
+    maxAds?: number;
+    mediaType?: string;
+  }) {
+    return this.runActorSync('apify/facebook-ads-scraper', {
+      search_type: 'keyword_unordered',
+      keyword,
+      country: opts?.country ?? 'US',
+      ad_type: 'all',
+      ad_active_status: opts?.adActiveStatus ?? 'active',
+      max_ads: opts?.maxAds ?? 100,
+      media_type: opts?.mediaType ?? 'all',
+    }, { timeout: 300 });
+  }
+
   /** Scrape any website with a full browser (Puppeteer) */
   async scrapeWithBrowser(urls: string[], opts?: { maxPages?: number; waitForSelector?: string }) {
     return this.runActor('apify/web-scraper', {

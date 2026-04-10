@@ -482,6 +482,7 @@ export async function handleReply(
   let replyBody = result.reply;
   if (isBmnCompany(lead.company_id)) {
     // BMN: Brand Builder funnel is the PRIMARY CTA — replace ALL link placeholders with it
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { BMN_BRAND_BUILDER_URL } = require('../bmn/config');
     replyBody = replyBody
       .replace(/\[Brand Builder(?:\s+(?:Application|link|url|funnel))?\]/gi, BMN_BRAND_BUILDER_URL)
@@ -910,6 +911,7 @@ export async function processWarmNurture(): Promise<number> {
       // Apply placeholder replacements (same as fresh replies)
       let replyBody = result.reply;
       if (isBmnCompany(thread.company_id)) {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const { BMN_BRAND_BUILDER_URL } = require('../bmn/config');
         replyBody = replyBody
           .replace(/\[Brand Builder(?:\s+(?:Application|link|url|funnel))?\]/gi, BMN_BRAND_BUILDER_URL)

@@ -264,7 +264,7 @@ export async function evaluateHotLeadAlert(
 
     // Parse enrichment data for context
     let enrichment: any = {};
-    try { enrichment = JSON.parse(lead.enrichment_data || '{}'); } catch {}
+    try { enrichment = JSON.parse(lead.enrichment_data || '{}'); } catch { /* expected */ }
 
     const companyName = enrichment?.apollo_org?.name || lead.company_name || 'Unknown';
     const title = enrichment?.apollo_person?.title || '';

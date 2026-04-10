@@ -15,7 +15,7 @@ class InstantlySync {
       try {
         analytics = await instantlyService.getCampaignAnalytics(campaign.id);
         if (Array.isArray(analytics)) analytics = analytics[0];
-      } catch {}
+      } catch { /* expected */ }
 
       const statsJson = analytics ? JSON.stringify({
         sent: analytics.sent || 0,
@@ -61,7 +61,7 @@ class InstantlySync {
 
   private inferCompanyId(name: string): number | null {
     const lower = name.toLowerCase();
-    if (lower.includes('grand park') || lower.includes('gpc') || lower.includes('granite') || lower.includes('investor') || lower.includes('family office') || lower.includes('black bull') || lower.includes('dockside mixer')) return 1;
+    if (lower.includes('grand park') || lower.includes('gpc') || lower.includes('granite') || lower.includes('investor') || lower.includes('family office') || lower.includes('dockside mixer')) return 1;
     if (lower.includes('brand new') || lower.includes('bnn') || lower.includes('brand me')) return 2;
     return null;
   }

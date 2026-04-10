@@ -138,7 +138,7 @@ class AdLibraryService {
     } catch (err: any) {
       const msg = err.response?.data?.error?.message || err.message;
       console.error('[AdLibrary] searchAds error:', msg);
-      throw new Error(`Ad Library search failed: ${msg}`);
+      throw new Error(`Ad Library search failed: ${msg}`, { cause: err });
     }
   }
 
@@ -203,7 +203,7 @@ class AdLibraryService {
       return data?.data ?? [];
     } catch (err: any) {
       console.error('[AdLibrary] searchByPageIds error:', err.response?.data?.error?.message || err.message);
-      throw new Error(`Page search failed: ${err.response?.data?.error?.message || err.message}`);
+      throw new Error(`Page search failed: ${err.response?.data?.error?.message || err.message}`, { cause: err });
     }
   }
 

@@ -222,7 +222,7 @@ async function setupVoyagerInterceptor(page: Page, state: string): Promise<Voyag
       totalCount = null;
     },
     destroy: async () => {
-      try { await client.detach(); } catch {}
+      try { await client.detach(); } catch { /* expected */ }
     },
   };
 }

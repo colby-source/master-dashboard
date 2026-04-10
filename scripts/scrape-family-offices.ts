@@ -354,7 +354,7 @@ async function main() {
   }
 
   // Collect all leads across states
-  let allLeads: Lead[] = [];
+  const allLeads: Lead[] = [];
 
   // Load existing leads from already-completed states
   if (resume) {

@@ -94,7 +94,7 @@ export async function runBackup(): Promise<BackupResult> {
     return { success: false, localPath: null, onedrivePath: null, cleanedCount: 0, error };
   }
 
-  let localPath: string | null = null;
+  let localPath: string | null;
   let onedrivePath: string | null = null;
   const sunday = isSunday(now);
 

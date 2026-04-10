@@ -99,7 +99,7 @@ export async function prefilterEmail(email: string, options?: { companyId?: numb
   }
 
   // MX record check — does this domain even accept email?
-  let hasMx = false;
+  let hasMx: boolean;
   try {
     const records = await resolveMx(domain);
     hasMx = records.length > 0;

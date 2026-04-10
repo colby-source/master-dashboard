@@ -182,6 +182,7 @@ router.get('/ab-tests', (req, res) => {
 
 router.get('/ab-tests/:id', (req, res) => {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { getTestResults } = require('../../services/enrichment/ab-testing');
     const results = getTestResults(parseInt(req.params.id));
     if (!results) return res.status(404).json({ error: 'Test not found' });
@@ -241,6 +242,7 @@ router.put('/ab-tests/:id/status', (req, res) => {
 
 router.get('/ab-tests/:id/winner', (req, res) => {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { getWinningVariant } = require('../../services/enrichment/ab-testing');
     const winner = getWinningVariant(parseInt(req.params.id));
     res.json({ winner });
@@ -343,6 +345,7 @@ router.get('/campaign-analytics/:campaignId', async (req, res) => {
 router.get('/campaign-trend/:campaignId', (req, res) => {
   try {
     const days = parseInt(req.query.days as string) || 14;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { getCampaignTrend } = require('../../services/enrichment/campaign-tracker');
     const trend = getCampaignTrend(req.params.campaignId, days);
     res.json({ campaignId: req.params.campaignId, days, snapshots: trend });
@@ -367,6 +370,7 @@ router.post('/optimization-cycle/:companyId', async (req, res) => {
 
 router.get('/optimization-insights/:companyId', (req, res) => {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { getLatestInsights } = require('../../services/enrichment/feedback-loop');
     const insights = getLatestInsights(parseInt(req.params.companyId));
     res.json(insights || { strategyBrief: null, recommendations: [], analyzedAt: null });

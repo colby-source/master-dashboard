@@ -93,10 +93,10 @@ router.get('/:id/detail', async (req, res) => {
     if (campaign.external_id) {
       try {
         stepsAnalytics = await instantlyService.getCampaignStepsAnalytics(campaign.external_id);
-      } catch {}
+      } catch { /* expected */ }
       try {
         instantlyDetail = await instantlyService.getCampaign(campaign.external_id);
-      } catch {}
+      } catch { /* expected */ }
     }
 
     res.json({

@@ -138,11 +138,11 @@ router.get('/leads/:id/full', async (req, res) => {
 
     // Parse enrichment_data JSON
     let enrichment = null;
-    try { enrichment = lead.enrichment_data ? JSON.parse(lead.enrichment_data) : null; } catch {}
+    try { enrichment = lead.enrichment_data ? JSON.parse(lead.enrichment_data) : null; } catch { /* expected */ }
 
     // Parse tags JSON
     let tags: string[] = [];
-    try { tags = lead.tags ? JSON.parse(lead.tags) : []; } catch {}
+    try { tags = lead.tags ? JSON.parse(lead.tags) : []; } catch { /* expected */ }
 
     // Get events for this lead
     const events = queryAll(
@@ -177,7 +177,7 @@ router.get('/leads/:id/full', async (req, res) => {
       enrichment,
       events: events.map((e: any) => {
         let event_data = null;
-        try { event_data = e.event_data ? JSON.parse(e.event_data) : null; } catch {}
+        try { event_data = e.event_data ? JSON.parse(e.event_data) : null; } catch { /* expected */ }
         return { ...e, event_data };
       }),
       threads: threadsWithMessages,
@@ -211,7 +211,7 @@ router.get('/leads/:id/audit-log', async (req, res) => {
     res.json({
       events: events.map((e: any) => {
         let event_data = null;
-        try { event_data = e.event_data ? JSON.parse(e.event_data) : null; } catch {}
+        try { event_data = e.event_data ? JSON.parse(e.event_data) : null; } catch { /* expected */ }
         return { ...e, event_data };
       }),
       messages,

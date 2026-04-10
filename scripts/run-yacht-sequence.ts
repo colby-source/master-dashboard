@@ -1,6 +1,8 @@
 #!/usr/bin/env tsx
 /**
- * Run the VNTR x Granite Park Party post-event follow-up sequence.
+ * Run the Granite Park Capital Investor Mixer post-event follow-up sequence.
+ *
+ * Current event: April 8, 2026 — Yacht TYCOON, The Deck at Island Gardens, Miami
  *
  * Usage:
  *   npx tsx scripts/run-yacht-sequence.ts enroll     # Enroll contacts (dry run — shows who would be enrolled)
@@ -11,7 +13,7 @@
  *   npx tsx scripts/run-yacht-sequence.ts start        # Start cron-based automation
  *   npx tsx scripts/run-yacht-sequence.ts replies      # Check for replies now
  *
- * For future events, copy this script and change the createEventSequence() params.
+ * For future events, use createEventSequence() with new params.
  */
 
 import 'dotenv/config';

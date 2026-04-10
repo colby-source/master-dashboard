@@ -28,7 +28,7 @@ export async function enrichLead(leadId: number): Promise<boolean> {
   logEvent(leadId, lead.company_id, 'enrichment_started', null);
 
   try {
-    let enrichmentData: any = {};
+    const enrichmentData: any = {};
     const existingEnrichment = lead.enrichment_data ? (() => { try { return JSON.parse(lead.enrichment_data); } catch { return {}; } })() : {};
 
     // ── Tier 0: Free pre-filter (MX check + personal domain block) ──

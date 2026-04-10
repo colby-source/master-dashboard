@@ -22,7 +22,7 @@ const BASE = 'http://localhost:3001/api/enrichment';
 
 let passed = 0;
 let failed = 0;
-let testIds: { leadId?: number; threadId?: number; draftId?: number; threadId2?: number; draftId2?: number; draftId3?: number } = {};
+const testIds: { leadId?: number; threadId?: number; draftId?: number; threadId2?: number; draftId2?: number; draftId3?: number } = {};
 
 function ok(name: string, detail?: string) {
   passed++;
@@ -299,7 +299,7 @@ async function run() {
     instantlyEmailId: 'e2e-test-email-004',
   });
 
-  let bulkIds: number[] = [];
+  let bulkIds: number[];
   if (seedBulk1.status === 200 && seedBulk2.status === 200) {
     bulkIds = [seedBulk1.data.draftId, seedBulk2.data.draftId];
     testIds.draftId3 = seedBulk1.data.draftId; // Track for cleanup

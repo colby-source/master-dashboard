@@ -20,15 +20,15 @@ router.get('/', (_req, res) => {
       const convo = JSON.parse(c.instantly_conversation || '[]');
       for (const msg of convo) {
         if (msg.startsWith('[outbound]')) {
-          const match = msg.match(/\((\d{4}-\d{2}-\d{2}T[\d:\.]+Z?)/);
+          const match = msg.match(/\((\d{4}-\d{2}-\d{2}T[\d:.]+Z?)/);
           if (match) lastOutbound = match[1];
         }
         if (msg.startsWith('[inbound]')) {
-          const match = msg.match(/\((\d{4}-\d{2}-\d{2}T[\d:\.]+Z?)/);
+          const match = msg.match(/\((\d{4}-\d{2}-\d{2}T[\d:.]+Z?)/);
           if (match) lastInbound = match[1];
         }
       }
-    } catch {}
+    } catch { /* expected */ }
 
     return {
       id: c.id,

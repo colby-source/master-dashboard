@@ -94,7 +94,7 @@ async function checkBlacklists(domain: string): Promise<BlacklistResult> {
   const listings: string[] = [];
 
   // Resolve domain to IP first
-  let ips: string[] = [];
+  let ips: string[];
   try {
     ips = await dns.resolve4(domain);
   } catch {

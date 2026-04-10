@@ -93,7 +93,7 @@ function signatureShort(): string {
   return `<br><br>Colby Watkins<br>Fund Manager | Granite Park Capital`;
 }
 
-// ── Sequence Template: VNTR x Granite Park Party ─────────────
+// ── Sequence Template: Granite Park Yacht Event ─────────────
 
 const BOOKING_LINK = 'https://api.leadconnectorhq.com/widget/bookings/granite-park-fund';
 const DECK_LINK = 'https://drive.google.com/file/d/1_t0RVOg47WqIKt16mo3jEz1n_4m0Dkzz/view?usp=drive_link';
@@ -717,9 +717,9 @@ export class PostEventSequence {
   }
 }
 
-// ── Factory: Create March 18 Yacht Event Sequence ────────────
+// ── Factory: Create March 18 Yacht Event Sequence (LEGACY) ───
 
-export function createYachtEventSequence(): PostEventSequence {
+export function createYachtEventSequenceMarch18(): PostEventSequence {
   const steps = buildEventSequence('VNTR x Granite Park Party', DECK_LINK, BOOKING_LINK);
 
   return new PostEventSequence({
@@ -729,6 +729,28 @@ export function createYachtEventSequence(): PostEventSequence {
     eventDate: '2026-03-18',
     tag: 'yacht-event-2026-03-18',
     requiredTags: ['attended-mixer', 'yacht-event-2026-03-18'],
+    excludeStageIds: ['690b47f0-2dfe-4bf5-8fc1-93b7c439ca79'], // Colby Warm Nurture
+    pipelineId: 'GMqxElyHPSr2karweCGS',
+    notInterestedStageId: 'f287eacd-8301-434d-8b84-789529def681',
+    bookedStageId: '450dd1b9-6ab2-4c86-af74-ed9f8e5ec373',
+    bookingLink: BOOKING_LINK,
+    deckLink: DECK_LINK,
+    steps,
+  });
+}
+
+// ── Factory: Create April 8 Yacht Event Sequence (CURRENT) ───
+
+export function createYachtEventSequence(): PostEventSequence {
+  const steps = buildEventSequence('Granite Park Capital Investor Mixer', DECK_LINK, BOOKING_LINK);
+
+  return new PostEventSequence({
+    id: 'yacht-event-2026-04-08',
+    name: 'Post-Event Follow-Up — Granite Park Capital Investor Mixer (April 8)',
+    eventName: 'Granite Park Capital Investor Mixer',
+    eventDate: '2026-04-08',
+    tag: 'yacht-event-2026-04-08',
+    requiredTags: ['attended-mixer', 'yacht-event-2026-04-08'],
     excludeStageIds: ['690b47f0-2dfe-4bf5-8fc1-93b7c439ca79'], // Colby Warm Nurture
     pipelineId: 'GMqxElyHPSr2karweCGS',
     notInterestedStageId: 'f287eacd-8301-434d-8b84-789529def681',

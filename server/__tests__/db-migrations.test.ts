@@ -84,7 +84,7 @@ describe('Migration error-handling guard', () => {
   it('re-throws a non-Error object thrown as an exception', () => {
     function runWithNonError(): void {
       try {
-        throw 'string error';  // eslint-disable-line @typescript-eslint/no-throw-literal
+        throw 'string error';
       } catch (e: any) {
         // e.message is undefined for a thrown string — guard: !undefined?.includes(...) → !undefined → true → re-throw
         if (!e?.message?.includes('duplicate column')) throw e;

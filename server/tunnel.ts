@@ -30,7 +30,7 @@ export async function startTunnel(_port: number): Promise<string> {
       if (text.includes('Registered tunnel connection') && !resolved) {
         resolved = true;
         console.log(`[Tunnel] Live at: ${TUNNEL_URL}`);
-        console.log(`[Tunnel] Yacht check-in: ${TUNNEL_URL}/yacht-checkin/yacht-2026-03-18`);
+        console.log(`[Tunnel] Yacht check-in: ${TUNNEL_URL}/yacht-checkin/yacht-2026-04-08`);
         resolve(TUNNEL_URL);
       }
       // Log errors

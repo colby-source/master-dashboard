@@ -324,7 +324,7 @@ const tools: Anthropic.Tool[] = [
     input_schema: {
       type: 'object' as const,
       properties: {
-        name: { type: 'string', description: 'Event name, e.g. "Yacht Mixer — March 12"' },
+        name: { type: 'string', description: 'Event name, e.g. "Granite Park Capital Investor Mixer — April 8"' },
         event_date: { type: 'string', description: 'Event date in YYYY-MM-DD format' },
         location: { type: 'string', description: 'Location (default: The Deck at Island Gardens, Miami)' },
         max_capacity: { type: 'number', description: 'Max attendees (default: 50)' },
@@ -966,9 +966,9 @@ async function executeTool(name: string, input: any): Promise<string> {
       const mt = queryOne('SELECT * FROM meeting_transcripts WHERE id = ?', [input.transcript_id]);
       if (!mt) return JSON.stringify({ error: 'Transcript not found' });
       const lead = mt.lead_id ? queryOne('SELECT first_name, last_name, email, score, score_label, status FROM enrichment_leads WHERE id = ?', [mt.lead_id]) : null;
-      let analysis: any = {};
+      let analysis: any;
       try { analysis = mt.analysis ? JSON.parse(mt.analysis) : {}; } catch { analysis = {}; }
-      let nextSteps: any = [];
+      let nextSteps: any;
       try { nextSteps = mt.next_steps ? JSON.parse(mt.next_steps) : []; } catch { nextSteps = []; }
       return JSON.stringify({
         transcript_id: mt.id,

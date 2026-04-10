@@ -277,7 +277,7 @@ export async function pushToGhl(leadId: number): Promise<boolean> {
       try {
         const parsedTags = JSON.parse(lead.tags);
         if (parsedTags.length) noteLines.push(`Tags: ${parsedTags.join(', ')}`);
-      } catch {}
+      } catch { /* expected */ }
     }
 
     // ── Personalizations ──
