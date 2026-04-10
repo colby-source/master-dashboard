@@ -336,7 +336,25 @@ export async function handleReply(
   // 12b. Build conversation goals from playbook
   const conversationGoals: string[] = playbook.conversation_goals ? JSON.parse(playbook.conversation_goals) : [];
 
-  // 12c. If prospect is interested or requesting a meeting, route by company
+  // 12c. Detect call requests — if creator wants a call, escalate to human with notification
+  const callPatterns = /\b(call me|give me a call|phone call|let'?s hop on a call|schedule a call|can we talk|talk on the phone|here'?s my number|my number is|reach me at|text me|shoot me a text)\b/i;
+  const creatorWantsCall = callPatterns.test(replyText);
+  if (creatorWantsCall && isBmnCompany(lead.company_id)) {
+    // Extract phone number if present
+    const phoneMatch = replyText.match(/(\+?1?\s*[-.]?\s*\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})/);
+    const phoneNumber = phoneMatch ? phoneMatch[1].trim() : null;
+
+    conversationGoals.push(
+      `CALL REQUESTED: The creator wants to talk on the phone${phoneNumber ? ` and gave their number: ${phoneNumber}` : ''}. Acknowledge this warmly — say you'll reach out shortly. Also share the Brand Builder link as something to check out while they wait. Keep it brief and enthusiastic.`
+    );
+
+    // Fire escalation so a human actually calls them
+    notifyEscalation(lead, thread.id,
+      `Creator WANTS A CALL${phoneNumber ? ` — Phone: ${phoneNumber}` : ''}. Reply text: "${replyText.slice(0, 200)}". Someone needs to call them ASAP.`
+    );
+  }
+
+  // 12d. If prospect is interested or requesting a meeting, route by company
   const meetingSentiments = ['interested', 'meeting_request'];
   if (meetingSentiments.includes(sentiment.sentiment)) {
     if (isBmnCompany(lead.company_id)) {
@@ -358,6 +376,33 @@ export async function handleReply(
       conversationGoals.push(
         `LEARNED FROM PAST PERFORMANCE: These reply strategies have converted best: ${winningStrategies}. Adapt your approach based on what has worked.`
       );
+    }
+  }
+
+  // 12f. Resolve sender name from the eaccount (match the person who originally emailed them)
+  // e.g., "ryan@brandmenow.io" → "Ryan", "bella@brandme-now.com" → "Bella"
+  let senderName = playbook.sender_name || '';
+  if (eaccount) {
+    const localPart = eaccount.split('@')[0] || '';
+    // Look up the account's first_name from Instantly, or capitalize the local part
+    const accountRecord = queryOne(
+      'SELECT first_name FROM enrichment_leads WHERE email = ? LIMIT 1',
+      [eaccount]
+    );
+    if (accountRecord?.first_name) {
+      senderName = accountRecord.first_name;
+    } else {
+      // Capitalize first letter of the email prefix (e.g., "ryan" → "Ryan")
+      senderName = localPart.charAt(0).toUpperCase() + localPart.slice(1).toLowerCase();
+    }
+  }
+  // Also check the thread's conversation — extract sender name from existing outbound emails
+  if (!senderName || senderName === playbook.sender_name) {
+    const existingOutbound = messages.find((m: any) => m.direction === 'outbound' && m.body);
+    if (existingOutbound) {
+      // Try to extract sign-off name from prior outbound (e.g., "Best, Ryan" or "— Bella")
+      const signOffMatch = (existingOutbound.body || '').match(/(?:Best|Thanks|Cheers|—)\s*,?\s*\n?\s*([A-Z][a-z]+)\s*$/m);
+      if (signOffMatch) senderName = signOffMatch[1];
     }
   }
 
@@ -386,6 +431,8 @@ export async function handleReply(
         do_not_mention: playbook.do_not_mention ? JSON.parse(playbook.do_not_mention) : [],
         booking_url: playbook.booking_url,
         max_auto_replies: playbook.max_auto_replies,
+        sender_name: senderName,
+        company_name: playbook.company_name,
       },
       autoReplyCount: thread.auto_reply_count,
     });
