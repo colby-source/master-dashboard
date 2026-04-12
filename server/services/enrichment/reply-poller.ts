@@ -61,28 +61,41 @@ export async function pollInstantlyReplies(): Promise<number> {
       }
 
       // Property Announcement campaign — notify only, no automation
-      // This is a one-off re-engagement. Colby handles replies manually.
+      // Replies stay UNREAD in Instantly Unibox so Colby can manage manually.
+      // Poller only sends Telegram notification, does NOT mark as read.
       const PROPERTY_ANNOUNCEMENT_CAMPAIGN = 'a87a9ded-d6b7-4c6f-ad8c-b6b579d5f1b1';
       if (campaignId === PROPERTY_ANNOUNCEMENT_CAMPAIGN) {
-        try {
-          const { sendTelegram } = await import('../telegram-service');
-          const { config } = await import('../../config');
-          const name = [leadFirstName, leadLastName].filter(Boolean).join(' ') || leadEmail;
-          const msg = [
-            '\ud83d\udce9 GPC PROPERTY ANNOUNCEMENT REPLY',
-            '',
-            `From: ${name} (${leadEmail})`,
-            `Reply: "${typeof replyText === 'string' ? replyText.substring(0, 300) : String(replyText).substring(0, 300)}"`,
-            '',
-            'Respond in Instantly Unibox.',
-          ].join('\n');
-          await sendTelegram(config.telegramChatId, msg);
-          console.log(`[ReplyPoller] Property announcement reply from ${leadEmail} — notified Colby, no automation`);
-        } catch (err: any) {
-          console.error(`[ReplyPoller] Failed to notify about property announcement reply:`, err.message);
+        // Dedup: only notify once per email ID
+        const alreadyNotified = queryOne(
+          `SELECT id FROM enrichment_events WHERE event_type = 'property_announcement_reply' AND event_data LIKE ?`,
+          [`%"instantlyEmailId":"${emailId}"%`]
+        );
+        if (!alreadyNotified) {
+          try {
+            const { sendTelegram } = await import('../telegram-service');
+            const { config } = await import('../../config');
+            const name = [leadFirstName, leadLastName].filter(Boolean).join(' ') || leadEmail;
+            const msg = [
+              '\ud83d\udce9 GPC PROPERTY ANNOUNCEMENT REPLY',
+              '',
+              `From: ${name} (${leadEmail})`,
+              `Reply: "${typeof replyText === 'string' ? replyText.substring(0, 300) : String(replyText).substring(0, 300)}"`,
+              '',
+              'Respond in Instantly Unibox.',
+            ].join('\n');
+            await sendTelegram(config.telegramChatId, msg);
+            // Record that we notified about this reply (for dedup across polls)
+            runSql(
+              `INSERT INTO enrichment_events (lead_id, event_type, event_data, created_at) VALUES (0, 'property_announcement_reply', ?, datetime('now'))`,
+              [JSON.stringify({ instantlyEmailId: emailId, email: leadEmail, name, replyPreview: typeof replyText === 'string' ? replyText.substring(0, 200) : '' })]
+            );
+            saveDb();
+            console.log(`[ReplyPoller] Property announcement reply from ${leadEmail} — notified Colby, no automation, left unread`);
+          } catch (err: any) {
+            console.error(`[ReplyPoller] Failed to notify about property announcement reply:`, err.message);
+          }
         }
-        await markRead(emailId, threadId);
-        processed++;
+        // DO NOT mark as read — Colby manages in Instantly Unibox
         continue;
       }
 
