@@ -1,6 +1,8 @@
 import { queryOne, queryAll, runSql, saveDb } from '../../db';
 import { instantlyService } from '../instantly-service';
 import { enrichmentService } from './index';
+import { createLogger } from '../../utils/logger';
+const log = createLogger('reply-poller');
 
 /**
  * Poll Instantly Unibox for new reply emails and feed them
@@ -32,7 +34,7 @@ export async function pollInstantlyReplies(): Promise<number> {
       Array.isArray(sentItems) ? sentItems : []
     );
     if (recordedOutbound > 0) {
-      console.log(`[ReplyPoller] Recorded ${recordedOutbound} manual outbound replies from Instantly UI`);
+      log.info(`[ReplyPoller] Recorded ${recordedOutbound} manual outbound replies from Instantly UI`);
     }
 
     const items = Array.isArray(inboundItems) ? inboundItems : [];
@@ -55,6 +57,32 @@ export async function pollInstantlyReplies(): Promise<number> {
 
       if (!leadEmail || !replyText || !emailId) {
         await markRead(emailId, threadId);
+        continue;
+      }
+
+      // Property Announcement campaign — notify only, no automation
+      // This is a one-off re-engagement. Colby handles replies manually.
+      const PROPERTY_ANNOUNCEMENT_CAMPAIGN = 'a87a9ded-d6b7-4c6f-ad8c-b6b579d5f1b1';
+      if (campaignId === PROPERTY_ANNOUNCEMENT_CAMPAIGN) {
+        try {
+          const { sendTelegram } = await import('../telegram-service');
+          const { config } = await import('../../config');
+          const name = [leadFirstName, leadLastName].filter(Boolean).join(' ') || leadEmail;
+          const msg = [
+            '\ud83d\udce9 GPC PROPERTY ANNOUNCEMENT REPLY',
+            '',
+            `From: ${name} (${leadEmail})`,
+            `Reply: "${typeof replyText === 'string' ? replyText.substring(0, 300) : String(replyText).substring(0, 300)}"`,
+            '',
+            'Respond in Instantly Unibox.',
+          ].join('\n');
+          await sendTelegram(config.telegramChatId, msg);
+          console.log(`[ReplyPoller] Property announcement reply from ${leadEmail} — notified Colby, no automation`);
+        } catch (err: any) {
+          console.error(`[ReplyPoller] Failed to notify about property announcement reply:`, err.message);
+        }
+        await markRead(emailId, threadId);
+        processed++;
         continue;
       }
 
@@ -113,7 +141,7 @@ export async function pollInstantlyReplies(): Promise<number> {
           eaccount,
         });
 
-        console.log(
+        log.info(
           `[ReplyPoller] Processed reply from ${leadEmail}: action=${result.action}` +
           (result.reason ? ` reason=${result.reason}` : '') +
           (result.sentiment ? ` sentiment=${result.sentiment}` : '')
@@ -124,22 +152,22 @@ export async function pollInstantlyReplies(): Promise<number> {
 
         processed++;
       } catch (err: any) {
-        console.error(`[ReplyPoller] Error processing reply from ${leadEmail}:`, err.message);
+        log.error(`[ReplyPoller] Error processing reply from ${leadEmail}:`, err.message);
         // Still mark as read to prevent infinite retry on broken emails
         await markRead(emailId, threadId);
       }
     }
 
     if (skippedUnmapped > 0) {
-      console.log(`[ReplyPoller] Marked ${skippedUnmapped} unmapped campaign emails as read`);
+      log.info(`[ReplyPoller] Marked ${skippedUnmapped} unmapped campaign emails as read`);
     }
     if (processed > 0) {
-      console.log(`[ReplyPoller] Processed ${processed} new replies`);
+      log.info(`[ReplyPoller] Processed ${processed} new replies`);
     }
 
     return processed;
   } catch (err: any) {
-    console.error('[ReplyPoller] Poll error:', err.message);
+    log.error('[ReplyPoller] Poll error:', err.message);
     return 0;
   }
 }
@@ -205,7 +233,7 @@ async function recordManualOutboundReplies(sentEmails: any[]): Promise<number> {
     );
     saveDb();
 
-    console.log(`[ReplyPoller] Recorded manual outbound reply to ${leadEmail} (thread ${replyThread.id})`);
+    log.info(`[ReplyPoller] Recorded manual outbound reply to ${leadEmail} (thread ${replyThread.id})`);
     await markRead(emailId, threadId);
     recorded++;
   }
@@ -275,7 +303,7 @@ function ensureLeadExists(
 
   const companyId = resolveCompanyFromCampaign(campaignId);
   if (!companyId) {
-    console.log(`[ReplyPoller] Unknown campaign ${campaignId} for ${email} — skipping auto-create`);
+    log.info(`[ReplyPoller] Unknown campaign ${campaignId} for ${email} — skipping auto-create`);
     return;
   }
 
@@ -288,5 +316,5 @@ function ensureLeadExists(
   );
   saveDb();
 
-  console.log(`[ReplyPoller] Auto-created lead for ${email} (company ${companyId}, campaign ${campaignId})`);
+  log.info(`[ReplyPoller] Auto-created lead for ${email} (company ${companyId}, campaign ${campaignId})`);
 }

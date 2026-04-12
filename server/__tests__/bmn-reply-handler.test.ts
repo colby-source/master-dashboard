@@ -68,7 +68,7 @@ describe('injectBmnBookingGoal', () => {
   it('the injected goal explicitly forbids suggesting booking a call', () => {
     const goals: string[] = [];
     injectBmnBookingGoal(goals);
-    expect(goals[0]).toContain('do NOT suggest booking a call');
+    expect(goals[0]).toContain('Do NOT suggest booking a call');
   });
 
   it('appends to a pre-populated goals array without modifying existing entries', () => {
