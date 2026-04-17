@@ -42,23 +42,50 @@ export abstract class HtmlEquipmentScraper implements EquipmentScraper {
   }
 
   protected async fetchRaw(url: string, opts: AxiosRequestConfig = {}): Promise<AxiosResponse | null> {
-    try {
-      return await axios({
+    const browserHeaders = {
+      'User-Agent': this.userAgent,
+      Accept:
+        'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Accept-Encoding': 'gzip, deflate, br',
+      'Cache-Control': 'no-cache',
+      Pragma: 'no-cache',
+      'Sec-Fetch-Dest': 'document',
+      'Sec-Fetch-Mode': 'navigate',
+      'Sec-Fetch-Site': 'none',
+      'Sec-Fetch-User': '?1',
+      'Upgrade-Insecure-Requests': '1',
+      Connection: 'keep-alive',
+    };
+
+    const doFetch = async () =>
+      axios({
         url,
         method: opts.method || 'GET',
         timeout: opts.timeout || this.defaultTimeoutMs,
-        headers: {
-          'User-Agent': this.userAgent,
-          'Accept-Language': 'en-US,en;q=0.9',
-          ...(opts.headers || {}),
-        },
+        headers: { ...browserHeaders, ...(opts.headers || {}) },
         params: opts.params,
         data: opts.data,
         responseType: opts.responseType,
         validateStatus: (s) => s < 500,
         maxRedirects: 5,
+        decompress: true,
       });
+
+    try {
+      return await doFetch();
     } catch (err) {
+      const code = (err as NodeJS.ErrnoException)?.code;
+      // Retry once on transient connection resets / timeouts
+      if (code === 'ECONNRESET' || code === 'ETIMEDOUT' || code === 'EAI_AGAIN') {
+        await new Promise((r) => setTimeout(r, 1500));
+        try {
+          return await doFetch();
+        } catch (retryErr) {
+          this.log.warn('http fetch failed (after retry)', { url, error: String(retryErr) });
+          return null;
+        }
+      }
       this.log.warn('http fetch failed', { url, error: String(err) });
       return null;
     }
