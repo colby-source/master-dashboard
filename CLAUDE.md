@@ -52,8 +52,35 @@ Required: `ANTHROPIC_API_KEY`, `PDL_API_KEY`, `HUNTER_API_KEY`, `INSTANTLY_API_K
 GHL: `GHL_COMPANY_[1-3]_ID`, `GHL_COMPANY_[1-3]_API_KEY`, `GHL_COMPANY_[1-3]_LOCATION_ID`
 Meta: `META_ACCESS_TOKEN`, `META_AD_ACCOUNT_ID`
 WhatsApp: `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`
+Apify: `APIFY_API_KEY` (required for Craigslist + FB Marketplace scrapers in Equipment Finder)
+eBay (optional): `EBAY_APP_ID`, `EBAY_CERT_ID` (enables Browse API path; HTML fallback used otherwise)
 
 See `.env.example` for full list.
+
+## Known environment issues
+
+### Apify TLS / MITM on certain networks
+
+Symptom: `api.apify.com` requests fail with:
+```
+Hostname/IP does not match certificate's altnames: Host: api.apify.com. is not in the cert's altnames: ...
+```
+and the cert altnames list unrelated domains (often `*.camil.com.br` or similar).
+
+Cause: a local HTTPS interceptor (corporate proxy, antivirus SSL inspection,
+VPN) is MITM-ing the connection and returning a re-signed cert for the wrong
+hostname. **This is a network/local-machine issue, not a code issue.**
+
+Fixes, in order of preference:
+1. Disable HTTPS inspection for `*.apify.com` in the MITM tool.
+2. Add the MITM root CA to `NODE_EXTRA_CA_CERTS`.
+3. **Dev-only escape hatch:** set `APIFY_ALLOW_INSECURE_TLS=true` in `.env` to
+   skip cert validation *for Apify only* (see `server/services/apify-service.ts`).
+   Never ship this to production — it disables TLS security for Apify traffic.
+
+When Apify is unreachable, the Equipment Finder still runs; Craigslist + FB
+Marketplace return empty but all 17 HTTP-based scrapers (Bidspotter,
+Future4200, GovDeals, eBay, etc.) work normally.
 
 ## Validation Requirements
 

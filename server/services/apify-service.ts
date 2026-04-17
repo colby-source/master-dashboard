@@ -1,10 +1,26 @@
 import axios, { AxiosInstance } from 'axios';
+import https from 'https';
 import { config } from '../config';
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('apify-service');
 
 class ApifyService {
   private client: AxiosInstance;
 
   constructor() {
+    // Escape hatch for environments where HTTPS is MITM-intercepted by a local
+    // proxy / corporate VPN / antivirus (e.g. cert returned for unrelated
+    // domain). Only honored when APIFY_ALLOW_INSECURE_TLS=true is set
+    // explicitly — never defaults on. Emits a loud warning each boot.
+    const allowInsecure = String(process.env.APIFY_ALLOW_INSECURE_TLS || '').toLowerCase() === 'true';
+    if (allowInsecure) {
+      log.warn(
+        'APIFY_ALLOW_INSECURE_TLS=true — skipping certificate validation for api.apify.com. ' +
+          'Use ONLY to work around a local MITM/proxy; do not ship to production.',
+      );
+    }
+
     this.client = axios.create({
       baseURL: config.apifyBaseUrl,
       headers: {
@@ -12,6 +28,7 @@ class ApifyService {
         'Content-Type': 'application/json',
       },
       timeout: 120_000,
+      httpsAgent: allowInsecure ? new https.Agent({ rejectUnauthorized: false }) : undefined,
     });
   }
 
