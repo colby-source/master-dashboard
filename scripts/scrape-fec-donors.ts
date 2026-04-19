@@ -44,14 +44,14 @@ const CYCLES = cyclesArg
 const PAGE_CAP = isTest ? 2 : Number.MAX_SAFE_INTEGER;
 
 // ── HTTP helper ─────────────────────────────────────────────
-async function httpGetJson(url: string): Promise<any> {
+async function httpGetJsonOnce(url: string): Promise<any> {
   await sleep(REQ_DELAY_MS);
   return new Promise((resolve, reject) => {
     const req = https.get(url, {
       headers: { 'User-Agent': USER_AGENT, 'Accept': 'application/json' },
     }, (res) => {
       if (res.statusCode === 429) {
-        return reject(new Error(`HTTP 429 rate-limited — use a real FEC_API_KEY`));
+        return reject(new Error(`HTTP 429 rate-limited`));
       }
       if (res.statusCode !== 200) {
         return reject(new Error(`HTTP ${res.statusCode} for ${url}`));
@@ -67,6 +67,24 @@ async function httpGetJson(url: string): Promise<any> {
     req.on('error', reject);
     req.setTimeout(60_000, () => req.destroy(new Error('timeout')));
   });
+}
+
+async function httpGetJson(url: string, maxRetries = 5): Promise<any> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await httpGetJsonOnce(url);
+    } catch (err) {
+      lastErr = err;
+      const msg = err instanceof Error ? err.message : String(err);
+      // Non-retryable: 4xx other than 429 (auth, bad params)
+      if (/HTTP 4[0-9][0-9]/.test(msg) && !msg.includes('HTTP 429')) throw err;
+      // Retryable: 429, 5xx, ECONNRESET, timeout, socket errors
+      const backoff = 1500 * Math.pow(2, attempt); // 1.5s, 3s, 6s, 12s, 24s
+      await sleep(backoff);
+    }
+  }
+  throw lastErr;
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
