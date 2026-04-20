@@ -43,6 +43,23 @@ const CYCLES = cyclesArg
   : [2026]; // default: current cycle
 const PAGE_CAP = isTest ? 2 : Number.MAX_SAFE_INTEGER;
 
+// --chunk-by-state: bypasses FEC pagination timeouts by splitting one big query into
+// 50+ smaller per-state queries. Each state has manageable result size (<50 pages).
+const CHUNK_BY_STATE = args.includes('--chunk-by-state');
+
+// --max-total=<usd>: exclude celebrity-tier donors who won't respond to cold email.
+// $2M total political giving = you have a family office / staff managing your wealth.
+const maxTotalArg = args.find(a => a.startsWith('--max-total='));
+const MAX_TOTAL_USD = maxTotalArg ? parseFloat(maxTotalArg.split('=')[1]) : Number.MAX_SAFE_INTEGER;
+
+// US states + territories with FEC contribution data
+const STATES = [
+  'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA',
+  'KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
+  'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT',
+  'VA','WA','WV','WI','WY','DC','PR','VI','GU','AS','MP',
+];
+
 // ── HTTP helper ─────────────────────────────────────────────
 async function httpGetJsonOnce(url: string): Promise<any> {
   await sleep(REQ_DELAY_MS);
@@ -111,7 +128,7 @@ interface FecContribution {
 }
 
 // ── Paginated fetch ─────────────────────────────────────────
-async function fetchCycleDonors(cycle: number): Promise<FecContribution[]> {
+async function fetchCycleDonors(cycle: number, state?: string): Promise<FecContribution[]> {
   const all: FecContribution[] = [];
   const base = new URL('https://api.open.fec.gov/v1/schedules/schedule_a/');
   base.searchParams.set('api_key', API_KEY);
@@ -120,6 +137,7 @@ async function fetchCycleDonors(cycle: number): Promise<FecContribution[]> {
   base.searchParams.set('is_individual', 'true');
   base.searchParams.set('per_page', String(PER_PAGE));
   base.searchParams.set('sort', '-contribution_receipt_date');
+  if (state) base.searchParams.set('contributor_state', state);
 
   let lastIndexes: Record<string, unknown> = {};
   let page = 0;
@@ -149,7 +167,8 @@ async function fetchCycleDonors(cycle: number): Promise<FecContribution[]> {
     lastIndexes = pagination.last_indexes;
     page++;
 
-    process.stdout.write(`\r  Cycle ${cycle}: page ${page}, ${all.length} contributions fetched`);
+    const label = state ? `${cycle}/${state}` : String(cycle);
+    process.stdout.write(`\r  ${label}: page ${page}, ${all.length} contribs`);
   }
   console.log();
   return all;
@@ -256,7 +275,9 @@ function dedupeByDonor(contribs: FecContribution[]): DonorRecord[] {
     }
   }
 
-  return [...map.values()].sort((a, b) => b.total_contributions_usd - a.total_contributions_usd);
+  // Apply MAX_TOTAL_USD filter — excludes celebrity/ultra-wealthy tier that won't respond to cold email
+  const filtered = [...map.values()].filter((d) => d.total_contributions_usd <= MAX_TOTAL_USD);
+  return filtered.sort((a, b) => b.total_contributions_usd - a.total_contributions_usd);
 }
 
 // ── CSV writer ──────────────────────────────────────────────
@@ -300,10 +321,28 @@ async function main() {
     console.log(`           Free at https://api.data.gov/signup/`);
   }
 
+  if (CHUNK_BY_STATE) {
+    console.log(`  Mode: state-chunked (${STATES.length} states × ${CYCLES.length} cycles = ${STATES.length * CYCLES.length} queries)`);
+  }
+  if (MAX_TOTAL_USD < Number.MAX_SAFE_INTEGER) {
+    console.log(`  Filter: excluding donors with total contributions > $${MAX_TOTAL_USD.toLocaleString()} (celebrity tier)`);
+  }
+
   const allContribs: FecContribution[] = [];
   for (const cycle of CYCLES) {
-    const contribs = await fetchCycleDonors(cycle);
-    allContribs.push(...contribs);
+    if (CHUNK_BY_STATE) {
+      for (const state of STATES) {
+        try {
+          const contribs = await fetchCycleDonors(cycle, state);
+          allContribs.push(...contribs);
+        } catch (err) {
+          console.warn(`\n  skipping ${cycle}/${state}: ${err instanceof Error ? err.message : err}`);
+        }
+      }
+    } else {
+      const contribs = await fetchCycleDonors(cycle);
+      allContribs.push(...contribs);
+    }
   }
 
   console.log(`  Total raw contributions: ${allContribs.length}`);
