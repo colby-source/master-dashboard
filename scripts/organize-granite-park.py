@@ -488,16 +488,28 @@ def main():
         name_key = f"{norm_name(primary.get('first_name', ''))}|{norm_name(primary.get('last_name', ''))}"
         sources_list = sorted({m.get("source_file", "") for m in members if m.get("source_file")})
 
-        # Collect signals
+        # Collect signals — guard against NaN (floats) leaking in from DataFrame.to_dict()
         member_signals = []
         for m in members:
-            if m.get("_signal_type"):
-                member_signals.append({
-                    "type": m["_signal_type"],
-                    "value_usd": float(m.get("_signal_value") or 0),
-                    "date": m.get("_signal_date", ""),
-                    "extra": m.get("_signal_extra", ""),
-                })
+            st = m.get("_signal_type", "")
+            if not isinstance(st, str) or not st:
+                continue
+            try:
+                val = float(m.get("_signal_value") or 0)
+            except (TypeError, ValueError):
+                val = 0.0
+            sd = m.get("_signal_date", "")
+            if not isinstance(sd, str):
+                sd = ""
+            sx = m.get("_signal_extra", "")
+            if not isinstance(sx, str):
+                sx = ""
+            member_signals.append({
+                "type": st,
+                "value_usd": val,
+                "date": sd,
+                "extra": sx,
+            })
 
         do_not_contact = name_key in excluded
 
