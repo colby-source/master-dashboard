@@ -7,6 +7,29 @@ import { StepCompliance } from './_launchpad/StepCompliance';
 type IntakeData = Record<string, any>;
 type Session = Awaited<ReturnType<typeof launchpadPublic.getSession>>;
 
+// Client-side mirror of server's launchpad-service.REQUIRED_INTAKE_FIELDS.
+// Used so the "Generate strategy" gate updates as soon as the creator fills
+// a field — without waiting for a session refetch round-trip.
+const REQUIRED_INTAKE_FIELDS = [
+  'brand_name', 'founder_name', 'niche', 'product_categories',
+  'founder_story', 'signature_belief',
+  'primary_icp', 'top_3_competitors', 'category_status',
+  'primary_platform', 'posting_capacity',
+  'launch_date', 'primary_goal', 'monetization_model', 'price_point_range',
+  'brand_voice_dos', 'brand_voice_donts',
+] as const;
+
+function computeMissingIntakeFields(intake: IntakeData): string[] {
+  return REQUIRED_INTAKE_FIELDS.filter((k) => {
+    const v = intake[k];
+    if (v === undefined || v === null) return true;
+    if (typeof v === 'string') return v.trim().length === 0;
+    if (Array.isArray(v)) return v.length === 0;
+    if (typeof v === 'object') return Object.keys(v).length === 0;
+    return false;
+  });
+}
+
 const STEPS = [
   { id: 'identity', title: 'Brand basics' },
   { id: 'story', title: 'Your story' },
@@ -91,27 +114,45 @@ export default function LaunchpadPublicPage() {
   }, [saveIntake]);
 
   // ── Strategy generation ─────────────────────────────────
-  const onGenerate = async () => {
+  // Fire-and-forget UX: kick off generation, advance the wizard
+  // immediately to the Content step. The Content step polls the session
+  // and renders a "generating…" placeholder until session.strategy
+  // appears, then transitions to the normal content studio. Creators
+  // never get stuck on a 3-4-min spinner.
+  const onGenerate = () => {
     if (!token) return;
     setGenerating(true);
     setGenerationError(null);
-    try {
-      const result = await launchpadPublic.generateStrategy(token);
-      if (!result.ok) {
-        setGenerationError('Strategy generation failed. Please contact your launch manager.');
-      } else if (result.partial) {
-        setGenerationError(`Strategy generated, but ${result.errors?.length} modules need a re-run. Your manager will fix.`);
-      }
-      // Reload session
-      const s = await launchpadPublic.getSession(token);
-      setSession(s);
-      if (s.strategy) setStep('assets');
-    } catch (err) {
-      setGenerationError(String(err));
-    } finally {
-      setGenerating(false);
-    }
+    setStep('content');
+
+    launchpadPublic.generateStrategy(token)
+      .then(async (result) => {
+        if (!result.ok) {
+          setGenerationError('Strategy generation failed. Please contact your launch manager.');
+        } else if (result.partial) {
+          setGenerationError(`Strategy generated, but ${result.errors?.length} modules need a re-run. Your manager will fix.`);
+        }
+        const s = await launchpadPublic.getSession(token);
+        setSession(s);
+      })
+      .catch((err) => setGenerationError(String(err)))
+      .finally(() => setGenerating(false));
   };
+
+  // Poll the session every 8s while strategy is generating so the Content
+  // step can show progress + auto-transition when the strategy lands.
+  useEffect(() => {
+    if (!token || !generating) return;
+    const interval = setInterval(() => {
+      launchpadPublic.getSession(token).then((s) => {
+        setSession(s);
+        if (s.strategy) {
+          setGenerating(false);
+        }
+      }).catch(() => { /* transient errors are fine */ });
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [token, generating]);
 
   // ── Submit ─────────────────────────────────────────────
   const onSubmit = async () => {
@@ -176,7 +217,11 @@ export default function LaunchpadPublicPage() {
               error={generationError}
             />
           )}
-          {step === 'content' && session.strategy && <StepContent token={token!} />}
+          {step === 'content' && (
+            session.strategy
+              ? <StepContent token={token!} />
+              : <StepGenerating generating={generating} error={generationError} />
+          )}
           {step === 'assets' && session.strategy && <StepAssets token={token!} session={session} />}
           {step === 'submit' && (
             <StepSubmit session={session} onSubmit={onSubmit} submitting={submitting} />
@@ -468,10 +513,10 @@ function StepReview({ intake, session, onGenerate, generating, error }: {
   generating: boolean;
   error: string | null;
 }) {
-  // Mirror the server's REQUIRED_INTAKE_FIELDS contract. session.missingIntakeFields
-  // is the authoritative source — if anything's missing here, the server will reject
-  // strategy generation, so the button must stay disabled.
-  const missing = session.missingIntakeFields ?? [];
+  // Compute missing fields from LIVE intake state — autosave is debounced
+  // and the session response only reflects what the server saw at page load.
+  // This way the gate updates immediately as the creator fills in each field.
+  const missing = computeMissingIntakeFields(intake);
   const baseReady = missing.length === 0;
   const acks: Record<string, string> = intake.compliance_acks || {};
   const universalReady = ['no_disease_claims', 'ftc_disclosure', 'pre_publish_legal_review']
@@ -526,6 +571,45 @@ function StepReview({ intake, session, onGenerate, generating, error }: {
       >
         {generating ? 'Generating… (3-4 min)' : 'Generate my 30-day launch package'}
       </button>
+    </div>
+  );
+}
+
+function StepGenerating({ generating, error }: { generating: boolean; error: string | null }) {
+  return (
+    <div className="space-y-5">
+      <h2 className="text-2xl font-semibold">Generating your strategy</h2>
+      <p className="text-stone-400">
+        Building all 7 modules — master strategy, ICP psychology, authority positioning, content pillars,
+        30-day calendar, 50-hook bank, and monetization funnel. This usually takes 3-4 minutes.
+      </p>
+
+      <div className="border border-stone-800 rounded p-5 bg-stone-950 space-y-3">
+        {generating ? (
+          <>
+            <div className="flex items-center gap-3">
+              <div className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
+              <div className="text-sm text-stone-200 font-medium">Working…</div>
+            </div>
+            <p className="text-xs text-stone-500">
+              You can leave this tab open or close it — we'll keep generating in the background.
+              When you come back, your content studio will be ready.
+            </p>
+          </>
+        ) : error ? (
+          <div className="text-sm text-red-400">{error}</div>
+        ) : (
+          <div className="text-sm text-stone-300">
+            Strategy isn't ready yet. Refreshing in a few seconds…
+          </div>
+        )}
+      </div>
+
+      {error && !generating && (
+        <p className="text-xs text-stone-500">
+          If this persists, contact your launch manager — they can re-run the modules manually.
+        </p>
+      )}
     </div>
   );
 }
