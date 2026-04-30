@@ -12,25 +12,17 @@ import { notFoundHandler } from './middleware/not-found';
 import { errorHandler } from './middleware/error-handler';
 
 import companiesRouter from './routes/companies';
-import tasksRouter from './routes/tasks';
 import campaignsRouter from './routes/campaigns';
-import agentsRouter from './routes/agents';
 import metricsRouter from './routes/metrics';
 import alertsRouter from './routes/alerts';
-import openclawRouter from './routes/openclaw';
 import ghlRouter from './routes/ghl';
 import eventsRouter from './routes/events';
 import aiDiscoveriesRouter from './routes/ai-discoveries';
 import aiRouter from './routes/ai';
 import metaAdsRouter from './routes/meta-ads';
 import competitorsRouter from './routes/competitors';
-import btrConferenceRouter from './routes/btr-conference';
 import instantlyRouter from './routes/instantly';
 import apifyRouter from './routes/apify';
-import whatsappRouter from './routes/whatsapp';
-import linkedinRouter from './routes/linkedin';
-import instagramRouter from './routes/instagram';
-import instagramDmRouter from './routes/instagram-dm';
 import enrichmentRouter from './routes/enrichment';
 import enrichmentWebhooksRouter from './routes/enrichment-webhooks';
 import aiAssistantRouter from './routes/ai-assistant';
@@ -38,12 +30,12 @@ import exportsRouter from './routes/exports';
 import bulkUploadRouter from './routes/bulk-upload';
 import domainHealthRouter from './routes/domain-health';
 import settingsRouter from './routes/settings';
-import rb2bRouter from './routes/rb2b';
 import anymailfinderRouter from './routes/anymailfinder';
 import reportsRouter from './routes/reports';
 import propertyAnnouncementWebhookRouter from './routes/property-announcement-webhook';
 import { startPropertyAnnouncementPoller } from './services/property-announcement-poller';
-import { yachtCheckinPageRouter, yachtCheckinRouter, yachtEventsRouter } from './routes/yacht-events';
+import gpf2WebhooksRouter from './routes/gpf2-webhooks';
+import { startStallRecovery } from './services/gpc/gpf2-stall-recovery';
 import { reportScheduler } from './services/report-scheduler';
 import { initMeetingScheduler } from './services/meeting-scheduler';
 import { dailyAuditService } from './services/daily-audit-service';
@@ -53,14 +45,28 @@ import spendRouter from './routes/spend';
 import cmoHealthRouter from './routes/cmo-health';
 import adIntelligenceRouter from './routes/ad-intelligence';
 import bmnCadenceRouter from './routes/bmn-cadence';
+import gpcPipelineRouter from './routes/gpc-pipeline';
+import pipelineRouter from './routes/pipeline';
+import integrationsRouter from './routes/integrations';
+import learningRouter from './routes/learning';
+import dataInventoryRouter from './routes/data-inventory';
+import launchpadRouter from './routes/launchpad';
+import launchpadPublicRouter from './routes/launchpad-public';
+import { createLogger } from './utils/logger';
+const log = createLogger('index');
 
 async function main() {
   // Initialize database
   await getDb();
-  console.log('[DB] Initialized');
+  log.info('[DB] Initialized');
 
   // Run pending database migrations
   runMigrations();
+
+  // Boot the BMN PLDS catalog cache. Initial sync is fire-and-forget so it
+  // never blocks server startup; failures degrade gracefully (empty catalog).
+  const { catalogService } = await import('./services/launchpad/catalog-service');
+  catalogService.start();
 
   const app = express();
 
@@ -71,6 +77,8 @@ async function main() {
     `http://localhost:${config.port}`,
     'https://granitepark.co',  // GHL hosted pages — GPC
     'https://checkin.graiteparkcapitalfund.com',  // Cloudflare tunnel — GPC
+    'https://graniteparkcapitalfund.com',  // Public Fund II site (CF Pages) — data-room intake
+    'https://www.graniteparkcapitalfund.com',
     'https://brandmenow.co',   // BMN main domain
     'https://www.brandmenow.co', // BMN www
   ];
@@ -83,6 +91,12 @@ async function main() {
       if (origin.endsWith('.trycloudflare.com')) return callback(null, true);
       // Allow Railway deployment origin
       if (origin.endsWith('.railway.app')) return callback(null, true);
+      // Allow Cloudflare Pages preview deploys for the GPC funnel
+      if (origin.endsWith('.granite-park-capital-funnel.pages.dev')) return callback(null, true);
+      // Allow any subdomain of our owned domains (covers dashboard.*, checkin.*, etc.)
+      if (origin.endsWith('.graiteparkcapitalfund.com')) return callback(null, true);
+      if (origin.endsWith('.graniteparkcapitalfund.com')) return callback(null, true);
+      if (origin.endsWith('.brandmenow.co')) return callback(null, true);
       callback(new Error(`CORS: origin ${origin} not allowed`));
     },
     credentials: true,
@@ -95,51 +109,50 @@ async function main() {
 
   // Webhook routes — mounted BEFORE auth middleware (they have their own verification)
   app.use('/api/enrichment', enrichmentWebhooksRouter);
-  app.use('/api/whatsapp', whatsappRouter);
   app.use('/api/property-announcement', propertyAnnouncementWebhookRouter);
 
-  // Yacht check-in — public routes (no auth, guests scan QR)
-  app.use('/yacht-checkin', yachtCheckinPageRouter);     // HTML page
-  app.use('/api/yacht-checkin', yachtCheckinRouter);       // API endpoints
+  // GPF-II — Instantly reply webhook (/api/webhooks/gpf2-reply) + ops URL buttons (/ops/gpf2/...)
+  // Mounted at root so both path prefixes route. HMAC-token-guarded on ops endpoints.
+  app.use(gpf2WebhooksRouter);
+
+  // Launchpad PUBLIC routes — mounted BEFORE apiKeyAuth. Magic-link tokens authenticate.
+  app.use('/api/launchpad-public', launchpadPublicRouter);
 
   // API key auth — only enforced when DASHBOARD_API_KEY env var is set
   app.use('/api', apiKeyAuth);
 
   // API routes
   app.use('/api/companies', companiesRouter);
-  app.use('/api/tasks', tasksRouter);
   app.use('/api/campaigns', campaignsRouter);
-  app.use('/api/agents', agentsRouter);
   app.use('/api/metrics', metricsRouter);
   app.use('/api/alerts', alertsRouter);
-  app.use('/api/openclaw', openclawRouter);
   app.use('/api/ghl', ghlRouter);
   app.use('/api/events', eventsRouter);
   app.use('/api/ai-discoveries', aiDiscoveriesRouter);
   app.use('/api/ai', aiRouter);
   app.use('/api/meta-ads', metaAdsRouter);
   app.use('/api/competitors', competitorsRouter);
-  app.use('/api/btr-conference', btrConferenceRouter);
   app.use('/api/instantly', instantlyRouter);
   app.use('/api/apify', apifyRouter);
-  app.use('/api/linkedin', linkedinRouter);
-  app.use('/api/instagram', instagramRouter);
-  app.use('/api/instagram-dm', instagramDmRouter);
   app.use('/api/enrichment', enrichmentRouter);
   app.use('/api/ai-assistant', aiAssistantRouter);
   app.use('/api/exports', exportsRouter);
   app.use('/api/enrichment/bulk-upload', bulkUploadRouter);
   app.use('/api/domain-health', domainHealthRouter);
   app.use('/api/settings', settingsRouter);
-  app.use('/api/rb2b', rb2bRouter);
   app.use('/api/anymailfinder', anymailfinderRouter);
   app.use('/api/reports', reportsRouter);
-  app.use('/api/yacht-events', yachtEventsRouter);
   app.use('/api/audit', auditRouter);
   app.use('/api/spend', spendRouter);
   app.use('/api/cmo', cmoHealthRouter);
   app.use('/api/ad-intelligence', adIntelligenceRouter);
   app.use('/api/bmn-cadence', bmnCadenceRouter);
+  app.use('/api/gpc/pipeline', gpcPipelineRouter);
+  app.use('/api/pipeline', pipelineRouter);
+  app.use('/api/integrations', integrationsRouter);
+  app.use('/api/learning', learningRouter);
+  app.use('/api/data-inventory', dataInventoryRouter);
+  app.use('/api/launchpad', launchpadRouter);
 
   // 404 handler for unmatched API routes (must be after all API routes)
   app.use(notFoundHandler);
@@ -170,25 +183,30 @@ async function main() {
 
   // Initialize meeting scheduler (Google Calendar + GHL availability)
   initMeetingScheduler().catch(err => {
-    console.error('[Server] Meeting scheduler init failed:', err.message);
+    log.error('[Server] Meeting scheduler init failed:', err.message);
   });
 
   // Start property announcement reply poller (every 2 min)
   startPropertyAnnouncementPoller();
 
+  // Start GPF-II stall recovery — 14-day silent replies get a Telegram nudge (every 12h)
+  startStallRecovery();
+
   server.listen(config.port, () => {
-    console.log(`[Server] Running on http://localhost:${config.port}`);
+    log.info(`[Server] Running on http://localhost:${config.port}`);
     // Auto-start Cloudflare tunnel for yacht check-in (and other external access)
     if (process.env.ENABLE_TUNNEL !== 'false') {
       startTunnel(config.port).catch(err => {
-        console.error('[Tunnel] Failed to start:', err.message);
+        log.error('[Tunnel] Failed to start:', err.message);
       });
     }
   });
 }
 
-console.log('[Boot] Starting master-dashboard...');
+log.info('[Boot] Starting master-dashboard...');
 main().catch(err => {
-  console.error('[Boot] Fatal startup error:', err);
+  log.error('[Boot] Fatal startup error:', err && (err.stack || err.message || JSON.stringify(err)));
+  if (err && err.stack) console.error(err.stack);
+  else console.error('Empty error thrown:', err);
   process.exit(1);
 });

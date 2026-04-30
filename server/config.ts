@@ -1,9 +1,11 @@
 import 'dotenv/config';
+import { createLogger } from './utils/logger';
+const log = createLogger('config');
 
 function env(key: string, fallback?: string): string {
   const val = process.env[key];
   if (!val && fallback === undefined) {
-    console.warn(`Warning: Missing env var ${key}`);
+    log.warn(`Warning: Missing env var ${key}`);
     return '';
   }
   return val || fallback || '';
@@ -54,6 +56,9 @@ export const config = {
   metaWebhookSecret: env('META_WEBHOOK_SECRET'),
   instantlyWebhookSecret: env('INSTANTLY_WEBHOOK_SECRET'),
   n8nWebhookSecret: env('N8N_WEBHOOK_SECRET'),
+  gpf2OpsSecret: env('GPF2_OPS_SECRET', ''),
+  publicBaseUrl: env('PUBLIC_BASE_URL', 'http://localhost:3001'),
+  webhookSecret: env('WEBHOOK_SECRET', ''),
   n8nWebhookBaseUrl: env('N8N_WEBHOOK_BASE_URL', 'http://localhost:5678'),
   // LinkedIn outreach (Apify connection requests)
   linkedinLiAtCookie: env('LINKEDIN_LI_AT', ''),
@@ -63,6 +68,35 @@ export const config = {
 
   enrichmentAutoEnabled: env('ENRICHMENT_AUTO_ENABLED', 'true') === 'true',
   enrichmentStaleDays: parseInt(env('ENRICHMENT_STALE_DAYS', '90')),
+
+  // Brand Launchpad — client-facing onboarding portal
+  googleDrive: {
+    clientId: env('GOOGLE_DRIVE_CLIENT_ID', ''),
+    clientSecret: env('GOOGLE_DRIVE_CLIENT_SECRET', ''),
+    refreshToken: env('GOOGLE_DRIVE_REFRESH_TOKEN', ''),
+    bmnClientsRootFolderId: env('GOOGLE_DRIVE_BMN_CLIENTS_ROOT_FOLDER_ID', ''),
+  },
+  launchpad: {
+    fromEmail: env('LAUNCHPAD_FROM_EMAIL', 'colby@brandmenow.co'),
+    magicLinkTtlDays: parseInt(env('LAUNCHPAD_MAGIC_LINK_TTL_DAYS', '7')),
+    maxAssetSizeMb: parseInt(env('LAUNCHPAD_MAX_ASSET_SIZE_MB', '50')),
+    maxVideoSizeMb: parseInt(env('LAUNCHPAD_MAX_VIDEO_SIZE_MB', '500')),
+    videoTempDir: env('LAUNCHPAD_VIDEO_TEMP_DIR', './data/video-tmp'),
+    targetClipsPerVideo: parseInt(env('LAUNCHPAD_TARGET_CLIPS_PER_VIDEO', '8')),
+    clipDurationSecMin: parseInt(env('LAUNCHPAD_CLIP_DURATION_MIN', '15')),
+    clipDurationSecMax: parseInt(env('LAUNCHPAD_CLIP_DURATION_MAX', '60')),
+    // Single Shopify Plus umbrella store. Per-brand storefronts are collections,
+    // not separate stores. Bio links and storefront URLs key off this domain.
+    shopifyShopDomain: env('LAUNCHPAD_SHOPIFY_SHOP_DOMAIN', 'brandmenow.shop'),
+    // BMN PLDS catalog source (Google Drive shortcut on Windows). The
+    // catalog-service parses these XLSX files into the bmn_catalog table.
+    pldsRoot: env(
+      'LAUNCHPAD_PLDS_ROOT',
+      'I:\\.shortcut-targets-by-id\\1b7s9Q39N_l0GyNK5yW0J1vgTqXW3gL6I\\1. Brand Me Now - BMN\\PLDS',
+    ),
+    pldsRefreshHours: parseInt(env('LAUNCHPAD_PLDS_REFRESH_HOURS', '24')),
+  },
+  openaiApiKey: env('OPENAI_API_KEY', ''),
 
   // Meeting scheduling — per-company calendar configs
   meetings: {
