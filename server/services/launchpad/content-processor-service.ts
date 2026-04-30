@@ -25,6 +25,7 @@ import type {
   Clip,
   ClipRow,
 } from './types';
+import type { Audience } from './types';
 import { rowToLongformSource, rowToClip } from './types';
 
 const log = createLogger('content-processor');
@@ -48,13 +49,18 @@ export function getLongformSource(id: string): LongformSource | null {
   return row ? rowToLongformSource(row) : null;
 }
 
-function persistGeneratedLongform(brandId: string, gen: { pillar_number: number; title: string; body: string; format: string }, metadata: Record<string, unknown>): string {
+function persistGeneratedLongform(
+  brandId: string,
+  gen: { pillar_number: number; title: string; body: string; format: string },
+  metadata: Record<string, unknown>,
+  audience: Audience = 'creator_personal',
+): string {
   const id = gid('lfs');
   const now = new Date().toISOString();
   runSql(
-    `INSERT INTO launchpad_longform_sources (id, brand_id, source_type, pillar_number, title, body, status, processing_completed_at, metadata, created_at, updated_at)
-     VALUES (?, ?, 'generated_script', ?, ?, ?, 'ready', ?, ?, ?, ?)`,
-    [id, brandId, gen.pillar_number, gen.title, gen.body, now, JSON.stringify({ format: gen.format, ...metadata }), now, now],
+    `INSERT INTO launchpad_longform_sources (id, brand_id, source_type, pillar_number, audience, title, body, status, processing_completed_at, metadata, created_at, updated_at)
+     VALUES (?, ?, 'generated_script', ?, ?, ?, ?, 'ready', ?, ?, ?, ?)`,
+    [id, brandId, gen.pillar_number, audience, gen.title, gen.body, now, JSON.stringify({ format: gen.format, ...metadata }), now, now],
   );
   return id;
 }
@@ -64,13 +70,14 @@ export function persistUploadedTextSource(params: {
   title: string;
   body: string;
   pillarNumber?: number;
+  audience?: Audience;
 }): string {
   const id = gid('lfs');
   const now = new Date().toISOString();
   runSql(
-    `INSERT INTO launchpad_longform_sources (id, brand_id, source_type, pillar_number, title, body, status, processing_completed_at, created_at, updated_at)
-     VALUES (?, ?, 'uploaded_article', ?, ?, ?, 'ready', ?, ?, ?)`,
-    [id, params.brandId, params.pillarNumber ?? null, params.title, params.body, now, now, now],
+    `INSERT INTO launchpad_longform_sources (id, brand_id, source_type, pillar_number, audience, title, body, status, processing_completed_at, created_at, updated_at)
+     VALUES (?, ?, 'uploaded_article', ?, ?, ?, ?, 'ready', ?, ?, ?)`,
+    [id, params.brandId, params.pillarNumber ?? null, params.audience ?? 'creator_personal', params.title, params.body, now, now, now],
   );
   saveDb();
   return id;
@@ -102,16 +109,18 @@ function persistClip(params: {
   pillarNumber: number;
   assignedDay: number | null;
   bestPostTime?: string;
+  audience?: Audience;
   c: ChoppedClip;
 }): string {
   const id = gid('clp');
   const now = new Date().toISOString();
   runSql(
-    `INSERT INTO launchpad_clips (id, brand_id, source_id, clip_type, format, hook, body, cta, visual_direction, hashtags, pillar_number, assigned_day, best_post_time, approval_status, metadata, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)`,
+    `INSERT INTO launchpad_clips (id, brand_id, source_id, clip_type, format, audience, hook, body, cta, visual_direction, hashtags, pillar_number, assigned_day, best_post_time, approval_status, metadata, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)`,
     [
       id, params.brandId, params.sourceId,
       params.c.clip_type, params.c.format,
+      params.audience ?? 'creator_personal',
       params.c.hook, params.c.body, params.c.cta, params.c.visual_direction,
       JSON.stringify(params.c.hashtags || []),
       params.pillarNumber, params.assignedDay, params.bestPostTime ?? null,

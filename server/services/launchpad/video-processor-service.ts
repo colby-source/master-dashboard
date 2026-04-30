@@ -29,7 +29,7 @@ import { config } from '../../config';
 import { claudeService } from '../claude-service';
 import { googleDriveService } from './google-drive-service';
 import { createLogger } from '../../utils/logger';
-import type { BrandIntake, StrategyPackage } from './types';
+import type { Audience, BrandIntake, StrategyPackage } from './types';
 
 const log = createLogger('video-processor');
 
@@ -230,6 +230,8 @@ export async function processVideoSource(params: {
   strategy: StrategyPackage;
   targetClipCount?: number;
   driveFolderId?: string;
+  /** Hub-and-spoke routing for the produced clips. Defaults to creator_personal. */
+  audience?: Audience;
 }): Promise<ProcessVideoSourceResult> {
   const tempDir = ensureTempDir();
   const localPath = path.join(tempDir, `${params.sourceId}-${params.filename.replace(/[^a-zA-Z0-9._-]/g, '_')}`);
@@ -309,11 +311,12 @@ export async function processVideoSource(params: {
         const clipId = gid('clp');
         const now = new Date().toISOString();
         runSql(
-          `INSERT INTO launchpad_clips (id, brand_id, source_id, clip_type, format, hook, body, cta, visual_direction, hashtags, pillar_number, source_start_seconds, source_end_seconds, drive_file_id, drive_file_url, approval_status, created_at, updated_at)
-           VALUES (?, ?, ?, 'video_clip', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
+          `INSERT INTO launchpad_clips (id, brand_id, source_id, clip_type, format, audience, hook, body, cta, visual_direction, hashtags, pillar_number, source_start_seconds, source_end_seconds, drive_file_id, drive_file_url, approval_status, created_at, updated_at)
+           VALUES (?, ?, ?, 'video_clip', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
           [
             clipId, params.brandId, params.sourceId,
-            m.format, m.hook, m.body, m.cta, m.visual_direction,
+            m.format, params.audience ?? 'creator_personal',
+            m.hook, m.body, m.cta, m.visual_direction,
             JSON.stringify(m.hashtags || []),
             m.pillar_number, m.start_sec, m.end_sec,
             driveFileId, driveFileUrl,

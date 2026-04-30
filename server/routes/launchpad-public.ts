@@ -347,9 +347,11 @@ router.post('/content/upload-video/:token', videoUpload.single('file'), async (r
 
   const sourceId = `lfs_${crypto.randomBytes(8).toString('hex')}`;
   const now = new Date().toISOString();
+  // audience defaults to creator_personal — hub-and-spoke routing for chopped
+  // clips is decided downstream by the video-processor based on intake config.
   runSql(
-    `INSERT INTO launchpad_longform_sources (id, brand_id, source_type, pillar_number, title, mime_type, size_bytes, status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 'pending_processing', ?, ?)`,
+    `INSERT INTO launchpad_longform_sources (id, brand_id, source_type, pillar_number, audience, title, mime_type, size_bytes, status, created_at, updated_at)
+     VALUES (?, ?, ?, ?, 'creator_personal', ?, ?, ?, 'pending_processing', ?, ?)`,
     [sourceId, brand.id, sourceType, pillarNumber, title, req.file.mimetype, req.file.size, now, now],
   );
   saveDb();
