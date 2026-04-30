@@ -292,6 +292,41 @@ router.patch('/brands/:id/identity', (req, res) => {
   }
 });
 
+// PUT /api/launchpad/brands/:id/skus — admin pre-loads SKUs before sending the
+// magic link. The wizard then opens in REVIEW mode for the creator (no picker).
+router.put('/brands/:id/skus', (req, res) => {
+  const brand = launchpadService.getBrandById(req.params.id);
+  if (!brand) return res.status(404).json({ error: 'Brand not found' });
+
+  const selections = (req.body?.selections ?? []) as Array<{
+    catalogItemId: string;
+    role: 'hero' | 'support' | 'bundle';
+    customName?: string;
+    customMsrpUsd?: number;
+    displayOrder?: number;
+  }>;
+  if (!Array.isArray(selections)) {
+    return res.status(400).json({ error: 'selections must be an array' });
+  }
+  for (const sel of selections) {
+    if (!sel.catalogItemId || !catalogService.getById(sel.catalogItemId)) {
+      return res.status(400).json({ error: `Unknown catalogItemId: ${sel.catalogItemId}` });
+    }
+    if (!['hero', 'support', 'bundle'].includes(sel.role)) {
+      return res.status(400).json({ error: `Invalid role: ${sel.role}` });
+    }
+  }
+  const skus = brandIdentityService.replaceBrandSkus(brand.id, selections);
+  res.json({ ok: true, skus });
+});
+
+// GET /api/launchpad/brands/:id/skus — admin reads current selections
+router.get('/brands/:id/skus', (req, res) => {
+  const brand = launchpadService.getBrandById(req.params.id);
+  if (!brand) return res.status(404).json({ error: 'Brand not found' });
+  res.json({ skus: brandIdentityService.listBrandSkus(brand.id) });
+});
+
 // ── BMN PLDS catalog (admin) ───────────────────────────────
 
 // GET /api/launchpad/catalog — filterable

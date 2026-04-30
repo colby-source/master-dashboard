@@ -1,22 +1,30 @@
 /**
  * Wizard Step 5 — Product line + SKUs.
  *
- * Browses the BMN PLDS catalog (skincare, cosmetics, selfnamed, supplements)
- * and lets the creator pick:
- *   - 1 hero SKU       (the launch flagship)
- *   - 1-2 support SKUs (cross-sells / bundle ladder)
- *   - 0+ bundle SKUs   (explicit bundle composition)
+ * Two modes, based on whether the brand already has SKUs picked when the
+ * creator opens the wizard:
  *
- * Margin / MOQ / compliance flags are surfaced on every card so creators
- * can pick economically-viable products. PUTting selections wholesale
- * keeps the data model dead simple — the server snapshots whatever the
- * UI sent at submission time.
+ *   REVIEW MODE (default when savedSkus.length > 0):
+ *     The BMN team typically pre-loads SKUs via the admin tool before
+ *     sending the magic link. The creator sees "here's what we built for
+ *     you" with full economics + compliance flags, and a single primary
+ *     "Looks good" CTA. They can drop into edit mode if they want to
+ *     change anything.
+ *
+ *   PICKER MODE (when no saved SKUs OR creator clicks "Edit"):
+ *     The full PLDS catalog browser with filters + role assignment for
+ *     hero / support / bundle. Heroes are exclusive — picking a new hero
+ *     auto-demotes the previous one to support.
+ *
+ * PUTting selections wholesale keeps the data model dead simple — the
+ * server snapshots whatever the UI sent at submission time.
  */
 
 import { useEffect, useMemo, useState } from 'react';
 import { launchpadPublic } from '../../lib/api/launchpad';
 import type { BmnCatalogItemDto, BrandSkuDto, CatalogSource } from '../../lib/api/launchpad';
-import { Field, Input, Select, fmtUsd, fmtPct } from './_primitives';
+import { Field, Input, Select } from './_primitives';
+import { fmtUsd, fmtPct } from './_format';
 
 export type SkuRole = 'hero' | 'support' | 'bundle';
 
@@ -43,21 +51,24 @@ export function StepProducts({ token, onComplete }: { token: string; onComplete?
   const [categories, setCategories] = useState<string[]>([]);
   const [selections, setSelections] = useState<Selection[]>([]);
   const [savedSkus, setSavedSkus] = useState<BrandSkuDto[]>([]);
+  const [savedItems, setSavedItems] = useState<Map<string, BmnCatalogItemDto>>(new Map());
+  const [mode, setMode] = useState<'review' | 'edit'>('edit');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Initial: load categories for the active source + saved selections.
+  // If saved selections already exist (admin pre-loaded them), default to
+  // REVIEW mode so the creator confirms instead of re-picking.
   useEffect(() => {
     setLoading(true);
     Promise.all([
       launchpadPublic.getCatalogCategories(token, source),
       launchpadPublic.getSkus(token),
     ])
-      .then(([cats, skus]) => {
+      .then(async ([cats, skus]) => {
         setCategories(cats.categories);
         setSavedSkus(skus.skus);
-        // Hydrate selections from server-saved SKUs on first mount only
         setSelections((prev) =>
           prev.length === 0
             ? skus.skus.map((s) => ({
@@ -68,10 +79,21 @@ export function StepProducts({ token, onComplete }: { token: string; onComplete?
               }))
             : prev,
         );
+        // Default to review mode when SKUs are pre-loaded
+        if (skus.skus.length > 0) {
+          setMode('review');
+          // Hydrate full catalog metadata for the review cards (one bulk pull,
+          // typical brand has 3-5 SKUs so we just grab the first 500 items).
+          const allItems = await launchpadPublic.getCatalog(token, { limit: 500 });
+          const map = new Map<string, BmnCatalogItemDto>();
+          for (const it of allItems.items) map.set(it.id, it);
+          setSavedItems(map);
+        } else {
+          setMode('edit');
+        }
       })
       .catch((err) => setError(String(err)))
       .finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, source]);
 
   // Filtered catalog list — re-fetches when filter changes.
@@ -158,13 +180,36 @@ export function StepProducts({ token, onComplete }: { token: string; onComplete?
     });
   }, [selections, savedSkus]);
 
+  // ── REVIEW MODE: BMN team pre-loaded SKUs; creator just confirms ──
+  if (mode === 'review' && savedSkus.length > 0) {
+    return (
+      <ReviewMode
+        skus={savedSkus}
+        items={savedItems}
+        onEdit={() => setMode('edit')}
+        onContinue={() => onComplete?.()}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold">Pick your products</h2>
-        <p className="text-stone-400 mt-1.5">
-          Choose 1 hero SKU + 1-2 supporting SKUs from the BMN catalog. Margin, MOQ, and compliance flags are shown for every option — pick economics that work.
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-semibold">Pick your products</h2>
+          <p className="text-stone-400 mt-1.5">
+            Choose 1 hero SKU + 1-2 supporting SKUs from the BMN catalog. Margin, MOQ, and compliance flags are shown for every option — pick economics that work.
+          </p>
+        </div>
+        {savedSkus.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setMode('review')}
+            className="shrink-0 text-xs text-stone-400 hover:text-stone-200 underline mt-2"
+          >
+            Back to review
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -313,4 +358,136 @@ function RoleButton({ current, role, setRole }: { current: SkuRole | null; role:
       {active ? `${role[0].toUpperCase()}${role.slice(1)} ✓` : label}
     </button>
   );
+}
+
+// ── REVIEW MODE — BMN team pre-loaded SKUs; creator just confirms ──
+
+function ReviewMode({
+  skus, items, onEdit, onContinue,
+}: {
+  skus: BrandSkuDto[];
+  items: Map<string, BmnCatalogItemDto>;
+  onEdit: () => void;
+  onContinue: () => void;
+}) {
+  const hero = skus.find((s) => s.role === 'hero');
+  const support = skus.filter((s) => s.role === 'support');
+  const bundle = skus.filter((s) => s.role === 'bundle');
+
+  const expectedAov = skus.reduce((acc, sku) => {
+    const item = items.get(sku.catalogItemId);
+    const msrp = sku.customMsrpUsd ?? item?.msrpUsd ?? 0;
+    return acc + msrp;
+  }, 0);
+
+  const flagged = skus.filter((s) => items.get(s.catalogItemId)?.requiresComplianceReview);
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-semibold">Your products</h2>
+        <p className="text-stone-400 mt-1.5">
+          Here's what BMN built for your brand. Review the picks below — economics, MOQ, and compliance flags. If anything needs to change, click <span className="text-stone-200">Edit selections</span> to swap SKUs or change roles.
+        </p>
+      </div>
+
+      <div className="border border-stone-800 rounded p-4 bg-stone-950 grid grid-cols-1 sm:grid-cols-4 gap-3 text-sm">
+        <SummaryCellLite label="Hero" value={hero ? labelFor(items, hero) : 'Not set'} highlight={!hero} />
+        <SummaryCellLite label="Support" value={`${support.length} SKU${support.length === 1 ? '' : 's'}`} />
+        <SummaryCellLite label="Bundle" value={`${bundle.length} SKU${bundle.length === 1 ? '' : 's'}`} />
+        <SummaryCellLite label="Expected AOV" value={fmtUsd(expectedAov)} />
+      </div>
+
+      {flagged.length > 0 && (
+        <div className="border border-amber-900/50 bg-amber-950/20 rounded p-3 text-sm">
+          <span className="text-amber-300 font-medium">{flagged.length} of these SKU{flagged.length === 1 ? '' : 's'} need extra compliance review.</span>
+          <span className="text-stone-300"> You'll handle that on the next step.</span>
+        </div>
+      )}
+
+      <div className="space-y-3">
+        {[...skus].sort((a, b) => roleOrder(a.role) - roleOrder(b.role)).map((sku) => {
+          const item = items.get(sku.catalogItemId);
+          if (!item) return (
+            <div key={sku.id} className="border border-stone-800 rounded p-4 bg-stone-950 text-stone-500 text-sm">
+              Unknown SKU {sku.catalogItemId} (catalog metadata not loaded)
+            </div>
+          );
+          const ringColor =
+            sku.role === 'hero' ? 'border-cyan-500/40 ring-1 ring-cyan-500/20' :
+            sku.role === 'support' ? 'border-teal-700/50' :
+            'border-violet-700/50';
+          return (
+            <div key={sku.id} className={`border rounded p-4 bg-stone-950 ${ringColor}`}>
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded ${
+                      sku.role === 'hero' ? 'bg-cyan-500 text-stone-950' :
+                      sku.role === 'support' ? 'bg-teal-700 text-white' :
+                      'bg-violet-700 text-white'
+                    }`}>
+                      {sku.role}
+                    </span>
+                    {item.requiresComplianceReview && (
+                      <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 bg-amber-900/40 border border-amber-800 text-amber-200 rounded">
+                        Compliance
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-stone-100 font-medium">{sku.customName ?? item.productName}</div>
+                  <div className="text-xs text-stone-500 mt-0.5">
+                    {item.supplierName ?? '—'}{item.category ? ` · ${item.category}` : ''}{item.sizeOrVolume ? ` · ${item.sizeOrVolume}` : ''}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 text-[11px] text-stone-400">
+                <Stat label="MSRP" value={fmtUsd(sku.customMsrpUsd ?? item.msrpUsd)} />
+                <Stat label="Cost" value={fmtUsd(item.totalLandedCost)} />
+                <Stat label="Margin" value={fmtPct(item.grossMarginPct)} />
+                <Stat label="BMN net %" value={fmtPct(item.bmnNetPct)} />
+                <Stat label="MOQ" value={item.moq?.toString() ?? '—'} />
+                <Stat label="Influencer 25%" value={fmtUsd(item.influencerPayout25Usd)} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="flex items-center gap-3 pt-2 border-t border-stone-800">
+        <button
+          type="button"
+          onClick={onContinue}
+          className="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-stone-950 font-semibold rounded"
+        >
+          Looks good — continue
+        </button>
+        <button
+          type="button"
+          onClick={onEdit}
+          className="px-4 py-2 text-sm bg-stone-800 hover:bg-stone-700 text-stone-200 rounded"
+        >
+          Edit selections
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SummaryCellLite({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div>
+      <div className="text-[10px] uppercase tracking-wider text-stone-500">{label}</div>
+      <div className={`text-sm mt-0.5 ${highlight ? 'text-amber-300' : 'text-stone-100'}`}>{value}</div>
+    </div>
+  );
+}
+
+function labelFor(items: Map<string, BmnCatalogItemDto>, sku: BrandSkuDto): string {
+  return sku.customName ?? items.get(sku.catalogItemId)?.productName ?? '(unknown)';
+}
+
+function roleOrder(role: string): number {
+  return role === 'hero' ? 0 : role === 'support' ? 1 : 2;
 }

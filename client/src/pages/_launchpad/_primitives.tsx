@@ -62,12 +62,3 @@ export function Chips({ values, onChange, placeholder }: { values: string[]; onC
   );
 }
 
-export function fmtUsd(n: number | null | undefined): string {
-  if (n === null || n === undefined || !Number.isFinite(n)) return '—';
-  return `$${n.toFixed(2)}`;
-}
-
-export function fmtPct(n: number | null | undefined): string {
-  if (n === null || n === undefined || !Number.isFinite(n)) return '—';
-  return `${n.toFixed(1)}%`;
-}

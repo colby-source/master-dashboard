@@ -10,6 +10,7 @@ export const launchpadPublic = {
     founderEmail: string;
     status: string;
     intake: Record<string, unknown> | null;
+    missingIntakeFields: string[];
     strategy: Record<string, unknown> | null;
     strategyGeneratedAt: string | null;
     driveFolderUrl: string | null;
@@ -331,4 +332,24 @@ export const launchpadAdmin = {
     ),
 
   calendarCsvUrl: (brandId: string) => `/api/launchpad/brands/${brandId}/calendar.csv`,
+
+  // Pre-load SKUs for a brand BEFORE the magic link is sent — wizard opens
+  // in review mode for the creator with these picks pre-filled.
+  getSkus: (brandId: string) =>
+    request<{ skus: BrandSkuDto[] }>(`/launchpad/brands/${brandId}/skus`),
+
+  putSkus: (
+    brandId: string,
+    selections: Array<{
+      catalogItemId: string;
+      role: 'hero' | 'support' | 'bundle';
+      customName?: string;
+      customMsrpUsd?: number;
+      displayOrder?: number;
+    }>,
+  ) =>
+    request<{ ok: boolean; skus: BrandSkuDto[] }>(
+      `/launchpad/brands/${brandId}/skus`,
+      { method: 'PUT', body: JSON.stringify({ selections }) },
+    ),
 };

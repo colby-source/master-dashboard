@@ -180,22 +180,33 @@ export function saveIntake(brandId: string, intake: Partial<BrandIntake>): void 
   saveDb();
 }
 
+// Single source of truth for required intake fields. Mirrored by the client
+// at LaunchpadPublicPage.tsx StepReview; if you add a field here, add it
+// there too so the "Generate strategy" button gates on the same set.
+export const REQUIRED_INTAKE_FIELDS: (keyof BrandIntake)[] = [
+  'brand_name', 'founder_name', 'niche', 'product_categories',
+  'founder_story', 'signature_belief',
+  'primary_icp', 'top_3_competitors', 'category_status',
+  'primary_platform', 'posting_capacity',
+  'launch_date', 'primary_goal', 'monetization_model', 'price_point_range',
+  'brand_voice_dos', 'brand_voice_donts',
+];
+
+function fieldFilled(v: unknown): boolean {
+  if (v === undefined || v === null) return false;
+  if (typeof v === 'string') return v.trim().length > 0;
+  if (Array.isArray(v)) return v.length > 0;
+  if (typeof v === 'object') return Object.keys(v).length > 0;
+  return true;
+}
+
 function isIntakeComplete(intake: Partial<BrandIntake>): boolean {
-  const required: (keyof BrandIntake)[] = [
-    'brand_name', 'founder_name', 'niche', 'product_categories',
-    'founder_story', 'signature_belief',
-    'primary_icp', 'top_3_competitors', 'category_status',
-    'primary_platform', 'posting_capacity',
-    'launch_date', 'primary_goal', 'monetization_model', 'price_point_range',
-    'brand_voice_dos', 'brand_voice_donts',
-  ];
-  return required.every((k) => {
-    const v = intake[k];
-    if (v === undefined || v === null) return false;
-    if (typeof v === 'string') return v.trim().length > 0;
-    if (Array.isArray(v)) return v.length > 0;
-    return true;
-  });
+  return REQUIRED_INTAKE_FIELDS.every((k) => fieldFilled(intake[k]));
+}
+
+/** Returns the list of required intake field names that are still empty. */
+export function missingIntakeFields(intake: Partial<BrandIntake>): string[] {
+  return REQUIRED_INTAKE_FIELDS.filter((k) => !fieldFilled(intake[k]));
 }
 
 // ── Strategy generation ───────────────────────────────────
@@ -218,7 +229,10 @@ export async function generateStrategy(brandId: string): Promise<{ ok: boolean; 
   const brand = getBrandById(brandId);
   if (!brand) throw new Error('Brand not found');
   if (!brand.intake) throw new Error('Cannot generate strategy — no intake data');
-  if (!isIntakeComplete(brand.intake)) throw new Error('Cannot generate strategy — intake incomplete');
+  if (!isIntakeComplete(brand.intake)) {
+    const missing = missingIntakeFields(brand.intake);
+    throw new Error(`Cannot generate strategy — intake incomplete (missing: ${missing.join(', ')})`);
+  }
 
   // ── Acquire lock ──
   const inFlightRow = queryOne(
@@ -484,4 +498,6 @@ export const launchpadService = {
   markLaunched,
   getStatusLog,
   isIntakeComplete,
+  missingIntakeFields,
+  REQUIRED_INTAKE_FIELDS,
 };

@@ -46,6 +46,10 @@ router.get('/session/:token', (req, res) => {
   const brand = resolveBrand(req.params.token);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
 
+  // Surface which required intake fields are missing so the client can render
+  // a precise "go fix these" pointer instead of a generic "incomplete" error.
+  const missingFields = brand.intake ? launchpadService.missingIntakeFields(brand.intake) : launchpadService.REQUIRED_INTAKE_FIELDS;
+
   // Strip admin-sensitive fields for the public response
   res.json({
     brandId: brand.id,
@@ -55,6 +59,7 @@ router.get('/session/:token', (req, res) => {
     founderEmail: brand.founderEmail,
     status: brand.status,
     intake: brand.intake,
+    missingIntakeFields: missingFields,
     strategy: brand.strategy,
     strategyGeneratedAt: brand.strategyGeneratedAt,
     driveFolderUrl: brand.driveFolderUrl,

@@ -468,14 +468,11 @@ function StepReview({ intake, session, onGenerate, generating, error }: {
   generating: boolean;
   error: string | null;
 }) {
-  // Phase-1/2 readiness contract: every creator must have completed brand
-  // basics + story + niche, picked a primary platform + posting cadence,
-  // set a launch goal — AND acknowledged universal compliance gates.
-  const baseReady = !!(
-    intake.brand_name && intake.founder_name && intake.niche &&
-    intake.signature_belief && intake.primary_platform &&
-    intake.posting_capacity && intake.launch_date && intake.primary_goal
-  );
+  // Mirror the server's REQUIRED_INTAKE_FIELDS contract. session.missingIntakeFields
+  // is the authoritative source — if anything's missing here, the server will reject
+  // strategy generation, so the button must stay disabled.
+  const missing = session.missingIntakeFields ?? [];
+  const baseReady = missing.length === 0;
   const acks: Record<string, string> = intake.compliance_acks || {};
   const universalReady = ['no_disease_claims', 'ftc_disclosure', 'pre_publish_legal_review']
     .every((k) => !!acks[k]);
@@ -504,10 +501,18 @@ function StepReview({ intake, session, onGenerate, generating, error }: {
     <div className="space-y-5">
       <h2 className="text-2xl font-semibold">Generate your strategy</h2>
       <p className="text-stone-400">When you click below, I'll generate all 7 modules — master strategy, ICP psychology, authority positioning, content pillars, 30-day calendar, 50-hook bank, and monetization funnel. Takes about 3-4 minutes.</p>
-      {!ready && !missingCompliance && (
-        <div className="text-sm text-amber-300">⚠ Some required fields are missing. Go back and complete the previous steps.</div>
+      {!baseReady && (
+        <div className="text-sm text-amber-300">
+          <div className="font-medium">⚠ {missing.length} required field{missing.length === 1 ? '' : 's'} missing:</div>
+          <ul className="list-disc list-inside mt-1.5 space-y-0.5 text-stone-300">
+            {missing.map((f) => (
+              <li key={f}>{f.replace(/_/g, ' ')}</li>
+            ))}
+          </ul>
+          <div className="text-xs text-stone-500 mt-2">Step back through the wizard to complete these.</div>
+        </div>
       )}
-      {missingCompliance && (
+      {baseReady && missingCompliance && (
         <div className="text-sm text-amber-300">
           ⚠ Compliance acknowledgments required before strategy generation. Return to the Compliance step to complete the universal gates.
         </div>
