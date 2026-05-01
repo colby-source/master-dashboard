@@ -303,6 +303,15 @@ class CatalogService {
   }
 
   private upsertBatch(source: CatalogSource, items: NormalizedItem[]): void {
+    // Snapshot the prior state for drift detection BEFORE wiping.
+    const priorRows = queryAll(
+      `SELECT id, total_landed_cost, msrp_usd, requires_compliance_review, moq
+       FROM bmn_catalog WHERE catalog_source = ?`,
+      [source],
+    ) as Array<{ id: string; total_landed_cost: number | null; msrp_usd: number | null; requires_compliance_review: number; moq: number | null }>;
+    const priorById = new Map(priorRows.map((r) => [r.id, r]));
+    const newIds = new Set(items.map((i) => computeId(i)));
+
     // Wipe existing rows for this source so deletions in PLDS propagate.
     runSql(`DELETE FROM bmn_catalog WHERE catalog_source = ?`, [source]);
     const now = new Date().toISOString();
@@ -340,7 +349,116 @@ class CatalogService {
           now,
         ],
       );
+
+      // Drift events vs. priorById
+      const prior = priorById.get(id);
+      if (!prior) {
+        this.recordDrift(id, source, 'added', null, { product_name: item.productName, msrp_usd: item.msrpUsd });
+      } else {
+        if ((prior.total_landed_cost ?? null) !== (item.totalLandedCost ?? null)) {
+          this.recordDrift(id, source, 'price_changed', { total_landed_cost: prior.total_landed_cost }, { total_landed_cost: item.totalLandedCost });
+        }
+        if ((prior.msrp_usd ?? null) !== (item.msrpUsd ?? null)) {
+          this.recordDrift(id, source, 'msrp_changed', { msrp_usd: prior.msrp_usd }, { msrp_usd: item.msrpUsd });
+        }
+        const priorCompliance = prior.requires_compliance_review === 1;
+        if (priorCompliance !== item.requiresComplianceReview) {
+          this.recordDrift(id, source, 'compliance_flag_changed', { requires_compliance_review: priorCompliance }, { requires_compliance_review: item.requiresComplianceReview });
+        }
+        if ((prior.moq ?? null) !== (item.moq ?? null)) {
+          this.recordDrift(id, source, 'metadata_changed', { moq: prior.moq }, { moq: item.moq });
+        }
+      }
     }
+    // Removals
+    for (const [id] of priorById) {
+      if (!newIds.has(id)) {
+        this.recordDrift(id, source, 'removed', { existed: true }, null);
+      }
+    }
+  }
+
+  private recordDrift(
+    catalogItemId: string,
+    source: CatalogSource,
+    changeType: 'added' | 'removed' | 'price_changed' | 'msrp_changed' | 'compliance_flag_changed' | 'metadata_changed',
+    before: Record<string, unknown> | null,
+    after: Record<string, unknown> | null,
+  ): void {
+    try {
+      runSql(
+        `INSERT INTO bmn_catalog_drift_events (id, catalog_item_id, catalog_source, change_type, before_value, after_value, detected_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          `lpcd_${crypto.randomBytes(8).toString('hex')}`,
+          catalogItemId,
+          source,
+          changeType,
+          before ? JSON.stringify(before) : null,
+          after ? JSON.stringify(after) : null,
+          new Date().toISOString(),
+        ],
+      );
+    } catch (err) {
+      log.warn(`[catalog] drift record failed for ${catalogItemId}: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
+  /**
+   * Returns recent drift events. Optionally filter to unacknowledged only.
+   * Joins launchpad_brand_skus so callers can see which brands picked the
+   * affected items.
+   */
+  driftReport(opts?: { since?: string; unackedOnly?: boolean; limit?: number }): Array<{
+    id: string;
+    catalog_item_id: string;
+    catalog_source: string;
+    change_type: string;
+    before_value: string | null;
+    after_value: string | null;
+    detected_at: string;
+    affected_brand_ids: string[];
+  }> {
+    const since = opts?.since ?? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const limit = opts?.limit ?? 200;
+    const where: string[] = [`detected_at >= ?`];
+    const params: unknown[] = [since];
+    if (opts?.unackedOnly) where.push(`acknowledged_at IS NULL`);
+
+    const events = queryAll(
+      `SELECT id, catalog_item_id, catalog_source, change_type, before_value, after_value, detected_at
+       FROM bmn_catalog_drift_events
+       WHERE ${where.join(' AND ')}
+       ORDER BY detected_at DESC
+       LIMIT ?`,
+      [...params, limit],
+    ) as Array<{ id: string; catalog_item_id: string; catalog_source: string; change_type: string; before_value: string | null; after_value: string | null; detected_at: string }>;
+
+    if (events.length === 0) return [];
+
+    // Join to brand_skus so each event lists affected brand_ids.
+    const ids = events.map((e) => e.catalog_item_id);
+    const placeholders = ids.map(() => '?').join(',');
+    const skuRows = queryAll(
+      `SELECT brand_id, catalog_item_id FROM launchpad_brand_skus WHERE catalog_item_id IN (${placeholders})`,
+      ids,
+    ) as Array<{ brand_id: string; catalog_item_id: string }>;
+    const itemToBrands = new Map<string, string[]>();
+    for (const r of skuRows) {
+      const arr = itemToBrands.get(r.catalog_item_id) ?? [];
+      arr.push(r.brand_id);
+      itemToBrands.set(r.catalog_item_id, arr);
+    }
+
+    return events.map((e) => ({ ...e, affected_brand_ids: itemToBrands.get(e.catalog_item_id) ?? [] }));
+  }
+
+  acknowledgeDrift(driftId: string, actorEmail: string): void {
+    runSql(
+      `UPDATE bmn_catalog_drift_events SET acknowledged_at = ?, acknowledged_by = ? WHERE id = ?`,
+      [new Date().toISOString(), actorEmail, driftId],
+    );
+    saveDb();
   }
 
   // ── Read API ─────────────────────────────────────────────

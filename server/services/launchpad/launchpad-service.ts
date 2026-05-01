@@ -17,6 +17,7 @@ import { queryAll, queryOne, runSql, saveDb } from '../../db';
 import { magicLinkService } from './magic-link-service';
 import { googleDriveService } from './google-drive-service';
 import { claudeStrategyService } from './claude-strategy-service';
+import { costGuardService } from './cost-guard-service';
 import { createLogger } from '../../utils/logger';
 import type {
   BrandIntake,
@@ -99,7 +100,7 @@ export async function createBrand(input: CreateBrandInput, adminEmail: string): 
 
   logStatus(id, null, 'invited', 'admin', adminEmail, 'Brand created');
 
-  const link = magicLinkService.createMagicLink({ brandId: id });
+  const link = magicLinkService.createMagicLink({ brandId: id, issuedByEmail: adminEmail });
 
   // Try to create Drive folder if available — non-blocking
   if (googleDriveService.available) {
@@ -252,6 +253,9 @@ export async function generateStrategy(brandId: string): Promise<{ ok: boolean; 
     throw new Error(`Cannot generate strategy — intake incomplete (missing: ${missing.join(', ')})`);
   }
 
+  // Cost guard — daily cap per brand
+  costGuardService.assertWithinDailyCap(brandId);
+
   // ── Acquire lock ──
   const inFlightRow = queryOne(
     `SELECT strategy_generation_started_at FROM launchpad_brands WHERE id = ?`,
@@ -277,12 +281,23 @@ export async function generateStrategy(brandId: string): Promise<{ ok: boolean; 
 
   log.info(`[Launchpad] Generating strategy for ${brand.brandName} (${brandId})`);
 
+  const generationStartMs = Date.now();
   try {
     const result = await withTimeout(
       claudeStrategyService.generateStrategyPackage(brand.intake as BrandIntake),
       STRATEGY_GENERATION_TIMEOUT_MS,
       'Strategy generation',
     );
+
+    // Audit + alert. Token counts aren't currently surfaced by the strategy
+    // service; cost-guard falls back to its conservative per-package estimate.
+    costGuardService.recordGeneration(brandId, {
+      status: result.package ? (result.partial ? 'partial' : 'ok') : 'error',
+      modulesOk: result.package && !result.partial ? 7 : 7 - (result.errors?.length ?? 0),
+      modulesFailed: result.errors?.length ?? 0,
+      durationMs: Date.now() - generationStartMs,
+      errorSummary: result.errors ? result.errors.map((e) => `m${e.module}: ${e.error}`).join('; ').slice(0, 500) : undefined,
+    });
 
     if (result.package) {
       runSql(
@@ -310,6 +325,12 @@ export async function generateStrategy(brandId: string): Promise<{ ok: boolean; 
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     log.error(`[Launchpad] Strategy generation failed for ${brandId}: ${msg}`);
+    costGuardService.recordGeneration(brandId, {
+      status: 'error',
+      modulesFailed: 7,
+      durationMs: Date.now() - generationStartMs,
+      errorSummary: msg.slice(0, 500),
+    });
     runSql(
       `UPDATE launchpad_brands SET strategy_generation_error = ?, strategy_generation_started_at = NULL, updated_at = ? WHERE id = ?`,
       [msg, new Date().toISOString(), brandId],

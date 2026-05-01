@@ -16,6 +16,9 @@ import { contentProcessorService } from '../services/launchpad/content-processor
 import { deliverablesService } from '../services/launchpad/deliverables-service';
 import { brandIdentityService } from '../services/launchpad/brand-identity-service';
 import { catalogService } from '../services/launchpad/catalog-service';
+import { telemetryService } from '../services/launchpad/telemetry-service';
+import { costGuardService } from '../services/launchpad/cost-guard-service';
+import { qualityFeedbackService, type Checkpoint, type MetricSource } from '../services/launchpad/quality-feedback-service';
 import type { CatalogSource } from '../services/launchpad/types';
 import { createLogger } from '../utils/logger';
 import type { LaunchpadStatus } from '../services/launchpad/types';
@@ -82,7 +85,8 @@ router.post('/brands/:id/magic-link', async (req, res) => {
   const brand = launchpadService.getBrandById(req.params.id);
   if (!brand) return res.status(404).json({ error: 'Brand not found' });
 
-  const link = magicLinkService.createMagicLink({ brandId: req.params.id });
+  const issuedByEmail = (req.headers['x-admin-email'] as string) || undefined;
+  const link = magicLinkService.createMagicLink({ brandId: req.params.id, issuedByEmail });
 
   if (req.body?.send !== false) {
     try {
@@ -100,6 +104,11 @@ router.post('/brands/:id/magic-link', async (req, res) => {
   }
 
   res.json(link);
+});
+
+// GET /api/launchpad/brands/:id/links — issue history per brand (operator audit)
+router.get('/brands/:id/links', (req, res) => {
+  res.json({ links: magicLinkService.listLinksForBrand(req.params.id) });
 });
 
 // POST /api/launchpad/brands/:id/generate-strategy — manually trigger generation
@@ -356,6 +365,90 @@ router.post('/catalog/refresh', async (req, res) => {
     log.error(`[Launchpad] Catalog refresh failed: ${msg}`);
     res.status(500).json({ error: msg });
   }
+});
+
+// ── Funnel telemetry (admin) ───────────────────────────────
+
+// GET /api/launchpad/telemetry/funnel?since=ISO&until=ISO
+router.get('/telemetry/funnel', (req, res) => {
+  const since = req.query.since as string | undefined;
+  const until = req.query.until as string | undefined;
+  res.json({ funnel: telemetryService.funnelReport({ since, until }) });
+});
+
+// GET /api/launchpad/telemetry/stale?days=7 — brands not progressing
+router.get('/telemetry/stale', (req, res) => {
+  const days = req.query.days ? parseInt(req.query.days as string) : 7;
+  const stale = telemetryService.staleBrands(days * 24 * 60 * 60 * 1000);
+  res.json({ stale, count: stale.length });
+});
+
+// ── Cost guard (admin) ─────────────────────────────────────
+
+// GET /api/launchpad/cost/spend — 24h spend total + per-brand breakdown
+router.get('/cost/spend', (req, res) => {
+  const since = req.query.since as string | undefined;
+  res.json({
+    spend_usd_24h: costGuardService.trailingSpendUsd24h(),
+    breakdown: costGuardService.spendBreakdown({ since }),
+  });
+});
+
+// ── PLDS catalog drift (admin) ─────────────────────────────
+
+// GET /api/launchpad/catalog/drift?since=ISO&unacked=true
+router.get('/catalog/drift', (req, res) => {
+  const events = catalogService.driftReport({
+    since: req.query.since as string | undefined,
+    unackedOnly: req.query.unacked === 'true',
+    limit: req.query.limit ? Math.min(500, parseInt(req.query.limit as string)) : 200,
+  });
+  res.json({ events, count: events.length });
+});
+
+// POST /api/launchpad/catalog/drift/:id/ack
+router.post('/catalog/drift/:id/ack', (req, res) => {
+  const actor = (req.headers['x-admin-email'] as string) || 'admin@brandmenow.co';
+  catalogService.acknowledgeDrift(req.params.id, actor);
+  res.json({ ok: true });
+});
+
+// ── Quality feedback (admin) ───────────────────────────────
+
+// POST /api/launchpad/brands/:id/metrics — record post-launch metric snapshot
+router.post('/brands/:id/metrics', (req, res) => {
+  try {
+    const body = req.body || {};
+    if (!body.checkpoint || !['day_30', 'day_60', 'day_90'].includes(body.checkpoint)) {
+      return res.status(400).json({ error: 'checkpoint must be day_30 | day_60 | day_90' });
+    }
+    const result = qualityFeedbackService.recordMetric({
+      brandId: req.params.id,
+      checkpoint: body.checkpoint as Checkpoint,
+      source: (body.source as MetricSource) || 'manual',
+      revenueUsd: body.revenueUsd,
+      ordersCount: body.ordersCount,
+      emailSubscribers: body.emailSubscribers,
+      followersPersonalHandle: body.followersPersonalHandle,
+      followersBrandHandle: body.followersBrandHandle,
+      postsPublished: body.postsPublished,
+      replyRatePct: body.replyRatePct,
+      notes: body.notes,
+    });
+    res.status(201).json(result);
+  } catch (err: unknown) {
+    res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// GET /api/launchpad/brands/:id/metrics — full metric + score history
+router.get('/brands/:id/metrics', (req, res) => {
+  res.json({ metrics: qualityFeedbackService.listMetrics(req.params.id) });
+});
+
+// GET /api/launchpad/quality/cohorts — month-over-month avg composite score
+router.get('/quality/cohorts', (_req, res) => {
+  res.json({ cohorts: qualityFeedbackService.cohortScores() });
 });
 
 export default router;

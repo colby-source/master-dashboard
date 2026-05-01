@@ -22,6 +22,32 @@ import { runSql, saveDb } from '../db';
 import { config } from '../config';
 import { createLogger } from '../utils/logger';
 import { tokenRateLimit } from '../middleware/launchpad-rate-limit';
+import { telemetryService, type StepId } from '../services/launchpad/telemetry-service';
+
+// Map intake field name → wizard step it lives on. Used to infer which step
+// the creator was on from a partial patch, so we can record drop-off events
+// without the client needing to send step metadata explicitly.
+const FIELD_TO_STEP: Record<string, StepId> = {
+  brand_name: 'identity', founder_name: 'identity', founder_handle: 'identity',
+  niche: 'identity', product_categories: 'identity',
+  founder_story: 'story', origin_moment: 'story', signature_belief: 'story',
+  primary_icp: 'audience',
+  top_3_competitors: 'competition', category_status: 'competition',
+  compliance_acks: 'compliance',
+  primary_platform: 'channels', secondary_platforms: 'channels', posting_capacity: 'channels',
+  launch_date: 'channels', primary_goal: 'channels',
+  monetization_model: 'channels', price_point_range: 'channels',
+  brand_voice_dos: 'voice', brand_voice_donts: 'voice', off_limits_topics: 'voice',
+  visual_style_notes: 'voice', legal_constraints: 'voice',
+};
+
+function inferStep(patch: Record<string, unknown>): StepId | null {
+  for (const k of Object.keys(patch)) {
+    const step = FIELD_TO_STEP[k];
+    if (step) return step;
+  }
+  return null;
+}
 
 const log = createLogger('launchpad-public-route');
 const router = Router();
@@ -82,9 +108,12 @@ router.post('/intake/:token', (req, res) => {
   const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
 
+  const patch = req.body || {};
   try {
-    launchpadService.saveIntake(brand.id, req.body || {});
+    launchpadService.saveIntake(brand.id, patch);
     const updated = launchpadService.getBrandById(brand.id);
+    const step = inferStep(patch);
+    if (step) telemetryService.record(brand.id, step, 'patch_saved', { field_count: Object.keys(patch).length });
     res.json({
       ok: true,
       status: updated?.status,
@@ -103,6 +132,7 @@ router.post('/generate-strategy/:token', async (req, res) => {
 
   try {
     const result = await launchpadService.generateStrategy(brand.id);
+    if (result.ok) telemetryService.record(brand.id, 'review', 'completed', { partial: result.partial });
     res.json(result);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -193,6 +223,7 @@ router.post('/submit/:token', (req, res) => {
 
   try {
     launchpadService.submitForReview(brand.id);
+    telemetryService.record(brand.id, 'submit', 'completed');
     res.json({ ok: true });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);

@@ -5,7 +5,7 @@
  */
 
 import crypto from 'crypto';
-import { queryOne, runSql, saveDb } from '../../db';
+import { queryAll, queryOne, runSql, saveDb } from '../../db';
 import { emailService } from '../email-service';
 import { config } from '../../config';
 import { createLogger } from '../../utils/logger';
@@ -38,6 +38,8 @@ function generateToken(): string {
 export interface CreateMagicLinkInput {
   brandId: string;
   ttlDays?: number;
+  /** Email of the operator issuing this link. Recorded on the row for audit. */
+  issuedByEmail?: string;
 }
 
 export interface MagicLinkInfo {
@@ -58,8 +60,8 @@ export function createMagicLink(input: CreateMagicLinkInput): MagicLinkInfo {
   const expiresAt = new Date(Date.now() + ttl * 24 * 60 * 60 * 1000).toISOString();
 
   runSql(
-    `INSERT INTO launchpad_magic_links (id, brand_id, token, expires_at) VALUES (?, ?, ?, ?)`,
-    [id, input.brandId, token, expiresAt],
+    `INSERT INTO launchpad_magic_links (id, brand_id, token, expires_at, issued_by_email) VALUES (?, ?, ?, ?, ?)`,
+    [id, input.brandId, token, expiresAt, input.issuedByEmail ?? null],
   );
   saveDb();
 
@@ -204,9 +206,44 @@ export async function sendMagicLinkEmail(params: {
   log.info(`[MagicLink] Sent to ${founderEmail} for brand ${brandName}`);
 }
 
+/**
+ * Returns every magic link ever issued to a brand, with redemption summary.
+ * Used in the admin UI so an operator can see who issued what and whether
+ * stale links should be revoked.
+ */
+export function listLinksForBrand(brandId: string): Array<{
+  id: string;
+  issued_by_email: string | null;
+  expires_at: string;
+  revoked_at: string | null;
+  first_used_at: string | null;
+  last_used_at: string | null;
+  use_count: number;
+  created_at: string;
+}> {
+  return queryAll(
+    `SELECT id, issued_by_email, expires_at, revoked_at,
+            first_used_at, last_used_at, use_count, created_at
+     FROM launchpad_magic_links
+     WHERE brand_id = ?
+     ORDER BY created_at DESC`,
+    [brandId],
+  ) as Array<{
+    id: string;
+    issued_by_email: string | null;
+    expires_at: string;
+    revoked_at: string | null;
+    first_used_at: string | null;
+    last_used_at: string | null;
+    use_count: number;
+    created_at: string;
+  }>;
+}
+
 export const magicLinkService = {
   createMagicLink,
   verifyToken,
   revokeMagicLink,
   sendMagicLinkEmail,
+  listLinksForBrand,
 };

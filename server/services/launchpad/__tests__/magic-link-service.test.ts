@@ -82,8 +82,15 @@ describe('magic-link-service', () => {
       expect(runSql).toHaveBeenCalledTimes(1);
       const [sql, params] = runSql.mock.calls[0];
       expect(sql).toMatch(/INSERT INTO launchpad_magic_links/i);
-      expect(params).toHaveLength(4); // id, brand_id, token, expires_at
+      expect(params).toHaveLength(5); // id, brand_id, token, expires_at, issued_by_email
       expect(params[1]).toBe('lpb_test1');
+      expect(params[4]).toBeNull(); // issued_by_email defaults to null when not provided
+    });
+
+    it('records issued_by_email when supplied', () => {
+      createMagicLink({ brandId: 'lpb_test1', issuedByEmail: 'ryan@brandmenow.co' });
+      const [, params] = runSql.mock.calls[0];
+      expect(params[4]).toBe('ryan@brandmenow.co');
     });
 
     it('produces unique tokens across calls (no PRNG collision)', () => {
