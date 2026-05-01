@@ -21,9 +21,16 @@ import type { CatalogSource, SkuRole } from '../services/launchpad/types';
 import { runSql, saveDb } from '../db';
 import { config } from '../config';
 import { createLogger } from '../utils/logger';
+import { tokenRateLimit } from '../middleware/launchpad-rate-limit';
 
 const log = createLogger('launchpad-public-route');
 const router = Router();
+
+// Per-token upload throttles. The token is the security boundary; these
+// caps just blunt the impact of a leaked token.
+const assetUploadLimiter = tokenRateLimit({ windowMs: 15 * 60 * 1000, max: 50, label: 'asset-upload' });
+const videoUploadLimiter = tokenRateLimit({ windowMs: 60 * 60 * 1000, max: 10, label: 'video-upload' });
+const articleUploadLimiter = tokenRateLimit({ windowMs: 15 * 60 * 1000, max: 30, label: 'article-upload' });
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -35,15 +42,18 @@ const videoUpload = multer({
   limits: { fileSize: config.launchpad.maxVideoSizeMb * 1024 * 1024 },
 });
 
-function resolveBrand(token: string) {
-  const brand = launchpadService.getBrandByMagicLink(token);
+function resolveBrand(token: string, req?: { ip?: string; headers?: Record<string, string | string[] | undefined> }) {
+  const ip = req?.ip;
+  const ua = req?.headers?.['user-agent'];
+  const userAgent = Array.isArray(ua) ? ua[0] : ua;
+  const brand = launchpadService.getBrandByMagicLink(token, { ip, userAgent });
   if (!brand) return null;
   return brand;
 }
 
 // GET /api/launchpad-public/session/:token — verify token + return brand state
 router.get('/session/:token', (req, res) => {
-  const brand = resolveBrand(req.params.token);
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
 
   // Surface which required intake fields are missing so the client can render
@@ -69,7 +79,7 @@ router.get('/session/:token', (req, res) => {
 
 // POST /api/launchpad-public/intake/:token — save (partial) intake
 router.post('/intake/:token', (req, res) => {
-  const brand = resolveBrand(req.params.token);
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
 
   try {
@@ -88,7 +98,7 @@ router.post('/intake/:token', (req, res) => {
 
 // POST /api/launchpad-public/generate-strategy/:token — kick off generation
 router.post('/generate-strategy/:token', async (req, res) => {
-  const brand = resolveBrand(req.params.token);
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
 
   try {
@@ -103,7 +113,7 @@ router.post('/generate-strategy/:token', async (req, res) => {
 
 // PATCH /api/launchpad-public/strategy/:token/module/:n — client edits a module
 router.patch('/strategy/:token/module/:n', (req, res) => {
-  const brand = resolveBrand(req.params.token);
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
 
   try {
@@ -126,8 +136,8 @@ router.patch('/strategy/:token/module/:n', (req, res) => {
 });
 
 // POST /api/launchpad-public/upload/:token — multipart file upload
-router.post('/upload/:token', upload.single('file'), async (req, res) => {
-  const brand = resolveBrand(req.params.token);
+router.post('/upload/:token', assetUploadLimiter, upload.single('file'), async (req, res) => {
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
 
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
@@ -160,21 +170,21 @@ router.post('/upload/:token', upload.single('file'), async (req, res) => {
 
 // GET /api/launchpad-public/assets/:token — list uploaded assets
 router.get('/assets/:token', (req, res) => {
-  const brand = resolveBrand(req.params.token);
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
   res.json({ assets: launchpadService.listAssets(brand.id) });
 });
 
 // GET /api/launchpad-public/reviews/:token — list admin's per-module feedback
 router.get('/reviews/:token', (req, res) => {
-  const brand = resolveBrand(req.params.token);
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
   res.json({ reviews: launchpadService.listModuleReviews(brand.id) });
 });
 
 // POST /api/launchpad-public/submit/:token — final submission for review
 router.post('/submit/:token', (req, res) => {
-  const brand = resolveBrand(req.params.token);
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
 
   if (!brand.strategy) {
@@ -194,7 +204,7 @@ router.post('/submit/:token', (req, res) => {
 
 // POST /api/launchpad-public/content/generate/:token — fire the full pipeline
 router.post('/content/generate/:token', async (req, res) => {
-  const brand = resolveBrand(req.params.token);
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
   if (!brand.intake || !brand.strategy) {
     return res.status(400).json({ error: 'Strategy must be generated before running content pipeline' });
@@ -216,8 +226,8 @@ router.post('/content/generate/:token', async (req, res) => {
 });
 
 // POST /api/launchpad-public/content/upload-article/:token — upload text long-form
-router.post('/content/upload-article/:token', (req, res) => {
-  const brand = resolveBrand(req.params.token);
+router.post('/content/upload-article/:token', articleUploadLimiter, (req, res) => {
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
 
   const { title, body, pillarNumber } = req.body || {};
@@ -235,14 +245,14 @@ router.post('/content/upload-article/:token', (req, res) => {
 
 // GET /api/launchpad-public/content/sources/:token — list long-form sources
 router.get('/content/sources/:token', (req, res) => {
-  const brand = resolveBrand(req.params.token);
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
   res.json({ sources: contentProcessorService.listLongformSources(brand.id) });
 });
 
 // GET /api/launchpad-public/content/clips/:token — list clips with filters
 router.get('/content/clips/:token', (req, res) => {
-  const brand = resolveBrand(req.params.token);
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
 
   const filter = {
@@ -255,7 +265,7 @@ router.get('/content/clips/:token', (req, res) => {
 
 // POST /api/launchpad-public/content/clips/:token/:clipId/approve
 router.post('/content/clips/:token/:clipId/approve', (req, res) => {
-  const brand = resolveBrand(req.params.token);
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
 
   const clip = contentProcessorService.getClip(req.params.clipId);
@@ -267,7 +277,7 @@ router.post('/content/clips/:token/:clipId/approve', (req, res) => {
 
 // POST /api/launchpad-public/content/clips/:token/:clipId/reject
 router.post('/content/clips/:token/:clipId/reject', (req, res) => {
-  const brand = resolveBrand(req.params.token);
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
 
   const clip = contentProcessorService.getClip(req.params.clipId);
@@ -280,7 +290,7 @@ router.post('/content/clips/:token/:clipId/reject', (req, res) => {
 
 // PATCH /api/launchpad-public/content/clips/:token/:clipId/day
 router.patch('/content/clips/:token/:clipId/day', (req, res) => {
-  const brand = resolveBrand(req.params.token);
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
 
   const clip = contentProcessorService.getClip(req.params.clipId);
@@ -298,7 +308,7 @@ router.patch('/content/clips/:token/:clipId/day', (req, res) => {
 
 // POST /api/launchpad-public/content/clips/:token/:clipId/regenerate
 router.post('/content/clips/:token/:clipId/regenerate', async (req, res) => {
-  const brand = resolveBrand(req.params.token);
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
   if (!brand.intake || !brand.strategy) return res.status(400).json({ error: 'Strategy required' });
 
@@ -339,8 +349,8 @@ router.post('/content/clips/:token/:clipId/regenerate', async (req, res) => {
 });
 
 // POST /api/launchpad-public/content/upload-video/:token — multipart video upload + processing
-router.post('/content/upload-video/:token', videoUpload.single('file'), async (req, res) => {
-  const brand = resolveBrand(req.params.token);
+router.post('/content/upload-video/:token', videoUploadLimiter, videoUpload.single('file'), async (req, res) => {
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
   if (!brand.intake || !brand.strategy) return res.status(400).json({ error: 'Strategy must be generated first' });
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
@@ -382,14 +392,14 @@ router.post('/content/upload-video/:token', videoUpload.single('file'), async (r
 
 // GET /api/launchpad-public/identity/:token — current brand identity (or null)
 router.get('/identity/:token', (req, res) => {
-  const brand = resolveBrand(req.params.token);
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
   res.json({ identity: brandIdentityService.getByBrandId(brand.id) });
 });
 
 // PATCH /api/launchpad-public/identity/:token — patch brand identity fields
 router.patch('/identity/:token', (req, res) => {
-  const brand = resolveBrand(req.params.token);
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
   try {
     const updated = brandIdentityService.upsert(brand.id, req.body || {});
@@ -404,7 +414,7 @@ router.patch('/identity/:token', (req, res) => {
 
 // GET /api/launchpad-public/catalog/:token — filterable list
 router.get('/catalog/:token', (req, res) => {
-  const brand = resolveBrand(req.params.token);
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
 
   const items = catalogService.list({
@@ -424,7 +434,7 @@ router.get('/catalog/:token', (req, res) => {
 
 // GET /api/launchpad-public/catalog/:token/categories — distinct categories
 router.get('/catalog/:token/categories', (req, res) => {
-  const brand = resolveBrand(req.params.token);
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
   const source = req.query.source as CatalogSource | undefined;
   res.json({ categories: catalogService.listCategories(source) });
@@ -434,14 +444,14 @@ router.get('/catalog/:token/categories', (req, res) => {
 
 // GET /api/launchpad-public/skus/:token — current selections
 router.get('/skus/:token', (req, res) => {
-  const brand = resolveBrand(req.params.token);
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
   res.json({ skus: brandIdentityService.listBrandSkus(brand.id) });
 });
 
 // PUT /api/launchpad-public/skus/:token — replace selections wholesale
 router.put('/skus/:token', (req, res) => {
-  const brand = resolveBrand(req.params.token);
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
 
   const selections = (req.body?.selections ?? []) as Array<{
@@ -469,7 +479,7 @@ router.put('/skus/:token', (req, res) => {
 
 // GET /api/launchpad-public/calendar/:token/csv — download approved calendar as CSV
 router.get('/calendar/:token/csv', (req, res) => {
-  const brand = resolveBrand(req.params.token);
+  const brand = resolveBrand(req.params.token, req);
   if (!brand) return res.status(401).json({ error: 'Invalid or expired link' });
 
   const csv = deliverablesService.exportCalendarCSV(brand.id);

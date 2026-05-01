@@ -147,11 +147,29 @@ describe('magic-link-service', () => {
       });
       const result = verifyToken(validToken);
       expect(result).toEqual({ brandId: 'lpb_x', linkId: 'mlt_x' });
-      expect(runSql).toHaveBeenCalledTimes(1);
-      const [sql] = runSql.mock.calls[0];
-      expect(sql).toMatch(/UPDATE launchpad_magic_links/i);
-      expect(sql).toMatch(/use_count = use_count \+ 1/);
+      // 2 writes: the use_count increment + the audit-log redemption row.
+      expect(runSql).toHaveBeenCalledTimes(2);
+      const [updateSql] = runSql.mock.calls[0];
+      expect(updateSql).toMatch(/UPDATE launchpad_magic_links/i);
+      expect(updateSql).toMatch(/use_count = use_count \+ 1/);
+      const [insertSql] = runSql.mock.calls[1];
+      expect(insertSql).toMatch(/INSERT INTO launchpad_magic_link_redemptions/i);
       expect(saveDb).toHaveBeenCalledTimes(1);
+    });
+
+    it('records IP and user-agent on the redemption row when ctx is provided', () => {
+      queryOne.mockReturnValueOnce({
+        id: 'mlt_x', brand_id: 'lpb_x',
+        expires_at: futureExpiry,
+        revoked_at: null,
+        first_used_at: null, use_count: 0,
+      });
+      verifyToken(validToken, { ip: '203.0.113.42', userAgent: 'TestAgent/1.0' });
+      const [sql, params] = runSql.mock.calls[1];
+      expect(sql).toMatch(/INSERT INTO launchpad_magic_link_redemptions/i);
+      // params: [id, link_id, brand_id, ip, user_agent, redeemed_at]
+      expect(params[3]).toBe('203.0.113.42');
+      expect(params[4]).toBe('TestAgent/1.0');
     });
   });
 

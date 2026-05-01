@@ -139,8 +139,8 @@ export function getBrandById(id: string): LaunchpadBrand | null {
   return row ? rowToBrand(row) : null;
 }
 
-export function getBrandByMagicLink(token: string): LaunchpadBrand | null {
-  const verified = magicLinkService.verifyToken(token);
+export function getBrandByMagicLink(token: string, ctx?: { ip?: string; userAgent?: string }): LaunchpadBrand | null {
+  const verified = magicLinkService.verifyToken(token, ctx);
   if (!verified) return null;
   return getBrandById(verified.brandId);
 }
@@ -216,6 +216,24 @@ export function missingIntakeFields(intake: Partial<BrandIntake>): string[] {
 // per-module Claude timeout (6 min) × max-modules-in-flight buffer.
 const GENERATION_LOCK_STALE_MS = 10 * 60 * 1000; // 10 minutes
 
+// Hard package-level ceiling. Protects against pathological cases where the
+// per-module AbortController fires but a downstream parse/serialize hangs.
+// Typical generation is 3-4 min; 8 min gives a safety margin without holding
+// the lock past the stale-lock window.
+const STRATEGY_GENERATION_TIMEOUT_MS = 8 * 60 * 1000;
+
+function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`${label} timed out after ${Math.round(ms / 1000)}s`));
+    }, ms);
+    p.then(
+      (v) => { clearTimeout(timer); resolve(v); },
+      (e) => { clearTimeout(timer); reject(e); },
+    );
+  });
+}
+
 /**
  * Generates the StrategyPackage by calling claude-strategy-service. Persists
  * the result and updates status. Long-running — caller should treat as async
@@ -260,7 +278,11 @@ export async function generateStrategy(brandId: string): Promise<{ ok: boolean; 
   log.info(`[Launchpad] Generating strategy for ${brand.brandName} (${brandId})`);
 
   try {
-    const result = await claudeStrategyService.generateStrategyPackage(brand.intake as BrandIntake);
+    const result = await withTimeout(
+      claudeStrategyService.generateStrategyPackage(brand.intake as BrandIntake),
+      STRATEGY_GENERATION_TIMEOUT_MS,
+      'Strategy generation',
+    );
 
     if (result.package) {
       runSql(

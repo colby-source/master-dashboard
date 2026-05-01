@@ -68,11 +68,21 @@ export function createMagicLink(input: CreateMagicLinkInput): MagicLinkInfo {
   return { id, token, url, expiresAt };
 }
 
+export interface VerifyContext {
+  /** Client IP from req.ip / X-Forwarded-For. */
+  ip?: string;
+  /** User-Agent header. */
+  userAgent?: string;
+}
+
 /**
  * Verifies a token. Returns the brand_id if valid, null otherwise.
  * Updates last_used_at and increments use_count on every redeem.
+ *
+ * Pass `ctx` to record a row in launchpad_magic_link_redemptions. Routes
+ * should always pass ctx so support can audit suspicious access patterns.
  */
-export function verifyToken(token: string): { brandId: string; linkId: string } | null {
+export function verifyToken(token: string, ctx?: VerifyContext): { brandId: string; linkId: string } | null {
   if (!token || typeof token !== 'string' || token.length !== TOKEN_BYTES * 2) {
     return null;
   }
@@ -102,6 +112,27 @@ export function verifyToken(token: string): { brandId: string; linkId: string } 
      WHERE id = ?`,
     [now, now, link.id],
   );
+
+  // Audit trail. Best-effort — never let a logging failure deny access.
+  // The redemptions table is created by migration 027; missing-table errors
+  // (e.g., during schema-rollback testing) are swallowed with a warn.
+  try {
+    runSql(
+      `INSERT INTO launchpad_magic_link_redemptions (id, link_id, brand_id, ip, user_agent, redeemed_at)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        generateId('mlr'),
+        link.id,
+        link.brand_id,
+        ctx?.ip ?? null,
+        ctx?.userAgent ? ctx.userAgent.slice(0, 500) : null,
+        now,
+      ],
+    );
+  } catch (err) {
+    log.warn(`[MagicLink] Redemption audit-log insert failed (non-fatal): ${err instanceof Error ? err.message : String(err)}`);
+  }
+
   saveDb();
 
   return { brandId: link.brand_id, linkId: link.id };
