@@ -20,17 +20,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { launchpadPublic } from '../../lib/api/launchpad';
 import type { BmnCatalogItemDto, BrandSkuDto } from '../../lib/api/launchpad';
-
-type IntakeData = Record<string, unknown> & {
-  compliance_acks?: Record<string, string>;
-  off_limits_topics?: string[];
-  legal_constraints?: string[];
-};
+import type { IntakeData, IntakePatch } from './_types';
 
 interface Props {
   token: string;
   intake: IntakeData;
-  update: (patch: Partial<IntakeData>) => void;
+  update: (patch: IntakePatch) => void;
   onComplete?: () => void;
 }
 
@@ -59,21 +54,24 @@ export function StepCompliance({ token, intake, update, onComplete }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setLoading(true);
+    let cancelled = false;
     launchpadPublic
       .getSkus(token)
       .then(async (r) => {
-        setSkus(r.skus);
+        if (cancelled) return;
         // Hydrate the catalog for the picked SKU IDs only (one query per source
         // would be cleaner; for the typical 3-5 picks a getById-by-id sweep is
         // a non-issue. We just pull the catalog with high limit and filter.)
         const cat = await launchpadPublic.getCatalog(token, { limit: 500 });
+        if (cancelled) return;
         const map = new Map<string, BmnCatalogItemDto>();
         for (const item of cat.items) map.set(item.id, item);
+        setSkus(r.skus);
         setCatalog(map);
       })
-      .catch((err) => setError(String(err)))
-      .finally(() => setLoading(false));
+      .catch((err) => { if (!cancelled) setError(String(err)); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [token]);
 
   const acks: Record<string, string> = intake.compliance_acks || {};

@@ -17,14 +17,11 @@
 
 import fs from 'fs';
 import path from 'path';
-import os from 'os';
-import { Readable } from 'stream';
-import { spawn } from 'child_process';
 import OpenAI from 'openai';
 import ffmpegPath from 'ffmpeg-static';
 import ffmpeg from 'fluent-ffmpeg';
 import crypto from 'crypto';
-import { runSql, queryOne, saveDb } from '../../db';
+import { runSql, saveDb } from '../../db';
 import { config } from '../../config';
 import { claudeService } from '../claude-service';
 import { googleDriveService } from './google-drive-service';

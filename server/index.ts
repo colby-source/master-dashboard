@@ -7,7 +7,7 @@ import { getDb } from './db';
 import { runMigrations } from './db-migrate';
 import { wsServer } from './websocket/ws-server';
 import { syncManager } from './sync/sync-manager';
-import { apiKeyAuth } from './middleware/auth';
+import { apiKeyAuth, assertAdminAuthConfigured } from './middleware/auth';
 import { notFoundHandler } from './middleware/not-found';
 import { errorHandler } from './middleware/error-handler';
 
@@ -62,6 +62,10 @@ async function main() {
 
   // Run pending database migrations
   runMigrations();
+
+  // Fail-closed: in production, refuse to boot if admin auth is misconfigured.
+  // In dev, this only validates the key length when one is set.
+  assertAdminAuthConfigured();
 
   // Boot the BMN PLDS catalog cache. Initial sync is fire-and-forget so it
   // never blocks server startup; failures degrade gracefully (empty catalog).

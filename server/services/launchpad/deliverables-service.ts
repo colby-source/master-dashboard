@@ -16,7 +16,7 @@ import { emailService } from '../email-service';
 import { config } from '../../config';
 import { contentProcessorService } from './content-processor-service';
 import { createLogger } from '../../utils/logger';
-import type { LaunchpadBrand, StrategyPackage, Clip } from './types';
+import type { StrategyPackage, Clip } from './types';
 
 const log = createLogger('deliverables');
 

@@ -1,7 +1,7 @@
 /**
  * Shared form primitives for Launchpad wizard steps. Pulled out of
- * LaunchpadPublicPage.tsx so multi-file wizard steps (StepProducts,
- * StepCompliance, future Phase 3 steps) reuse the same look and behavior.
+ * LaunchpadPublicPage.tsx so multi-file wizard steps reuse the same look
+ * and behavior. Add new shared inputs here, never duplicate them in step files.
  */
 
 import { useState } from 'react';
@@ -19,6 +19,15 @@ export function Field({ label, hint, children }: { label: string; hint?: string;
 export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
+      {...props}
+      className={`w-full bg-stone-900 border border-stone-800 focus:border-cyan-500 rounded px-3 py-2.5 text-stone-100 placeholder-stone-600 outline-none transition ${props.className || ''}`}
+    />
+  );
+}
+
+export function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <textarea
       {...props}
       className={`w-full bg-stone-900 border border-stone-800 focus:border-cyan-500 rounded px-3 py-2.5 text-stone-100 placeholder-stone-600 outline-none transition ${props.className || ''}`}
     />
@@ -62,3 +71,6 @@ export function Chips({ values, onChange, placeholder }: { values: string[]; onC
   );
 }
 
+export function FullScreen({ children }: { children: React.ReactNode }) {
+  return <div className="min-h-screen bg-[#0D0D0D] flex items-center justify-center px-6">{children}</div>;
+}
