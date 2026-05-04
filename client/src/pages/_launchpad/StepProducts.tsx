@@ -23,7 +23,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { launchpadPublic } from '../../lib/api/launchpad';
 import type { BmnCatalogItemDto, BrandSkuDto, CatalogSource } from '../../lib/api/launchpad';
-import { Field, Input, Select } from './_primitives';
+import { Field, Input, Select, StepHeader, Panel, PrimaryBtn } from './_primitives';
 import { fmtUsd, fmtPct } from './_format';
 
 export type SkuRole = 'hero' | 'support' | 'bundle';
@@ -195,17 +195,16 @@ export function StepProducts({ token, onComplete }: { token: string; onComplete?
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-2xl font-semibold">Pick your products</h2>
-          <p className="text-stone-400 mt-1.5">
-            Choose 1 hero SKU + 1-2 supporting SKUs from the BMN catalog. Margin, MOQ, and compliance flags are shown for every option — pick economics that work.
-          </p>
-        </div>
+        <StepHeader
+          step="05 / Products"
+          title="Pick your products"
+          subtitle="Choose 1 hero SKU + 1–2 supporting SKUs from the BMN catalog. Margin, MOQ, and compliance flags shown — pick economics that work."
+        />
         {savedSkus.length > 0 && (
           <button
             type="button"
             onClick={() => setMode('review')}
-            className="shrink-0 text-xs text-stone-400 hover:text-stone-200 underline mt-2"
+            className="shrink-0 text-xs text-white/40 hover:text-white underline mt-2 transition-colors"
           >
             Back to review
           </button>
@@ -234,18 +233,21 @@ export function StepProducts({ token, onComplete }: { token: string; onComplete?
       </div>
 
       {/* Selection summary */}
-      <div className="border border-stone-800 rounded p-4 bg-stone-950 grid grid-cols-1 sm:grid-cols-4 gap-3 text-sm">
+      <Panel className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-sm">
         <SummaryCell label="Hero" value={heroPicked ? itemLabel(items, heroPicked.catalogItemId) : 'Not picked'} highlight={!heroPicked} />
         <SummaryCell label="Support" value={`${supportPicked.length} picked`} />
         <SummaryCell label="Bundle" value={`${bundlePicked.length} picked`} />
         <SummaryCell label="Expected AOV" value={fmtUsd(expectedAov)} />
-      </div>
+      </Panel>
 
       {/* Cards */}
       {loading ? (
-        <div className="text-stone-500 text-sm">Loading catalog…</div>
+        <div className="text-white/40 text-sm flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#1AE7F6] animate-pulse" />
+          Loading catalog…
+        </div>
       ) : items.length === 0 ? (
-        <div className="text-stone-500 text-sm">No SKUs match these filters. Try widening the criteria.</div>
+        <div className="text-white/40 text-sm">No SKUs match these filters. Try widening the criteria.</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {items.map((item) => {
@@ -256,17 +258,12 @@ export function StepProducts({ token, onComplete }: { token: string; onComplete?
       )}
 
       {/* Save */}
-      {error && <div className="text-sm text-red-400">{error}</div>}
-      <div className="flex items-center gap-3 pt-2 border-t border-stone-800">
-        <button
-          type="button"
-          onClick={onSave}
-          disabled={saving || !heroPicked || !dirty}
-          className="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-stone-950 font-semibold rounded disabled:opacity-30 disabled:cursor-not-allowed"
-        >
+      {error && <div className="text-sm text-red-300">{error}</div>}
+      <div className="flex items-center gap-3 pt-4 border-t border-white/[0.06]">
+        <PrimaryBtn onClick={onSave} disabled={saving || !heroPicked || !dirty}>
           {saving ? 'Saving…' : dirty ? 'Save selections' : 'Saved ✓'}
-        </button>
-        <span className="text-xs text-stone-500">
+        </PrimaryBtn>
+        <span className="text-xs text-white/40">
           {!heroPicked ? 'Hero SKU required.' : dirty ? 'Unsaved changes.' : 'Saved — continue to the next step.'}
         </span>
       </div>
@@ -277,8 +274,8 @@ export function StepProducts({ token, onComplete }: { token: string; onComplete?
 function SummaryCell({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
     <div>
-      <div className="text-[10px] uppercase tracking-wider text-stone-500">{label}</div>
-      <div className={`text-sm mt-0.5 ${highlight ? 'text-amber-300' : 'text-stone-100'}`}>{value}</div>
+      <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">{label}</div>
+      <div className={`text-sm mt-1 ${highlight ? 'text-amber-300' : 'text-white'}`}>{value}</div>
     </div>
   );
 }
@@ -288,29 +285,36 @@ function itemLabel(items: BmnCatalogItemDto[], id: string): string {
 }
 
 function SkuCard({ item, role, setRole }: { item: BmnCatalogItemDto; role: SkuRole | null; setRole: (r: SkuRole | null) => void }) {
-  const ringColor =
-    role === 'hero' ? 'border-cyan-500 ring-1 ring-cyan-500/40' :
-    role === 'support' ? 'border-teal-700' :
-    role === 'bundle' ? 'border-violet-700' :
-    'border-stone-800';
+  const cardStyle = (() => {
+    if (role === 'hero')    return { border: 'rgba(26,231,246,0.55)',  bg: 'rgba(26,231,246,0.04)', shadow: '0 0 18px rgba(26,231,246,0.15)' };
+    if (role === 'support') return { border: 'rgba(10,147,150,0.55)',  bg: 'rgba(10,147,150,0.05)', shadow: 'none' };
+    if (role === 'bundle')  return { border: 'rgba(168,85,247,0.55)',  bg: 'rgba(168,85,247,0.05)', shadow: 'none' };
+    return { border: 'rgba(255,255,255,0.06)', bg: 'rgba(255,255,255,0.025)', shadow: 'none' };
+  })();
 
   return (
-    <div className={`border rounded p-4 bg-stone-950 ${ringColor}`}>
-      <div className="flex items-start justify-between gap-2 mb-2">
+    <div
+      className="rounded-2xl p-5 transition-all duration-200"
+      style={{ border: `1px solid ${cardStyle.border}`, background: cardStyle.bg, boxShadow: cardStyle.shadow }}
+    >
+      <div className="flex items-start justify-between gap-2 mb-3">
         <div className="min-w-0">
-          <div className="text-stone-100 font-medium leading-tight truncate">{item.productName}</div>
-          <div className="text-xs text-stone-500 mt-0.5">
+          <div className="text-white font-semibold leading-tight truncate">{item.productName}</div>
+          <div className="text-xs text-white/40 mt-1">
             {item.supplierName ?? '—'}{item.category ? ` · ${item.category}` : ''}{item.sizeOrVolume ? ` · ${item.sizeOrVolume}` : ''}
           </div>
         </div>
         {item.requiresComplianceReview && (
-          <span className="shrink-0 px-2 py-0.5 bg-amber-900/40 border border-amber-800 text-amber-200 text-[10px] uppercase tracking-wider rounded">
+          <span
+            className="shrink-0 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full"
+            style={{ background: 'rgba(245,158,11,0.12)', color: 'rgb(252,211,77)', border: '1px solid rgba(245,158,11,0.30)' }}
+          >
             Compliance
           </span>
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-1 text-[11px] text-stone-400 mb-3">
+      <div className="grid grid-cols-3 gap-1.5 mb-4">
         <Stat label="MSRP" value={fmtUsd(item.msrpUsd)} />
         <Stat label="Margin" value={fmtPct(item.grossMarginPct)} />
         <Stat label="BMN net %" value={fmtPct(item.bmnNetPct)} />
@@ -327,7 +331,7 @@ function SkuCard({ item, role, setRole }: { item: BmnCatalogItemDto; role: SkuRo
           <button
             type="button"
             onClick={() => setRole(null)}
-            className="text-[11px] text-stone-500 hover:text-stone-300 ml-auto"
+            className="text-[11px] text-white/35 hover:text-white/70 ml-auto transition-colors"
           >
             Remove
           </button>
@@ -340,21 +344,31 @@ function SkuCard({ item, role, setRole }: { item: BmnCatalogItemDto; role: SkuRo
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-[9px] uppercase tracking-wider text-stone-600">{label}</div>
-      <div className="text-stone-200 text-xs">{value}</div>
+      <div className="text-[9px] font-semibold uppercase tracking-[0.16em] text-white/30">{label}</div>
+      <div className="text-white/85 text-xs mt-0.5">{value}</div>
     </div>
   );
 }
 
 function RoleButton({ current, role, setRole }: { current: SkuRole | null; role: SkuRole; setRole: (r: SkuRole) => void }) {
   const active = current === role;
-  const cls =
-    role === 'hero' ? (active ? 'bg-cyan-500 text-stone-950' : 'bg-stone-800 text-stone-300 hover:bg-stone-700') :
-    role === 'support' ? (active ? 'bg-teal-700 text-white' : 'bg-stone-800 text-stone-300 hover:bg-stone-700') :
-    /* bundle */ (active ? 'bg-violet-700 text-white' : 'bg-stone-800 text-stone-300 hover:bg-stone-700');
+  const activeStyle = (() => {
+    if (role === 'hero')    return { background: 'linear-gradient(135deg,#1AE7F6,#0A9396)', color: '#0D0D0D' };
+    if (role === 'support') return { background: '#0A9396',                                  color: '#fff'    };
+    return                       { background: 'rgb(124,58,237)',                            color: '#fff'    };
+  })();
   const label = role === 'hero' ? 'Set as hero' : role === 'support' ? 'Add as support' : 'Add to bundle';
   return (
-    <button type="button" onClick={() => setRole(role)} className={`text-[11px] px-2.5 py-1 rounded ${cls}`}>
+    <button
+      type="button"
+      onClick={() => setRole(role)}
+      className="text-[11px] font-semibold px-3 py-1.5 rounded-full transition-all duration-200 hover:scale-[1.04]"
+      style={
+        active
+          ? activeStyle
+          : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.65)' }
+      }
+    >
       {active ? `${role[0].toUpperCase()}${role.slice(1)} ✓` : label}
     </button>
   );
@@ -384,65 +398,78 @@ function ReviewMode({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold">Your products</h2>
-        <p className="text-stone-400 mt-1.5">
-          Here's what BMN built for your brand. Review the picks below — economics, MOQ, and compliance flags. If anything needs to change, click <span className="text-stone-200">Edit selections</span> to swap SKUs or change roles.
-        </p>
-      </div>
+      <StepHeader
+        step="05 / Products"
+        title="Your products"
+        subtitle="Here's what BMN built for your brand. Review the picks below. If anything needs to change, click Edit selections."
+      />
 
-      <div className="border border-stone-800 rounded p-4 bg-stone-950 grid grid-cols-1 sm:grid-cols-4 gap-3 text-sm">
+      <Panel className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-sm">
         <SummaryCellLite label="Hero" value={hero ? labelFor(items, hero) : 'Not set'} highlight={!hero} />
         <SummaryCellLite label="Support" value={`${support.length} SKU${support.length === 1 ? '' : 's'}`} />
         <SummaryCellLite label="Bundle" value={`${bundle.length} SKU${bundle.length === 1 ? '' : 's'}`} />
         <SummaryCellLite label="Expected AOV" value={fmtUsd(expectedAov)} />
-      </div>
+      </Panel>
 
       {flagged.length > 0 && (
-        <div className="border border-amber-900/50 bg-amber-950/20 rounded p-3 text-sm">
-          <span className="text-amber-300 font-medium">{flagged.length} of these SKU{flagged.length === 1 ? '' : 's'} need extra compliance review.</span>
-          <span className="text-stone-300"> You'll handle that on the next step.</span>
-        </div>
+        <Panel className="border-amber-500/20 bg-amber-500/[0.04]">
+          <span className="text-amber-300 font-semibold text-sm">
+            {flagged.length} of these SKU{flagged.length === 1 ? '' : 's'} need extra compliance review.
+          </span>
+          <span className="text-white/65 text-sm"> You'll handle that on the next step.</span>
+        </Panel>
       )}
 
       <div className="space-y-3">
         {[...skus].sort((a, b) => roleOrder(a.role) - roleOrder(b.role)).map((sku) => {
           const item = items.get(sku.catalogItemId);
           if (!item) return (
-            <div key={sku.id} className="border border-stone-800 rounded p-4 bg-stone-950 text-stone-500 text-sm">
+            <Panel key={sku.id} className="text-white/40 text-sm">
               Unknown SKU {sku.catalogItemId} (catalog metadata not loaded)
-            </div>
+            </Panel>
           );
-          const ringColor =
-            sku.role === 'hero' ? 'border-cyan-500/40 ring-1 ring-cyan-500/20' :
-            sku.role === 'support' ? 'border-teal-700/50' :
-            'border-violet-700/50';
+          const cardStyle = (() => {
+            if (sku.role === 'hero')    return { border: 'rgba(26,231,246,0.45)', bg: 'rgba(26,231,246,0.035)', shadow: '0 0 16px rgba(26,231,246,0.10)' };
+            if (sku.role === 'support') return { border: 'rgba(10,147,150,0.45)', bg: 'rgba(10,147,150,0.04)',  shadow: 'none' };
+            return                           { border: 'rgba(168,85,247,0.45)', bg: 'rgba(168,85,247,0.04)',  shadow: 'none' };
+          })();
+          const rolePillStyle = (() => {
+            if (sku.role === 'hero')    return { background: 'linear-gradient(135deg,#1AE7F6,#0A9396)', color: '#0D0D0D' };
+            if (sku.role === 'support') return { background: '#0A9396',                                  color: '#fff'    };
+            return                           { background: 'rgb(124,58,237)',                            color: '#fff'    };
+          })();
           return (
-            <div key={sku.id} className={`border rounded p-4 bg-stone-950 ${ringColor}`}>
-              <div className="flex items-start justify-between gap-3 mb-3">
+            <div
+              key={sku.id}
+              className="rounded-2xl p-5"
+              style={{ border: `1px solid ${cardStyle.border}`, background: cardStyle.bg, boxShadow: cardStyle.shadow }}
+            >
+              <div className="flex items-start justify-between gap-3 mb-4">
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded ${
-                      sku.role === 'hero' ? 'bg-cyan-500 text-stone-950' :
-                      sku.role === 'support' ? 'bg-teal-700 text-white' :
-                      'bg-violet-700 text-white'
-                    }`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span
+                      className="text-[10px] font-bold uppercase tracking-[0.14em] px-2.5 py-0.5 rounded-full"
+                      style={rolePillStyle}
+                    >
                       {sku.role}
                     </span>
                     {item.requiresComplianceReview && (
-                      <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 bg-amber-900/40 border border-amber-800 text-amber-200 rounded">
+                      <span
+                        className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full"
+                        style={{ background: 'rgba(245,158,11,0.12)', color: 'rgb(252,211,77)', border: '1px solid rgba(245,158,11,0.30)' }}
+                      >
                         Compliance
                       </span>
                     )}
                   </div>
-                  <div className="text-stone-100 font-medium">{sku.customName ?? item.productName}</div>
-                  <div className="text-xs text-stone-500 mt-0.5">
+                  <div className="text-white font-semibold">{sku.customName ?? item.productName}</div>
+                  <div className="text-xs text-white/40 mt-1">
                     {item.supplierName ?? '—'}{item.category ? ` · ${item.category}` : ''}{item.sizeOrVolume ? ` · ${item.sizeOrVolume}` : ''}
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 text-[11px] text-stone-400">
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
                 <Stat label="MSRP" value={fmtUsd(sku.customMsrpUsd ?? item.msrpUsd)} />
                 <Stat label="Cost" value={fmtUsd(item.totalLandedCost)} />
                 <Stat label="Margin" value={fmtPct(item.grossMarginPct)} />
@@ -455,18 +482,12 @@ function ReviewMode({
         })}
       </div>
 
-      <div className="flex items-center gap-3 pt-2 border-t border-stone-800">
-        <button
-          type="button"
-          onClick={onContinue}
-          className="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-stone-950 font-semibold rounded"
-        >
-          Looks good — continue
-        </button>
+      <div className="flex items-center gap-3 pt-4 border-t border-white/[0.06]">
+        <PrimaryBtn onClick={onContinue}>Looks good — continue →</PrimaryBtn>
         <button
           type="button"
           onClick={onEdit}
-          className="px-4 py-2 text-sm bg-stone-800 hover:bg-stone-700 text-stone-200 rounded"
+          className="px-4 py-2 text-sm font-medium bg-white/[0.05] hover:bg-white/[0.10] border border-white/[0.08] rounded-full text-white/70 hover:text-white transition-all duration-200"
         >
           Edit selections
         </button>
@@ -478,8 +499,8 @@ function ReviewMode({
 function SummaryCellLite({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
     <div>
-      <div className="text-[10px] uppercase tracking-wider text-stone-500">{label}</div>
-      <div className={`text-sm mt-0.5 ${highlight ? 'text-amber-300' : 'text-stone-100'}`}>{value}</div>
+      <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">{label}</div>
+      <div className={`text-sm mt-1 ${highlight ? 'text-amber-300' : 'text-white'}`}>{value}</div>
     </div>
   );
 }

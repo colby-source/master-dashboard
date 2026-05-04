@@ -1,4 +1,4 @@
-import { Field, Input, Textarea, Select } from './_primitives';
+import { Field, Input, Textarea, Select, StepHeader, Panel } from './_primitives';
 import type { StepProps, CompetitorEntry, CategoryStatus } from './_types';
 
 export function StepCompetition({ intake, update }: StepProps) {
@@ -9,19 +9,40 @@ export function StepCompetition({ intake, update }: StepProps) {
     update({ top_3_competitors: next });
   };
   return (
-    <div className="space-y-5">
-      <h2 className="text-2xl font-semibold">Competition</h2>
-      <p className="text-sm text-stone-400">Name 3 brands customers compare you to. For each, tell me what you do meaningfully differently — not "better quality", be specific.</p>
+    <div className="space-y-6">
+      <StepHeader
+        step="04 / Competition"
+        title="Competition"
+        subtitle="Name 3 brands customers compare you to. For each, what do you do meaningfully differently — be specific, not 'better quality'."
+      />
       {[0, 1, 2].map((i) => (
-        <div key={i} className="border border-stone-800 rounded p-4 space-y-3">
-          <div className="text-xs uppercase tracking-wider text-stone-500">Competitor {i + 1}</div>
-          <Input placeholder="Brand name" value={competitors[i]?.name || ''} onChange={(e) => updateCompetitor(i, { name: e.target.value })} />
-          <Input placeholder="@handle (optional)" value={competitors[i]?.handle || ''} onChange={(e) => updateCompetitor(i, { handle: e.target.value })} />
-          <Textarea rows={2} placeholder="What do you do differently?" value={competitors[i]?.what_we_do_differently || ''} onChange={(e) => updateCompetitor(i, { what_we_do_differently: e.target.value })} />
-        </div>
+        <Panel key={i} className="space-y-3">
+          <div className="text-[10px] font-mono uppercase tracking-[0.18em]" style={{ color: 'rgba(26,231,246,0.55)' }}>
+            Competitor {i + 1}
+          </div>
+          <Input
+            placeholder="Brand name"
+            value={competitors[i]?.name || ''}
+            onChange={(e) => updateCompetitor(i, { name: e.target.value })}
+          />
+          <Input
+            placeholder="@handle (optional)"
+            value={competitors[i]?.handle || ''}
+            onChange={(e) => updateCompetitor(i, { handle: e.target.value })}
+          />
+          <Textarea
+            rows={2}
+            placeholder="What do you do differently?"
+            value={competitors[i]?.what_we_do_differently || ''}
+            onChange={(e) => updateCompetitor(i, { what_we_do_differently: e.target.value })}
+          />
+        </Panel>
       ))}
       <Field label="Your category status">
-        <Select value={intake.category_status || ''} onChange={(e) => update({ category_status: e.target.value as CategoryStatus | '' })}>
+        <Select
+          value={intake.category_status || ''}
+          onChange={(e) => update({ category_status: e.target.value as CategoryStatus | '' })}
+        >
           <option value="">Select…</option>
           <option value="new">New — I'm creating this category</option>
           <option value="emerging">Emerging — early adopters are finding it</option>

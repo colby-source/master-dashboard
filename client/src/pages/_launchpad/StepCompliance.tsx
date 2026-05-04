@@ -21,6 +21,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { launchpadPublic } from '../../lib/api/launchpad';
 import type { BmnCatalogItemDto, BrandSkuDto } from '../../lib/api/launchpad';
 import type { IntakeData, IntakePatch } from './_types';
+import { StepHeader, Panel, PrimaryBtn } from './_primitives';
 
 interface Props {
   token: string;
@@ -101,21 +102,27 @@ export function StepCompliance({ token, intake, update, onComplete }: Props) {
     update({ compliance_acks: next });
   };
 
-  if (loading) return <div className="text-stone-500 text-sm">Loading compliance review…</div>;
-  if (error) return <div className="text-sm text-red-400">{error}</div>;
+  if (loading) return (
+    <div className="text-white/40 text-sm flex items-center gap-2">
+      <span className="w-1.5 h-1.5 rounded-full bg-[#1AE7F6] animate-pulse" />
+      Loading compliance review…
+    </div>
+  );
+  if (error) return <div className="text-sm text-red-300">{error}</div>;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold">Compliance review</h2>
-        <p className="text-stone-400 mt-1.5">
-          Before we generate your launch strategy, you need to acknowledge how BMN handles compliance for the SKUs you picked. These rules are non-negotiable — they protect your brand from FDA / FTC enforcement actions and keep your ad accounts alive.
-        </p>
-      </div>
+      <StepHeader
+        step="06 / Compliance"
+        title="Compliance review"
+        subtitle="Before we generate your launch strategy, acknowledge how BMN handles compliance. Non-negotiable — protects you from FDA/FTC enforcement and keeps ad accounts alive."
+      />
 
       {/* Universal gates — always apply */}
       <section>
-        <h3 className="text-xs uppercase tracking-wider text-stone-500 mb-3">Universal — applies to every BMN brand</h3>
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] mb-3" style={{ color: 'rgba(26,231,246,0.6)' }}>
+          Universal — applies to every BMN brand
+        </h3>
         <div className="space-y-2">
           {UNIVERSAL_GATES.map((gate) => (
             <AckRow
@@ -133,7 +140,7 @@ export function StepCompliance({ token, intake, update, onComplete }: Props) {
       {/* Per-SKU gates */}
       {flaggedSkus.length > 0 && (
         <section>
-          <h3 className="text-xs uppercase tracking-wider text-stone-500 mb-3">
+          <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] mb-3" style={{ color: 'rgba(26,231,246,0.6)' }}>
             Per-SKU — {flaggedSkus.length} of your selections need extra acknowledgment
           </h3>
           <div className="space-y-2">
@@ -153,37 +160,44 @@ export function StepCompliance({ token, intake, update, onComplete }: Props) {
       )}
 
       {flaggedSkus.length === 0 && (
-        <div className="text-sm text-stone-500 italic">
+        <div className="text-sm text-white/40 italic">
           None of the SKUs you picked are flagged for extra compliance review. Universal gates above still apply.
         </div>
       )}
 
       {/* Off-limits topics — show what creator declared */}
       {intake.off_limits_topics && intake.off_limits_topics.length > 0 && (
-        <section className="border border-stone-800 rounded p-4 bg-stone-950">
-          <div className="text-xs uppercase tracking-wider text-stone-500 mb-2">Your declared off-limits topics</div>
-          <div className="flex flex-wrap gap-1.5">
+        <Panel>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/40 mb-2.5">
+            Your declared off-limits topics
+          </div>
+          <div className="flex flex-wrap gap-2">
             {intake.off_limits_topics.map((t, i) => (
-              <span key={i} className="px-2 py-0.5 bg-stone-800 text-stone-300 text-xs rounded">{t}</span>
+              <span
+                key={i}
+                className="px-3 py-1 text-xs rounded-full"
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  color: 'rgba(255,255,255,0.7)',
+                }}
+              >
+                {t}
+              </span>
             ))}
           </div>
-          <p className="text-xs text-stone-500 mt-2">
+          <p className="text-xs text-white/35 mt-3 leading-relaxed">
             Strategy generation will avoid these topics in your content calendar. Edit them on the Voice step if needed.
           </p>
-        </section>
+        </Panel>
       )}
 
       {/* Continue */}
-      <div className="flex items-center gap-3 pt-3 border-t border-stone-800">
-        <button
-          type="button"
-          onClick={() => onComplete?.()}
-          disabled={!allAcked}
-          className="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-stone-950 font-semibold rounded disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          Continue
-        </button>
-        <span className="text-xs text-stone-500">
+      <div className="flex items-center gap-3 pt-4 border-t border-white/[0.06]">
+        <PrimaryBtn onClick={() => onComplete?.()} disabled={!allAcked}>
+          Continue →
+        </PrimaryBtn>
+        <span className="text-xs text-white/40">
           {allAcked
             ? `All ${UNIVERSAL_GATES.length + flaggedSkus.length} acknowledgments complete.`
             : `${UNIVERSAL_GATES.length + flaggedSkus.length - Object.keys(acks).filter((k) => UNIVERSAL_GATES.some((g) => g.id === k) || k.startsWith('sku:')).length} acknowledgments pending.`}
@@ -205,26 +219,34 @@ function AckRow({
 }) {
   const acked = !!ackedAt;
   return (
-    <div className={`border rounded p-4 ${acked ? 'border-emerald-900 bg-emerald-950/30' : 'border-stone-800 bg-stone-950'}`}>
-      <div className="flex items-start gap-3">
+    <div
+      className="rounded-2xl p-5 transition-all duration-200"
+      style={
+        acked
+          ? { border: '1px solid rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.04)' }
+          : { border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.025)' }
+      }
+    >
+      <div className="flex items-start gap-3.5">
         <button
           type="button"
           onClick={() => (acked ? onUnack() : onAck())}
           aria-label={acked ? 'Unacknowledge' : 'Acknowledge'}
-          className={`shrink-0 mt-0.5 h-5 w-5 border-2 rounded ${
+          className="shrink-0 mt-0.5 h-5 w-5 rounded-md flex items-center justify-center text-xs font-bold transition-all duration-200"
+          style={
             acked
-              ? 'bg-emerald-500 border-emerald-500 text-stone-950'
-              : 'border-stone-600 hover:border-stone-400'
-          } flex items-center justify-center text-xs font-bold`}
+              ? { background: 'rgb(16,185,129)', color: '#0D0D0D', boxShadow: '0 0 10px rgba(16,185,129,0.4)' }
+              : { background: 'transparent', border: '1.5px solid rgba(255,255,255,0.25)' }
+          }
         >
           {acked ? '✓' : ''}
         </button>
         <div className="min-w-0 flex-1">
-          <div className="text-stone-100 font-medium">{title}</div>
-          {meta && <div className="text-xs text-stone-500 mt-0.5">{meta}</div>}
-          <div className="text-sm text-stone-400 mt-1.5 leading-relaxed">{detail}</div>
+          <div className="text-white font-semibold">{title}</div>
+          {meta && <div className="text-xs text-white/40 mt-1">{meta}</div>}
+          <div className="text-sm text-white/55 mt-2 leading-relaxed">{detail}</div>
           {acked && (
-            <div className="text-[11px] text-emerald-400 mt-2">
+            <div className="text-[11px] mt-2.5" style={{ color: 'rgb(110,231,183)' }}>
               Acknowledged {new Date(ackedAt!).toLocaleString()}
             </div>
           )}
