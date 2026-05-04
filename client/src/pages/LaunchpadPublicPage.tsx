@@ -4,6 +4,7 @@ import { launchpadPublic } from '../lib/api/launchpad';
 
 import { FullScreen } from './_launchpad/_primitives';
 import { ProgressRail } from './_launchpad/ProgressRail';
+import { StepWelcome } from './_launchpad/StepWelcome';
 import { StepIdentity } from './_launchpad/StepIdentity';
 import { StepStory } from './_launchpad/StepStory';
 import { StepAudience } from './_launchpad/StepAudience';
@@ -40,6 +41,9 @@ function computeMissingIntakeFields(intake: IntakeData): string[] {
   });
 }
 
+// The 12 numbered steps that make up the wizard rail.
+// 'welcome' lives OFF the rail — it's a one-time intro screen and not counted
+// against progress.
 const STEPS = [
   { id: 'identity',   title: 'Brand basics' },
   { id: 'story',      title: 'Your story' },
@@ -55,14 +59,15 @@ const STEPS = [
   { id: 'submit',     title: 'Submit for review' },
 ] as const;
 
-type StepId = typeof STEPS[number]['id'];
+type RailStepId = typeof STEPS[number]['id'];
+type StepId = RailStepId | 'welcome';
 
 export default function LaunchpadPublicPage() {
   const { token } = useParams<{ token: string }>();
   const [session, setSession] = useState<Session | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [step, setStep] = useState<StepId>('identity');
+  const [step, setStep] = useState<StepId>('welcome');
   const [intake, setIntake] = useState<IntakeData>({});
   const [savingState, setSavingState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [generating, setGenerating] = useState(false);
@@ -76,9 +81,12 @@ export default function LaunchpadPublicPage() {
       .then((s) => {
         setSession(s);
         if (s.intake) setIntake(s.intake as IntakeData);
+        // Returning creators skip the welcome screen — only fresh `invited`
+        // sessions with no saved intake see it.
         if (s.status === 'strategy_generated' || s.status === 'assets_uploading') setStep('assets');
         else if (s.status === 'submitted' || s.status === 'in_review') setStep('submit');
         else if (s.intake) setStep('review');
+        else setStep('welcome');
       })
       .catch((err) => setError(String(err)))
       .finally(() => setLoading(false));
@@ -167,8 +175,8 @@ export default function LaunchpadPublicPage() {
   if (loading) {
     return (
       <FullScreen>
-        <div className="flex items-center gap-3 text-white/40">
-          <span className="w-2 h-2 rounded-full bg-[#1AE7F6] animate-pulse" />
+        <div className="flex items-center gap-3 text-slate-500">
+          <span className="w-2 h-2 rounded-full bg-[#0A9396] animate-pulse" />
           <span className="text-sm">Loading your portal…</span>
         </div>
       </FullScreen>
@@ -179,11 +187,29 @@ export default function LaunchpadPublicPage() {
     return (
       <FullScreen>
         <div className="text-center space-y-3 max-w-sm">
-          <div className="text-white/30 text-4xl">⚡</div>
-          <div className="text-white font-semibold">Link invalid or expired</div>
-          <div className="text-white/40 text-sm">Contact your launch manager for a fresh link.</div>
+          <div className="text-slate-300 text-4xl">⚡</div>
+          <div className="text-slate-900 font-semibold">Link invalid or expired</div>
+          <div className="text-slate-500 text-sm">Contact your launch manager for a fresh link.</div>
         </div>
       </FullScreen>
+    );
+  }
+
+  // Off-rail welcome screen has no progress / nav chrome. Render full-bleed.
+  if (step === 'welcome') {
+    return (
+      <div
+        className="min-h-screen"
+        style={{
+          background:
+            'radial-gradient(ellipse 80% 35% at 50% -5%, rgba(26,231,246,0.14) 0%, transparent 60%), #FAFAF7',
+          color: '#0F172A',
+        }}
+      >
+        <div className="max-w-3xl mx-auto px-6 py-12 sm:py-16">
+          <StepWelcome brandName={session.brandName} onStart={() => setStep('identity')} />
+        </div>
+      </div>
     );
   }
 
@@ -195,9 +221,11 @@ export default function LaunchpadPublicPage() {
 
   return (
     <div
-      className="min-h-screen text-white"
+      className="min-h-screen"
       style={{
-        background: 'radial-gradient(ellipse 80% 35% at 50% -5%, rgba(26,231,246,0.07) 0%, transparent 60%), #0D0D0D',
+        background:
+          'radial-gradient(ellipse 80% 35% at 50% -5%, rgba(26,231,246,0.10) 0%, transparent 60%), #FAFAF7',
+        color: '#0F172A',
       }}
     >
       <div className="max-w-2xl mx-auto px-6 py-12">
@@ -208,14 +236,14 @@ export default function LaunchpadPublicPage() {
             <div
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest"
               style={{
-                background: 'rgba(26,231,246,0.08)',
-                border: '1px solid rgba(26,231,246,0.18)',
-                color: 'rgba(26,231,246,0.8)',
+                background: 'rgba(26,231,246,0.14)',
+                border: '1px solid rgba(10,147,150,0.30)',
+                color: '#016F74',
               }}
             >
               <span
                 className="w-1.5 h-1.5 rounded-full animate-pulse"
-                style={{ background: '#1AE7F6' }}
+                style={{ background: '#0A9396' }}
               />
               Brand Me Now
             </div>
@@ -223,22 +251,27 @@ export default function LaunchpadPublicPage() {
             {/* Save indicator */}
             <div className="ml-auto text-[11px]">
               {savingState === 'saving' && (
-                <span className="text-white/25 flex items-center gap-1.5">
-                  <span className="w-1 h-1 rounded-full bg-white/30 animate-pulse" />
+                <span className="text-slate-500 flex items-center gap-1.5">
+                  <span className="w-1 h-1 rounded-full bg-slate-400 animate-pulse" />
                   saving
                 </span>
               )}
               {savingState === 'saved' && (
-                <span className="text-white/25">saved</span>
+                <span className="text-slate-400">saved</span>
               )}
               {savingState === 'error' && (
-                <span className="text-red-400">save failed</span>
+                <span className="text-rose-600">save failed</span>
               )}
             </div>
           </div>
 
-          <h1 className="text-4xl font-bold tracking-tight">{session.brandName}</h1>
-          <p className="text-sm text-white/35 mt-2">
+          <h1
+            className="text-4xl font-bold tracking-tight text-slate-900"
+            style={{ letterSpacing: '-0.02em' }}
+          >
+            {session.brandName}
+          </h1>
+          <p className="text-sm text-slate-500 mt-2">
             {session.launchDate
               ? `Launching ${new Date(session.launchDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`
               : 'Set your launch date in the Channels step.'}
@@ -277,24 +310,29 @@ export default function LaunchpadPublicPage() {
         </main>
 
         {/* ── Navigation ── */}
-        <nav className="flex items-center justify-between mt-14 pt-6 border-t border-white/[0.06]">
+        <nav className="flex items-center justify-between mt-14 pt-6 border-t border-slate-200">
           <button
             type="button"
             disabled={stepIdx === 0}
-            onClick={() => setStep(STEPS[Math.max(0, stepIdx - 1)].id)}
-            className="text-sm text-white/35 hover:text-white/70 disabled:opacity-0 transition-colors duration-200"
+            onClick={() => setStep(STEPS[Math.max(0, stepIdx - 1)].id as RailStepId)}
+            className="text-sm text-slate-500 hover:text-slate-900 disabled:opacity-0 transition-colors duration-200"
           >
             ← Back
           </button>
           <button
             type="button"
             disabled={stepIdx === STEPS.length - 1}
-            onClick={() => setStep(STEPS[Math.min(STEPS.length - 1, stepIdx + 1)].id)}
-            className="px-7 py-2.5 text-sm font-bold text-[#0D0D0D] rounded-full disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-            style={{
-              background: 'linear-gradient(135deg, #1AE7F6 0%, #0A9396 100%)',
-              boxShadow: '0 0 22px rgba(26,231,246,0.22)',
-            }}
+            onClick={() => setStep(STEPS[Math.min(STEPS.length - 1, stepIdx + 1)].id as RailStepId)}
+            className="px-7 py-2.5 text-sm font-bold rounded-full disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            style={
+              stepIdx === STEPS.length - 1
+                ? { background: '#CBD5E1', color: '#fff' }
+                : {
+                    background: 'linear-gradient(135deg, #1AE7F6 0%, #0A9396 100%)',
+                    boxShadow: '0 6px 20px rgba(10,147,150,0.28), 0 0 0 1px rgba(10,147,150,0.10)',
+                    color: '#06292B',
+                  }
+            }
           >
             Continue →
           </button>
@@ -307,7 +345,7 @@ export default function LaunchpadPublicPage() {
               href={session.driveFolderUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-white/20 hover:text-white/50 underline transition-colors"
+              className="text-xs text-slate-400 hover:text-slate-700 underline transition-colors"
             >
               Open brand folder ↗
             </a>

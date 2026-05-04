@@ -103,12 +103,12 @@ export function StepCompliance({ token, intake, update, onComplete }: Props) {
   };
 
   if (loading) return (
-    <div className="text-white/40 text-sm flex items-center gap-2">
-      <span className="w-1.5 h-1.5 rounded-full bg-[#1AE7F6] animate-pulse" />
+    <div className="text-slate-500 text-sm flex items-center gap-2">
+      <span className="w-1.5 h-1.5 rounded-full bg-[#0A9396] animate-pulse" />
       Loading compliance review…
     </div>
   );
-  if (error) return <div className="text-sm text-red-300">{error}</div>;
+  if (error) return <div className="text-sm text-rose-600">{error}</div>;
 
   return (
     <div className="space-y-6">
@@ -120,7 +120,7 @@ export function StepCompliance({ token, intake, update, onComplete }: Props) {
 
       {/* Universal gates — always apply */}
       <section>
-        <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] mb-3" style={{ color: 'rgba(26,231,246,0.6)' }}>
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] mb-3" style={{ color: '#016F74' }}>
           Universal — applies to every BMN brand
         </h3>
         <div className="space-y-2">
@@ -140,7 +140,7 @@ export function StepCompliance({ token, intake, update, onComplete }: Props) {
       {/* Per-SKU gates */}
       {flaggedSkus.length > 0 && (
         <section>
-          <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] mb-3" style={{ color: 'rgba(26,231,246,0.6)' }}>
+          <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] mb-3" style={{ color: '#016F74' }}>
             Per-SKU — {flaggedSkus.length} of your selections need extra acknowledgment
           </h3>
           <div className="space-y-2">
@@ -160,7 +160,7 @@ export function StepCompliance({ token, intake, update, onComplete }: Props) {
       )}
 
       {flaggedSkus.length === 0 && (
-        <div className="text-sm text-white/40 italic">
+        <div className="text-sm text-slate-500 italic">
           None of the SKUs you picked are flagged for extra compliance review. Universal gates above still apply.
         </div>
       )}
@@ -168,7 +168,7 @@ export function StepCompliance({ token, intake, update, onComplete }: Props) {
       {/* Off-limits topics — show what creator declared */}
       {intake.off_limits_topics && intake.off_limits_topics.length > 0 && (
         <Panel>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/40 mb-2.5">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-700 mb-2.5">
             Your declared off-limits topics
           </div>
           <div className="flex flex-wrap gap-2">
@@ -177,27 +177,27 @@ export function StepCompliance({ token, intake, update, onComplete }: Props) {
                 key={i}
                 className="px-3 py-1 text-xs rounded-full"
                 style={{
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  color: 'rgba(255,255,255,0.7)',
+                  background: '#F1F5F9',
+                  border: '1px solid #E2E8F0',
+                  color: '#334155',
                 }}
               >
                 {t}
               </span>
             ))}
           </div>
-          <p className="text-xs text-white/35 mt-3 leading-relaxed">
+          <p className="text-xs text-slate-500 mt-3 leading-relaxed">
             Strategy generation will avoid these topics in your content calendar. Edit them on the Voice step if needed.
           </p>
         </Panel>
       )}
 
       {/* Continue */}
-      <div className="flex items-center gap-3 pt-4 border-t border-white/[0.06]">
+      <div className="flex items-center gap-3 pt-4 border-t border-slate-200">
         <PrimaryBtn onClick={() => onComplete?.()} disabled={!allAcked}>
           Continue →
         </PrimaryBtn>
-        <span className="text-xs text-white/40">
+        <span className="text-xs text-slate-500">
           {allAcked
             ? `All ${UNIVERSAL_GATES.length + flaggedSkus.length} acknowledgments complete.`
             : `${UNIVERSAL_GATES.length + flaggedSkus.length - Object.keys(acks).filter((k) => UNIVERSAL_GATES.some((g) => g.id === k) || k.startsWith('sku:')).length} acknowledgments pending.`}
@@ -223,8 +223,8 @@ function AckRow({
       className="rounded-2xl p-5 transition-all duration-200"
       style={
         acked
-          ? { border: '1px solid rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.04)' }
-          : { border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.025)' }
+          ? { border: '1px solid rgba(16,185,129,0.40)', background: 'rgba(16,185,129,0.06)', boxShadow: '0 1px 2px rgba(15,23,42,0.04)' }
+          : { border: '1px solid #E2E8F0', background: '#FFFFFF', boxShadow: '0 1px 2px rgba(15,23,42,0.04)' }
       }
     >
       <div className="flex items-start gap-3.5">
@@ -235,18 +235,18 @@ function AckRow({
           className="shrink-0 mt-0.5 h-5 w-5 rounded-md flex items-center justify-center text-xs font-bold transition-all duration-200"
           style={
             acked
-              ? { background: 'rgb(16,185,129)', color: '#0D0D0D', boxShadow: '0 0 10px rgba(16,185,129,0.4)' }
-              : { background: 'transparent', border: '1.5px solid rgba(255,255,255,0.25)' }
+              ? { background: 'rgb(16,185,129)', color: '#fff', boxShadow: '0 2px 6px rgba(16,185,129,0.35)' }
+              : { background: '#fff', border: '1.5px solid #CBD5E1' }
           }
         >
           {acked ? '✓' : ''}
         </button>
         <div className="min-w-0 flex-1">
-          <div className="text-white font-semibold">{title}</div>
-          {meta && <div className="text-xs text-white/40 mt-1">{meta}</div>}
-          <div className="text-sm text-white/55 mt-2 leading-relaxed">{detail}</div>
+          <div className="text-slate-900 font-semibold">{title}</div>
+          {meta && <div className="text-xs text-slate-500 mt-1">{meta}</div>}
+          <div className="text-sm text-slate-600 mt-2 leading-relaxed">{detail}</div>
           {acked && (
-            <div className="text-[11px] mt-2.5" style={{ color: 'rgb(110,231,183)' }}>
+            <div className="text-[11px] mt-2.5" style={{ color: 'rgb(5,122,85)' }}>
               Acknowledged {new Date(ackedAt!).toLocaleString()}
             </div>
           )}

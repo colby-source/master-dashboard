@@ -28,10 +28,11 @@ export function StepReview({ session, onGenerate, generating, error, missing, un
             href={session.driveFolderUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 text-sm font-bold text-[#0D0D0D] rounded-full transition-all duration-200 hover:scale-[1.02]"
+            className="inline-flex items-center gap-2 px-6 py-3 text-sm font-bold rounded-full transition-all duration-200 hover:scale-[1.02]"
             style={{
               background: 'linear-gradient(135deg, #1AE7F6 0%, #0A9396 100%)',
-              boxShadow: '0 0 22px rgba(26,231,246,0.22)',
+              boxShadow: '0 6px 20px rgba(10,147,150,0.28), 0 0 0 1px rgba(10,147,150,0.10)',
+              color: '#06292B',
             }}
           >
             Open my brand folder →
@@ -39,10 +40,10 @@ export function StepReview({ session, onGenerate, generating, error, missing, un
         )}
         <Panel>
           <details>
-            <summary className="cursor-pointer text-white/60 text-sm hover:text-white transition-colors">
+            <summary className="cursor-pointer text-slate-700 text-sm hover:text-slate-900 transition-colors">
               Inspect raw strategy JSON
             </summary>
-            <pre className="mt-3 text-xs text-white/40 overflow-auto max-h-96 font-mono">
+            <pre className="mt-3 text-xs text-slate-600 overflow-auto max-h-96 font-mono bg-slate-50 rounded-lg p-3">
               {JSON.stringify(session.strategy, null, 2)}
             </pre>
           </details>
@@ -60,33 +61,33 @@ export function StepReview({ session, onGenerate, generating, error, missing, un
       />
 
       {!baseReady && (
-        <Panel className="border-amber-500/20 bg-amber-500/[0.04]">
-          <div className="text-sm font-semibold text-amber-300 mb-2">
+        <Panel className="border-amber-300 bg-amber-50">
+          <div className="text-sm font-semibold text-amber-800 mb-2">
             ⚠ {missing.length} required field{missing.length === 1 ? '' : 's'} missing
           </div>
-          <ul className="space-y-1 text-sm text-white/60">
+          <ul className="space-y-1 text-sm text-slate-700">
             {missing.map((f) => (
               <li key={f} className="flex items-center gap-2">
-                <span className="w-1 h-1 rounded-full bg-amber-400/60" />
+                <span className="w-1 h-1 rounded-full bg-amber-500" />
                 {f.replace(/_/g, ' ')}
               </li>
             ))}
           </ul>
-          <div className="text-xs text-white/30 mt-3">Step back through the wizard to complete these.</div>
+          <div className="text-xs text-slate-500 mt-3">Step back through the wizard to complete these.</div>
         </Panel>
       )}
 
       {missingCompliance && (
-        <Panel className="border-amber-500/20 bg-amber-500/[0.04]">
-          <div className="text-sm text-amber-300">
+        <Panel className="border-amber-300 bg-amber-50">
+          <div className="text-sm text-amber-800">
             ⚠ Compliance acknowledgments required before strategy generation. Return to the Compliance step to complete the universal gates.
           </div>
         </Panel>
       )}
 
       {error && (
-        <Panel className="border-red-500/20 bg-red-500/[0.05]">
-          <div className="text-sm text-red-300">{error}</div>
+        <Panel className="border-rose-300 bg-rose-50">
+          <div className="text-sm text-rose-700">{error}</div>
         </Panel>
       )}
 

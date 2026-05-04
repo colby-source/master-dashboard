@@ -61,16 +61,16 @@ export function StepAssets({ token, session }: { token: string; session: Session
           href={session.driveFolderUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 text-sm font-medium transition-colors"
-          style={{ color: '#1AE7F6' }}
+          className="inline-flex items-center gap-2 text-sm font-medium transition-colors hover:underline"
+          style={{ color: '#016F74' }}
         >
           Open my Drive folder ↗
         </a>
       )}
 
       {error && (
-        <Panel className="border-red-500/20 bg-red-500/[0.05]">
-          <div className="text-sm text-red-300">{error}</div>
+        <Panel className="border-rose-300 bg-rose-50">
+          <div className="text-sm text-rose-700">{error}</div>
         </Panel>
       )}
 
@@ -81,10 +81,10 @@ export function StepAssets({ token, session }: { token: string; session: Session
             <Panel key={t.value}>
               <div className="flex items-baseline justify-between gap-4">
                 <div>
-                  <div className="font-semibold text-white">{t.label}</div>
-                  <div className="text-xs text-white/35 mt-0.5">{t.hint}</div>
+                  <div className="font-semibold text-slate-900">{t.label}</div>
+                  <div className="text-xs text-slate-500 mt-0.5">{t.hint}</div>
                 </div>
-                <label className="cursor-pointer px-4 py-2 text-xs font-medium bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.08] rounded-full text-white/70 hover:text-white transition-all duration-200 whitespace-nowrap">
+                <label className="cursor-pointer px-4 py-2 text-xs font-medium bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-full text-slate-700 hover:text-slate-900 transition-all duration-200 whitespace-nowrap">
                   {uploading ? 'Uploading…' : '+ Upload'}
                   <input type="file" multiple className="hidden" onChange={(e) => onUpload(e, t.value)} disabled={uploading} />
                 </label>
@@ -97,11 +97,11 @@ export function StepAssets({ token, session }: { token: string; session: Session
                       href={a.drive_file_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs px-3 py-1.5 rounded-full transition-all duration-200"
+                      className="text-xs px-3 py-1.5 rounded-full transition-all duration-200 hover:scale-[1.02]"
                       style={{
-                        background: 'rgba(26,231,246,0.08)',
-                        border: '1px solid rgba(26,231,246,0.22)',
-                        color: '#1AE7F6',
+                        background: 'rgba(26,231,246,0.14)',
+                        border: '1px solid rgba(10,147,150,0.35)',
+                        color: '#016F74',
                       }}
                     >
                       {a.filename}

@@ -89,8 +89,8 @@ export function StepContent({ token }: { token: string }) {
 
   if (loading) {
     return (
-      <div className="flex items-center gap-3 text-white/40">
-        <span className="w-2 h-2 rounded-full bg-[#1AE7F6] animate-pulse" />
+      <div className="flex items-center gap-3 text-slate-500">
+        <span className="w-2 h-2 rounded-full bg-[#0A9396] animate-pulse" />
         <span className="text-sm">Loading content studio…</span>
       </div>
     );
@@ -114,24 +114,24 @@ export function StepContent({ token }: { token: string }) {
 
       {clips.length === 0 ? (
         <Panel className="space-y-4">
-          <div className="text-sm text-white/70">
+          <div className="text-sm text-slate-700">
             Click below to spin up your content engine. Takes about 4–6 minutes — you'll get long-form scripts AND ~40 ready-to-post clips back.
           </div>
-          {error && <div className="text-sm text-red-300">{error}</div>}
+          {error && <div className="text-sm text-rose-600">{error}</div>}
           <PrimaryBtn onClick={onGenerate} disabled={generating}>
             {generating ? 'Generating… (4–6 min — keep this tab open)' : 'Generate my content engine →'}
           </PrimaryBtn>
         </Panel>
       ) : (
         <Panel className="flex items-center justify-between gap-3">
-          <div className="text-sm text-white/70">
-            <span className="font-semibold text-white">{sources.length}</span> long-form sources · <span className="font-semibold text-white">{clips.length}</span> clips ready to review
+          <div className="text-sm text-slate-700">
+            <span className="font-semibold text-slate-900">{sources.length}</span> long-form sources · <span className="font-semibold text-slate-900">{clips.length}</span> clips ready to review
           </div>
           <button
             type="button"
             onClick={onGenerate}
             disabled={generating}
-            className="px-4 py-2 text-xs font-medium bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.08] rounded-full text-white/70 hover:text-white transition-all duration-200 disabled:opacity-30 whitespace-nowrap"
+            className="px-4 py-2 text-xs font-medium bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-full text-slate-700 hover:text-slate-900 transition-all duration-200 disabled:opacity-30 whitespace-nowrap"
           >
             {generating ? 'Generating…' : '+ Generate more'}
           </button>
@@ -139,41 +139,42 @@ export function StepContent({ token }: { token: string }) {
       )}
 
       {genResult && (
-        <Panel className="text-xs text-white/50">
+        <Panel className="text-xs text-slate-600">
           {genResult.generatedSources} long-form generated · {genResult.choppedSources} chopped · {genResult.newClips} new clips
-          {genResult.errors.length > 0 && <span className="text-amber-300 ml-2">· {genResult.errors.length} errors</span>}
+          {genResult.errors.length > 0 && <span className="text-amber-700 ml-2">· {genResult.errors.length} errors</span>}
         </Panel>
       )}
 
       <Panel className="space-y-3">
         <div>
-          <div className="text-sm font-semibold text-white">Upload long-form video or audio</div>
-          <p className="text-xs text-white/40 mt-1 leading-relaxed">
+          <div className="text-sm font-semibold text-slate-900">Upload long-form video or audio</div>
+          <p className="text-xs text-slate-500 mt-1 leading-relaxed">
             Drop a podcast, interview, or talking-head clip. We'll transcribe it, identify highlight moments, and produce vertical 9:16 clips ready to post.
           </p>
         </div>
         <label
-          className="inline-flex items-center gap-2 cursor-pointer px-5 py-2.5 text-sm font-bold text-[#0D0D0D] rounded-full transition-all duration-200 hover:scale-[1.02] w-fit"
+          className="inline-flex items-center gap-2 cursor-pointer px-5 py-2.5 text-sm font-bold rounded-full transition-all duration-200 hover:scale-[1.02] w-fit"
           style={{
             background: 'linear-gradient(135deg, #1AE7F6 0%, #0A9396 100%)',
-            boxShadow: '0 0 18px rgba(26,231,246,0.18)',
+            boxShadow: '0 6px 20px rgba(10,147,150,0.28), 0 0 0 1px rgba(10,147,150,0.10)',
+            color: '#06292B',
           }}
         >
           {uploadingVideo ? 'Uploading…' : '+ Upload video / audio'}
           <input type="file" accept="video/*,audio/*" className="hidden" onChange={onVideoUpload} disabled={uploadingVideo} />
         </label>
         {sources.filter((s) => s.sourceType === 'uploaded_video' || s.sourceType === 'uploaded_audio').map((s) => (
-          <div key={s.id} className="flex items-center gap-2 text-xs text-white/50">
-            <span className="text-white/30">[{s.sourceType.replace(/_/g, ' ')}]</span>
+          <div key={s.id} className="flex items-center gap-2 text-xs text-slate-600">
+            <span className="text-slate-400">[{s.sourceType.replace(/_/g, ' ')}]</span>
             <span>{s.title}</span>
             <span
               className="ml-auto px-2 py-0.5 rounded-full text-[10px] font-medium"
               style={
                 s.status === 'ready'
-                  ? { background: 'rgba(16,185,129,0.12)', color: 'rgb(110,231,183)' }
+                  ? { background: 'rgba(16,185,129,0.12)', color: 'rgb(5,122,85)' }
                   : s.status === 'error'
-                  ? { background: 'rgba(239,68,68,0.12)', color: 'rgb(252,165,165)' }
-                  : { background: 'rgba(245,158,11,0.12)', color: 'rgb(252,211,77)' }
+                  ? { background: 'rgba(239,68,68,0.12)', color: 'rgb(190,18,60)' }
+                  : { background: 'rgba(245,158,11,0.14)', color: 'rgb(146,64,14)' }
               }
             >
               {s.status === 'processing' || s.status === 'pending_processing' ? 'transcribing + chopping…' : s.status}
@@ -185,14 +186,14 @@ export function StepContent({ token }: { token: string }) {
       {clips.filter((c) => c.approvalStatus === 'approved').length > 0 && (
         <Panel className="flex items-center justify-between gap-4">
           <div>
-            <div className="text-sm font-semibold text-white">Export approved schedule</div>
-            <p className="text-xs text-white/40 mt-0.5">CSV with day-by-day hooks + captions, ready for Buffer / Later / Hootsuite.</p>
+            <div className="text-sm font-semibold text-slate-900">Export approved schedule</div>
+            <p className="text-xs text-slate-500 mt-0.5">CSV with day-by-day hooks + captions, ready for Buffer / Later / Hootsuite.</p>
           </div>
           <a
             href={launchpadPublic.calendarCsvUrl(token)}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-4 py-2 text-xs font-medium bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.08] rounded-full text-white/70 hover:text-white transition-all duration-200 whitespace-nowrap"
+            className="px-4 py-2 text-xs font-medium bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-full text-slate-700 hover:text-slate-900 transition-all duration-200 whitespace-nowrap"
           >
             Download CSV ↓
           </a>
@@ -202,14 +203,14 @@ export function StepContent({ token }: { token: string }) {
       {sources.length > 0 && (
         <Panel>
           <details>
-            <summary className="cursor-pointer text-sm font-semibold text-white/70 hover:text-white transition-colors">
+            <summary className="cursor-pointer text-sm font-semibold text-slate-700 hover:text-slate-900 transition-colors">
               Long-form sources ({sources.length})
             </summary>
             <div className="mt-3 space-y-1.5">
               {sources.map((s) => (
-                <div key={s.id} className="text-xs text-white/50">
-                  <span className="text-white/30">[Pillar {s.pillarNumber ?? '—'}]</span> {s.title}
-                  <span className="text-white/25 ml-2">({s.sourceType.replace(/_/g, ' ')})</span>
+                <div key={s.id} className="text-xs text-slate-600">
+                  <span className="text-slate-400">[Pillar {s.pillarNumber ?? '—'}]</span> {s.title}
+                  <span className="text-slate-400 ml-2">({s.sourceType.replace(/_/g, ' ')})</span>
                 </div>
               ))}
             </div>
@@ -230,14 +231,14 @@ export function StepContent({ token }: { token: string }) {
                   style={
                     active
                       ? {
-                          background: 'rgba(26,231,246,0.12)',
-                          border: '1px solid rgba(26,231,246,0.4)',
-                          color: '#1AE7F6',
+                          background: 'rgba(26,231,246,0.18)',
+                          border: '1px solid rgba(10,147,150,0.50)',
+                          color: '#016F74',
                         }
                       : {
-                          background: 'rgba(255,255,255,0.04)',
-                          border: '1px solid rgba(255,255,255,0.08)',
-                          color: 'rgba(255,255,255,0.6)',
+                          background: '#FFFFFF',
+                          border: '1px solid #E2E8F0',
+                          color: '#475569',
                         }
                   }
                 >

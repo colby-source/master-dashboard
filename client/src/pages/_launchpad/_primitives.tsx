@@ -1,6 +1,9 @@
 import { useState } from 'react';
 
 const CYAN = '#1AE7F6';
+const TEAL = '#0A9396';
+const TEAL_DARK = '#016F74';
+const INK = '#0F172A'; // slate-900-ish, not pure black — softer on cream
 
 // ─── Layout ────────────────────────────────────────────────────────────────
 
@@ -8,7 +11,12 @@ export function FullScreen({ children }: { children: React.ReactNode }) {
   return (
     <div
       className="min-h-screen flex items-center justify-center px-6"
-      style={{ background: `radial-gradient(ellipse 70% 40% at 50% 0%, rgba(26,231,246,0.07) 0%, transparent 65%), #0D0D0D` }}
+      style={{
+        background:
+          // soft cyan halo at top, fading into warm cream
+          'radial-gradient(ellipse 70% 40% at 50% 0%, rgba(26,231,246,0.10) 0%, transparent 65%), #FAFAF7',
+        color: INK,
+      }}
     >
       {children}
     </div>
@@ -29,13 +37,23 @@ export function StepHeader({
   return (
     <div className="mb-8">
       {step && (
-        <div className="text-[11px] font-mono tracking-[0.18em] uppercase mb-3" style={{ color: `${CYAN}99` }}>
+        <div
+          className="text-[11px] font-mono tracking-[0.18em] uppercase mb-3"
+          style={{ color: TEAL_DARK }}
+        >
           {step}
         </div>
       )}
-      <h2 className="text-3xl font-bold tracking-tight text-white">{title}</h2>
+      <h2
+        className="text-3xl sm:text-4xl font-bold tracking-tight"
+        style={{ color: INK, letterSpacing: '-0.02em' }}
+      >
+        {title}
+      </h2>
       {subtitle && (
-        <p className="text-sm text-white/40 mt-2 leading-relaxed max-w-lg">{subtitle}</p>
+        <p className="text-[15px] text-slate-600 mt-2.5 leading-relaxed max-w-lg">
+          {subtitle}
+        </p>
       )}
     </div>
   );
@@ -54,17 +72,20 @@ export function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/40">{label}</div>
-      {hint && <div className="text-xs text-white/25 leading-relaxed">{hint}</div>}
+      <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-700">
+        {label}
+      </div>
+      {hint && <div className="text-xs text-slate-500 leading-relaxed">{hint}</div>}
       {children}
     </div>
   );
 }
 
 const inputCls =
-  'w-full bg-white/[0.04] border border-white/[0.08] focus:border-[#1AE7F6]/50 focus:bg-white/[0.07] ' +
-  'focus:shadow-[0_0_0_4px_rgba(26,231,246,0.06)] rounded-xl px-4 py-3.5 text-white ' +
-  'placeholder-white/20 outline-none transition-all duration-200 text-[15px]';
+  'w-full bg-white border border-slate-200 hover:border-slate-300 ' +
+  'focus:border-[#0A9396] focus:bg-white ' +
+  'focus:shadow-[0_0_0_4px_rgba(26,231,246,0.18)] rounded-xl px-4 py-3.5 text-slate-900 ' +
+  'placeholder-slate-400 outline-none transition-all duration-200 text-[15px]';
 
 export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={`${inputCls} ${props.className ?? ''}`} />;
@@ -83,7 +104,7 @@ export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <div className="relative">
       <select {...props} className={`${inputCls} appearance-none pr-10 ${props.className ?? ''}`} />
-      <div className="pointer-events-none absolute inset-y-0 right-3.5 flex items-center text-white/30">
+      <div className="pointer-events-none absolute inset-y-0 right-3.5 flex items-center text-slate-400">
         <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
           <path d="M2 3.5l3.5 3.5L9 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -117,16 +138,17 @@ export function Chips({
               key={i}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium"
               style={{
-                background: 'rgba(26,231,246,0.08)',
-                border: '1px solid rgba(26,231,246,0.22)',
-                color: CYAN,
+                background: 'rgba(26,231,246,0.12)',
+                border: '1px solid rgba(10,147,150,0.35)',
+                color: TEAL_DARK,
               }}
             >
               {v}
               <button
                 type="button"
                 onClick={() => onChange(values.filter((_, j) => j !== i))}
-                className="opacity-50 hover:opacity-100 transition-opacity leading-none"
+                className="opacity-60 hover:opacity-100 transition-opacity leading-none"
+                style={{ color: TEAL_DARK }}
               >
                 ×
               </button>
@@ -147,7 +169,7 @@ export function Chips({
         <button
           type="button"
           onClick={add}
-          className="px-4 py-3 text-sm font-medium bg-white/[0.05] hover:bg-white/[0.09] text-white/60 hover:text-white rounded-xl border border-white/[0.08] transition-all duration-200 whitespace-nowrap"
+          className="px-4 py-3 text-sm font-medium bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 rounded-xl border border-slate-200 hover:border-slate-300 transition-all duration-200 whitespace-nowrap"
         >
           Add
         </button>
@@ -160,7 +182,9 @@ export function Chips({
 
 export function Panel({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-2xl border border-white/[0.06] bg-white/[0.025] p-5 ${className}`}>
+    <div
+      className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${className}`}
+    >
       {children}
     </div>
   );
@@ -184,13 +208,14 @@ export function PrimaryBtn({
       type={type}
       disabled={disabled}
       onClick={onClick}
-      className="inline-flex items-center gap-2 px-7 py-3 text-sm font-bold text-[#0D0D0D] rounded-full disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+      className="inline-flex items-center gap-2 px-7 py-3 text-sm font-bold text-white rounded-full disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
       style={
         disabled
-          ? { background: '#555' }
+          ? { background: '#CBD5E1', color: '#fff' }
           : {
-              background: 'linear-gradient(135deg, #1AE7F6 0%, #0A9396 100%)',
-              boxShadow: '0 0 22px rgba(26,231,246,0.22)',
+              background: `linear-gradient(135deg, ${CYAN} 0%, ${TEAL} 100%)`,
+              boxShadow: '0 6px 20px rgba(10,147,150,0.28), 0 0 0 1px rgba(10,147,150,0.10)',
+              color: '#06292B',
             }
       }
     >
@@ -213,7 +238,7 @@ export function GhostBtn({
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white/60 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] rounded-xl border border-white/[0.08] disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
+      className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 rounded-xl border border-slate-200 hover:border-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
     >
       {children}
     </button>

@@ -17,7 +17,7 @@ export function StepCompetition({ intake, update }: StepProps) {
       />
       {[0, 1, 2].map((i) => (
         <Panel key={i} className="space-y-3">
-          <div className="text-[10px] font-mono uppercase tracking-[0.18em]" style={{ color: 'rgba(26,231,246,0.55)' }}>
+          <div className="text-[10px] font-mono uppercase tracking-[0.18em]" style={{ color: '#016F74' }}>
             Competitor {i + 1}
           </div>
           <Input

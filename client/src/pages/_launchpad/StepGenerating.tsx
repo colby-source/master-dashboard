@@ -21,29 +21,29 @@ export function StepGenerating({ generating, error }: Props) {
               <div className="relative">
                 <div
                   className="h-2.5 w-2.5 rounded-full"
-                  style={{ background: '#1AE7F6', boxShadow: '0 0 12px rgba(26,231,246,0.6)' }}
+                  style={{ background: '#0A9396', boxShadow: '0 0 12px rgba(10,147,150,0.55)' }}
                 />
                 <div
                   className="absolute inset-0 h-2.5 w-2.5 rounded-full animate-ping"
-                  style={{ background: '#1AE7F6' }}
+                  style={{ background: '#0A9396' }}
                 />
               </div>
-              <div className="text-sm text-white font-semibold">Working on your launch package…</div>
+              <div className="text-sm text-slate-900 font-semibold">Working on your launch package…</div>
             </div>
-            <p className="text-xs text-white/40 leading-relaxed">
+            <p className="text-xs text-slate-500 leading-relaxed">
               Leave this tab open or close it — we'll keep generating in the background.
               When you come back, your content studio will be ready.
             </p>
           </div>
         ) : error ? (
-          <div className="text-sm text-red-300">{error}</div>
+          <div className="text-sm text-rose-600">{error}</div>
         ) : (
-          <div className="text-sm text-white/60">Strategy isn't ready yet. Refreshing in a few seconds…</div>
+          <div className="text-sm text-slate-600">Strategy isn't ready yet. Refreshing in a few seconds…</div>
         )}
       </Panel>
 
       {error && !generating && (
-        <p className="text-xs text-white/30">
+        <p className="text-xs text-slate-500">
           If this persists, contact your launch manager — they can re-run the modules manually.
         </p>
       )}
