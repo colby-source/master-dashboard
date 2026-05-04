@@ -210,6 +210,82 @@ export function missingIntakeFields(intake: Partial<BrandIntake>): string[] {
   return REQUIRED_INTAKE_FIELDS.filter((k) => !fieldFilled(intake[k]));
 }
 
+/**
+ * Admin version of saveIntake — bypasses the 'invited → intake_started' status
+ * promotion so the brand stays in 'invited' until the admin explicitly seals
+ * the pre-bake and sends the magic link. Merges with existing intake data.
+ */
+export function adminSaveIntake(brandId: string, patch: Record<string, unknown>): void {
+  const existing = getBrandById(brandId);
+  if (!existing) throw new Error('Brand not found');
+
+  const merged: Record<string, unknown> = { ...(existing.intake as Record<string, unknown> || {}), ...patch };
+  runSql(
+    `UPDATE launchpad_brands SET intake_data = ?, updated_at = ? WHERE id = ?`,
+    [JSON.stringify(merged), new Date().toISOString(), brandId],
+  );
+  saveDb();
+}
+
+// Minimum fields required for the admin pre-bake to be considered ready.
+// The creator cannot be sent a link until these are all present.
+const PREBAKE_REQUIRED_INTAKE_FIELDS: (keyof BrandIntake)[] = [
+  'brand_name', 'founder_name', 'niche', 'product_categories',
+  'founder_story', 'signature_belief',
+  'primary_icp',
+  'brand_voice_dos', 'brand_voice_donts',
+];
+
+const PREBAKE_MIN_PRODUCT_PHOTOS = 3;
+
+/**
+ * Validates that the admin has pre-baked enough brand direction before the
+ * magic link is sent. Returns an array of human-readable missing items.
+ * An empty array means the brand is ready.
+ */
+export function validatePrebake(brandId: string): string[] {
+  const brand = getBrandById(brandId);
+  if (!brand) return ['Brand not found'];
+
+  const missing: string[] = [];
+
+  // Check intake fields
+  const intake = (brand.intake || {}) as Record<string, unknown>;
+  for (const field of PREBAKE_REQUIRED_INTAKE_FIELDS) {
+    const v = intake[field];
+    const empty =
+      v === undefined || v === null ||
+      (typeof v === 'string' && v.trim().length === 0) ||
+      (Array.isArray(v) && v.length === 0) ||
+      (typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0);
+    if (empty) missing.push(`intake.${field}`);
+  }
+
+  // Check voice: need at least 1 dos AND 1 donts
+  const dos = intake['brand_voice_dos'];
+  const donts = intake['brand_voice_donts'];
+  if (!Array.isArray(dos) || dos.length === 0) missing.push('intake.brand_voice_dos (at least 1)');
+  if (!Array.isArray(donts) || donts.length === 0) missing.push('intake.brand_voice_donts (at least 1)');
+
+  // Check assets
+  const assets = queryAll(
+    `SELECT asset_type FROM launchpad_assets WHERE brand_id = ?`,
+    [brandId],
+  ) as Array<{ asset_type: string }>;
+  const assetTypes = new Set(assets.map((a) => a.asset_type));
+
+  if (!assetTypes.has('logo')) missing.push('asset: logo (at least 1)');
+
+  const productPhotoCount = assets.filter((a) => a.asset_type === 'product_photo').length;
+  if (productPhotoCount < PREBAKE_MIN_PRODUCT_PHOTOS) {
+    missing.push(`asset: product_photo (need ${PREBAKE_MIN_PRODUCT_PHOTOS}, have ${productPhotoCount})`);
+  }
+
+  // Remove duplicates from voice checks (they're already in PREBAKE_REQUIRED_INTAKE_FIELDS)
+  // so just return de-duped
+  return [...new Set(missing)];
+}
+
 // ── Strategy generation ───────────────────────────────────
 
 // Stale-lock window: if a generation has been running longer than this, we
@@ -528,6 +604,8 @@ export const launchpadService = {
   getBrandByMagicLink,
   listBrands,
   saveIntake,
+  adminSaveIntake,
+  validatePrebake,
   generateStrategy,
   updateStrategyModule,
   uploadAsset,

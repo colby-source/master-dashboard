@@ -17,6 +17,8 @@ import { StepReview } from './_launchpad/StepReview';
 import { StepGenerating } from './_launchpad/StepGenerating';
 import { StepContent } from './_launchpad/StepContent';
 import { StepAssets } from './_launchpad/StepAssets';
+import { StepAssetsReview } from './_launchpad/StepAssetsReview';
+import { StepBrandReview } from './_launchpad/StepBrandReview';
 import { StepSubmit } from './_launchpad/StepSubmit';
 
 import type { IntakeData, IntakePatch, Session } from './_launchpad/_types';
@@ -41,26 +43,42 @@ function computeMissingIntakeFields(intake: IntakeData): string[] {
   });
 }
 
-// The 12 numbered steps that make up the wizard rail.
-// 'welcome' lives OFF the rail — it's a one-time intro screen and not counted
-// against progress.
-const STEPS = [
-  { id: 'identity',   title: 'Brand basics' },
-  { id: 'story',      title: 'Your story' },
-  { id: 'audience',   title: 'Your audience' },
+// Standard 12-step rail (brands WITHOUT admin pre-bake)
+const STEPS_STANDARD = [
+  { id: 'identity',    title: 'Brand basics' },
+  { id: 'story',       title: 'Your story' },
+  { id: 'audience',    title: 'Your audience' },
   { id: 'competition', title: 'Competition' },
-  { id: 'products',   title: 'Products' },
-  { id: 'compliance', title: 'Compliance' },
-  { id: 'channels',   title: 'Channels & goals' },
-  { id: 'voice',      title: 'Voice & constraints' },
-  { id: 'review',     title: 'Generate strategy' },
-  { id: 'content',    title: 'Content studio' },
-  { id: 'assets',     title: 'Upload assets' },
-  { id: 'submit',     title: 'Submit for review' },
+  { id: 'products',    title: 'Products' },
+  { id: 'compliance',  title: 'Compliance' },
+  { id: 'channels',    title: 'Channels & goals' },
+  { id: 'voice',       title: 'Voice & constraints' },
+  { id: 'review',      title: 'Generate strategy' },
+  { id: 'content',     title: 'Content studio' },
+  { id: 'assets',      title: 'Upload assets' },
+  { id: 'submit',      title: 'Submit for review' },
 ] as const;
 
-type RailStepId = typeof STEPS[number]['id'];
-type StepId = RailStepId | 'welcome';
+// Condensed 6-step rail (brands WITH admin pre-bake)
+// Brand direction is pre-built — creator reviews and approves rather than filling it in.
+const STEPS_PREBAKED = [
+  { id: 'brand_review',  title: 'Brand direction' },
+  { id: 'products',      title: 'Products' },
+  { id: 'compliance',    title: 'Compliance' },
+  { id: 'content',       title: 'Content studio' },
+  { id: 'assets_review', title: 'Brand assets' },
+  { id: 'submit',        title: 'Submit for review' },
+] as const;
+
+type StandardStepId = typeof STEPS_STANDARD[number]['id'];
+type PrebakedStepId = typeof STEPS_PREBAKED[number]['id'];
+type RailStepId = StandardStepId | PrebakedStepId;
+type StepId = RailStepId | 'welcome' | 'generating';
+
+/** Returns true if the admin has pre-baked brand direction for this brand. */
+function isPrebakedBrand(intake: IntakeData | null): boolean {
+  return !!(intake as Record<string, unknown> | null)?.['admin_prep_sealed'];
+}
 
 export default function LaunchpadPublicPage() {
   const { token } = useParams<{ token: string }>();
@@ -75,18 +93,38 @@ export default function LaunchpadPublicPage() {
   const [submitting, setSubmitting] = useState(false);
   const saveTimer = useRef<number | null>(null);
 
+  // Derived: which step set we're using
+  const prebaked = isPrebakedBrand(intake);
+  const STEPS = prebaked ? STEPS_PREBAKED : STEPS_STANDARD;
+
   useEffect(() => {
     if (!token) return;
     launchpadPublic.getSession(token)
       .then((s) => {
         setSession(s);
-        if (s.intake) setIntake(s.intake as IntakeData);
-        // Returning creators skip the welcome screen — only fresh `invited`
-        // sessions with no saved intake see it.
-        if (s.status === 'strategy_generated' || s.status === 'assets_uploading') setStep('assets');
-        else if (s.status === 'submitted' || s.status === 'in_review') setStep('submit');
-        else if (s.intake) setStep('review');
-        else setStep('welcome');
+        const loadedIntake = (s.intake as IntakeData) ?? {};
+        if (s.intake) setIntake(loadedIntake);
+
+        const isBaked = isPrebakedBrand(loadedIntake);
+
+        // Route returning creators to the right step
+        if (s.status === 'submitted' || s.status === 'in_review') {
+          setStep('submit');
+        } else if (isBaked) {
+          // Pre-baked flow: skip welcome → go to brand_review (or content if strategy ready)
+          if (s.status === 'strategy_generated' || s.status === 'assets_uploading') {
+            setStep('assets_review');
+          } else if (s.strategy) {
+            setStep('content');
+          } else {
+            setStep('brand_review');
+          }
+        } else {
+          // Standard flow
+          if (s.status === 'strategy_generated' || s.status === 'assets_uploading') setStep('assets');
+          else if (s.intake) setStep('review');
+          else setStep('welcome');
+        }
       })
       .catch((err) => setError(String(err)))
       .finally(() => setLoading(false));
@@ -207,7 +245,10 @@ export default function LaunchpadPublicPage() {
         }}
       >
         <div className="max-w-3xl mx-auto px-6 py-12 sm:py-16">
-          <StepWelcome brandName={session.brandName} onStart={() => setStep('identity')} />
+          <StepWelcome
+            brandName={session.brandName}
+            onStart={() => setStep(prebaked ? 'brand_review' : 'identity')}
+          />
         </div>
       </div>
     );
@@ -218,6 +259,10 @@ export default function LaunchpadPublicPage() {
   const acks: Record<string, string> = (intake.compliance_acks as Record<string, string>) || {};
   const universalReady = ['no_disease_claims', 'ftc_disclosure', 'pre_publish_legal_review']
     .every((k) => !!acks[k]);
+
+  // Gate: in pre-baked mode, "Submit" requires review signoffs + compliance + 30 approved clips
+  const brandDirectionApproved = prebaked ? !!(intake.review_signoffs?.brand_direction) : true;
+  const assetsApproved = prebaked ? !!(intake.review_signoffs?.assets) : true;
 
   return (
     <div
@@ -274,20 +319,20 @@ export default function LaunchpadPublicPage() {
           <p className="text-sm text-slate-500 mt-2">
             {session.launchDate
               ? `Launching ${new Date(session.launchDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`
-              : 'Set your launch date in the Channels step.'}
+              : prebaked ? 'Your launch package is being prepared.' : 'Set your launch date in the Channels step.'}
           </p>
         </header>
 
-        <ProgressRail steps={STEPS} current={stepIdx} />
+        <ProgressRail steps={STEPS as unknown as Array<{ id: string; title: string }>} current={stepIdx} />
 
         {/* ── Step content ── */}
         <main className="min-h-[420px]">
+
+          {/* ── Standard (non-pre-baked) steps ── */}
           {step === 'identity'    && <StepIdentity intake={intake} update={update} />}
           {step === 'story'       && <StepStory intake={intake} update={update} />}
           {step === 'audience'    && <StepAudience intake={intake} update={update} updateNested={updateNested} />}
           {step === 'competition' && <StepCompetition intake={intake} update={update} />}
-          {step === 'products'    && <StepProducts token={token!} onComplete={() => setStep('compliance')} />}
-          {step === 'compliance'  && <StepCompliance token={token!} intake={intake} update={update} onComplete={() => setStep('channels')} />}
           {step === 'channels'    && <StepChannels intake={intake} update={update} />}
           {step === 'voice'       && <StepVoice intake={intake} update={update} />}
           {step === 'review'      && (
@@ -300,29 +345,80 @@ export default function LaunchpadPublicPage() {
               universalReady={universalReady}
             />
           )}
+          {step === 'assets' && <StepAssets token={token!} session={session} />}
+
+          {/* ── Pre-baked steps ── */}
+          {step === 'brand_review' && (
+            <StepBrandReview
+              intake={intake}
+              update={update}
+              onApprove={() => setStep('products')}
+            />
+          )}
+          {step === 'assets_review' && (
+            <StepAssetsReview
+              token={token!}
+              intake={intake}
+              update={update}
+            />
+          )}
+
+          {/* ── Shared steps (both flows) ── */}
+          {step === 'products'   && (
+            <StepProducts
+              token={token!}
+              onComplete={() => setStep('compliance')}
+            />
+          )}
+          {step === 'compliance' && (
+            <StepCompliance
+              token={token!}
+              intake={intake}
+              update={update}
+              onComplete={() => setStep(prebaked ? 'content' : 'channels')}
+            />
+          )}
           {step === 'content' && (
             session.strategy
               ? <StepContent token={token!} />
               : <StepGenerating generating={generating} error={generationError} />
           )}
-          {step === 'assets' && session.strategy && <StepAssets token={token!} session={session} />}
-          {step === 'submit' && <StepSubmit session={session} onSubmit={onSubmit} submitting={submitting} />}
+          {step === 'generating' && (
+            <StepGenerating generating={generating} error={generationError} />
+          )}
+          {step === 'submit' && (
+            <StepSubmit
+              session={session}
+              onSubmit={onSubmit}
+              submitting={submitting}
+              prebaked={prebaked}
+              brandDirectionApproved={brandDirectionApproved}
+              assetsApproved={assetsApproved}
+              universalReady={universalReady}
+            />
+          )}
         </main>
 
         {/* ── Navigation ── */}
         <nav className="flex items-center justify-between mt-14 pt-6 border-t border-slate-200">
           <button
             type="button"
-            disabled={stepIdx === 0}
-            onClick={() => setStep(STEPS[Math.max(0, stepIdx - 1)].id as RailStepId)}
+            disabled={stepIdx <= 0}
+            onClick={() => {
+              const prevIdx = Math.max(0, stepIdx - 1);
+              setStep(STEPS[prevIdx].id as RailStepId);
+            }}
             className="text-sm text-slate-500 hover:text-slate-900 disabled:opacity-0 transition-colors duration-200"
           >
-            ← Back
+            Back
           </button>
           <button
             type="button"
             disabled={stepIdx === STEPS.length - 1}
-            onClick={() => setStep(STEPS[Math.min(STEPS.length - 1, stepIdx + 1)].id as RailStepId)}
+            onClick={() => {
+              const nextIdx = Math.min(STEPS.length - 1, stepIdx + 1);
+              setStep(STEPS[nextIdx].id as RailStepId);
+            }}
             className="px-7 py-2.5 text-sm font-bold rounded-full disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
             style={
               stepIdx === STEPS.length - 1
@@ -334,7 +430,7 @@ export default function LaunchpadPublicPage() {
                   }
             }
           >
-            Continue →
+            Continue
           </button>
         </nav>
 

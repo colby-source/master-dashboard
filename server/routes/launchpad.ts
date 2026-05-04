@@ -5,11 +5,13 @@
  *   - list / inspect brands
  *   - review modules + approve / reject
  *   - resend / revoke magic links
+ *   - pre-bake brand direction (intake + assets) before sending link
  *
  * Public client-facing routes are in routes/launchpad-public.ts.
  */
 
 import { Router } from 'express';
+import multer from 'multer';
 import { launchpadService } from '../services/launchpad/launchpad-service';
 import { magicLinkService } from '../services/launchpad/magic-link-service';
 import { contentProcessorService } from '../services/launchpad/content-processor-service';
@@ -20,8 +22,14 @@ import { telemetryService } from '../services/launchpad/telemetry-service';
 import { costGuardService } from '../services/launchpad/cost-guard-service';
 import { qualityFeedbackService, type Checkpoint, type MetricSource } from '../services/launchpad/quality-feedback-service';
 import type { CatalogSource } from '../services/launchpad/types';
+import { config } from '../config';
 import { createLogger } from '../utils/logger';
 import type { LaunchpadStatus } from '../services/launchpad/types';
+
+const adminUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: config.launchpad.maxAssetSizeMb * 1024 * 1024 },
+});
 
 const log = createLogger('launchpad-route');
 const router = Router();
@@ -78,6 +86,87 @@ router.post('/brands', async (req, res) => {
     log.error(`[Launchpad] Create brand failed: ${msg}`);
     res.status(500).json({ error: msg });
   }
+});
+
+// PATCH /api/launchpad/brands/:id/intake — admin pre-populates intake fields
+// before sending the magic link. Merges with any existing intake data.
+router.patch('/brands/:id/intake', (req, res) => {
+  const brand = launchpadService.getBrandById(req.params.id);
+  if (!brand) return res.status(404).json({ error: 'Brand not found' });
+
+  const patch = req.body || {};
+  if (typeof patch !== 'object' || Array.isArray(patch)) {
+    return res.status(400).json({ error: 'Body must be an intake object' });
+  }
+
+  try {
+    // saveIntake merges with existing data and promotes status if complete
+    launchpadService.adminSaveIntake(brand.id, patch);
+    const updated = launchpadService.getBrandById(brand.id);
+    res.json({ ok: true, intake: updated?.intake ?? null });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    res.status(400).json({ error: msg });
+  }
+});
+
+// POST /api/launchpad/brands/:id/assets — admin uploads brand assets
+// (logo, brand_guide, founder_photo, product_photo) before sending the link.
+// Uses the same launchpad_assets table and Google Drive structure as the
+// creator path; asset_type field distinguishes origin.
+router.post('/brands/:id/assets', adminUpload.single('file'), async (req, res) => {
+  const brand = launchpadService.getBrandById(req.params.id);
+  if (!brand) return res.status(404).json({ error: 'Brand not found' });
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+  const assetType = (req.body?.assetType || 'other') as
+    | 'logo' | 'product_photo' | 'founder_photo' | 'brand_guide'
+    | 'finalized_post' | 'video' | 'audio' | 'other';
+
+  let metadata: Record<string, unknown> | undefined;
+  if (req.body?.metadata) {
+    try { metadata = JSON.parse(req.body.metadata); } catch { /* ignore */ }
+  }
+
+  try {
+    const result = await launchpadService.uploadAsset({
+      brandId: brand.id,
+      filename: req.file.originalname,
+      mimeType: req.file.mimetype,
+      body: req.file.buffer,
+      assetType,
+      metadata: { ...metadata, uploadedBy: 'admin' },
+    });
+    res.json(result);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    log.error(`[Launchpad] Admin asset upload failed for ${brand.id}: ${msg}`);
+    res.status(500).json({ error: msg });
+  }
+});
+
+// POST /api/launchpad/brands/:id/seal-prep — admin signals brand direction is
+// ready. Validates minimum pre-bake requirements then marks the brand as
+// "prep_ready" (stored in intake.admin_prep_sealed) and returns the magic link.
+// The /magic-link endpoint checks this seal before sending if brand has intake.
+router.post('/brands/:id/seal-prep', (req, res) => {
+  const brand = launchpadService.getBrandById(req.params.id);
+  if (!brand) return res.status(404).json({ error: 'Brand not found' });
+
+  const missing = launchpadService.validatePrebake(brand.id);
+  if (missing.length > 0) {
+    return res.status(422).json({
+      error: 'Brand direction is not ready — pre-bake validation failed',
+      missing,
+    });
+  }
+
+  // Stamp the intake with admin_prep_sealed timestamp
+  launchpadService.adminSaveIntake(brand.id, {
+    admin_prep_sealed: new Date().toISOString(),
+  } as Record<string, unknown>);
+
+  res.json({ ok: true, message: 'Brand direction sealed — safe to send magic link' });
 });
 
 // POST /api/launchpad/brands/:id/magic-link — issue a fresh magic link

@@ -352,4 +352,35 @@ export const launchpadAdmin = {
       `/launchpad/brands/${brandId}/skus`,
       { method: 'PUT', body: JSON.stringify({ selections }) },
     ),
+
+  // Pre-bake: admin saves intake fields before sending the magic link
+  patchAdminIntake: (brandId: string, intake: Record<string, unknown>) =>
+    request<{ ok: boolean; intake: Record<string, unknown> | null }>(
+      `/launchpad/brands/${brandId}/intake`,
+      { method: 'PATCH', body: JSON.stringify(intake) },
+    ),
+
+  // Pre-bake: admin uploads logo / brand guide / founder photos / product photos
+  uploadAdminAsset: async (brandId: string, file: File, assetType: string, metadata?: Record<string, unknown>): Promise<{ id: string; url: string }> => {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('assetType', assetType);
+    if (metadata) fd.append('metadata', JSON.stringify(metadata));
+    const res = await fetch(`${BASE}/launchpad/brands/${brandId}/assets`, {
+      method: 'POST',
+      body: fd,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText })) as { error?: string };
+      throw new Error(err.error || `Upload failed: ${res.status}`);
+    }
+    return res.json() as Promise<{ id: string; url: string }>;
+  },
+
+  // Pre-bake: validate minimum requirements and seal brand direction
+  sealPrep: (brandId: string) =>
+    request<{ ok: boolean; message: string; missing?: string[] }>(
+      `/launchpad/brands/${brandId}/seal-prep`,
+      { method: 'POST' },
+    ),
 };

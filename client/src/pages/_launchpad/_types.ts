@@ -68,6 +68,26 @@ export interface IntakeData {
 
   // Compliance acks (Phase 2) — { gate_id: ISO timestamp }
   compliance_acks?: Record<string, string>;
+
+  // ── Admin pre-bake fields ────────────────────────────────
+  // Set by the admin BEFORE sending the magic link. Creator sees read-only
+  // review sections instead of data-entry forms when these are present.
+
+  /** ISO timestamp set by admin when brand direction is sealed and ready */
+  admin_prep_sealed?: string;
+
+  /** Creator per-section comments. { [sectionId]: string } */
+  creator_feedback?: Record<string, string>;
+
+  /**
+   * Creator explicit section sign-offs.
+   * { brand_direction: ISO | null, assets: ISO | null, products: ISO | null }
+   */
+  review_signoffs?: {
+    brand_direction?: string | null;
+    assets?: string | null;
+    products?: string | null;
+  };
 }
 
 export type IntakePatch = Partial<IntakeData>;
