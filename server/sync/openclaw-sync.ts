@@ -2,6 +2,8 @@ import { openclawService } from '../services/openclaw-service';
 import { runSql, queryOne } from '../db';
 import { saveDb } from '../db';
 import { createAlert } from '../services/alert-service';
+import { createLogger } from '../utils/logger';
+const log = createLogger('openclaw-sync');
 
 class OpenClawSync {
   private getLastOnline(): boolean {
@@ -13,7 +15,7 @@ class OpenClawSync {
   }
 
   async sync() {
-    console.log('[Sync:OpenClaw] Starting...');
+    log.info('[Sync:OpenClaw] Starting...');
     const health = await openclawService.getHealth();
     const lastOnline = this.getLastOnline();
 
@@ -37,7 +39,7 @@ class OpenClawSync {
     }
 
     saveDb();
-    console.log(`[Sync:OpenClaw] Online: ${health.online}, Latency: ${health.latencyMs}ms`);
+    log.info(`[Sync:OpenClaw] Online: ${health.online}, Latency: ${health.latencyMs}ms`);
   }
 }
 

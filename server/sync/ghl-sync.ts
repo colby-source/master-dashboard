@@ -1,18 +1,20 @@
 import { ghlService } from '../services/ghl-service';
 import { runSql, queryOne } from '../db';
 import { saveDb } from '../db';
+import { createLogger } from '../utils/logger';
+const log = createLogger('ghl-sync');
 
 class GhlSync {
   private accessAlertSent = new Set<number>();
 
   async sync() {
-    console.log('[Sync:GHL] Starting...');
+    log.info('[Sync:GHL] Starting...');
     let totalPipelines = 0;
     let totalWorkflows = 0;
 
     const clients = ghlService.getAllClients();
     if (clients.length === 0) {
-      console.log('[Sync:GHL] No GHL locations configured, skipping');
+      log.info('[Sync:GHL] No GHL locations configured, skipping');
       return;
     }
 
@@ -32,9 +34,9 @@ class GhlSync {
               `INSERT INTO alerts (company_id, severity, source, message) VALUES (?, 'warning', 'ghl', ?)`,
               [companyId, `GHL connection failed for ${label}: ${client.lastError}. Fix: Go to GHL → Settings → Integrations → Private Integrations → Edit your integration → Enable scopes: contacts.readonly, opportunities.readonly, workflows.readonly`]
             );
-          } catch (e) { /* ignore if db not ready */ }
+          } catch (_e) { /* ignore if db not ready */ }
         }
-        console.log(`[Sync:GHL:${label}] Skipping — no access (${client.lastError})`);
+        log.info(`[Sync:GHL:${label}] Skipping — no access (${client.lastError})`);
         continue;
       }
 
@@ -85,11 +87,11 @@ class GhlSync {
         );
       }
 
-      console.log(`[Sync:GHL:${label}] ${pipelines.length} pipelines, ${workflows.length} workflows, ${contactTotal} contacts`);
+      log.info(`[Sync:GHL:${label}] ${pipelines.length} pipelines, ${workflows.length} workflows, ${contactTotal} contacts`);
     }
 
     saveDb();
-    console.log(`[Sync:GHL] Total: ${totalPipelines} pipelines, ${totalWorkflows} workflows`);
+    log.info(`[Sync:GHL] Total: ${totalPipelines} pipelines, ${totalWorkflows} workflows`);
   }
 }
 

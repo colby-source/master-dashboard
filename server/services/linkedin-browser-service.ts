@@ -1,6 +1,8 @@
 import puppeteer, { type Browser, type Page } from 'puppeteer-core';
 import path from 'path';
 import fs from 'fs';
+import { createLogger } from '../utils/logger';
+const log = createLogger('linkedin-browser-service');
 
 // Persistent Chrome profile for LinkedIn automation.
 // User logs in once manually; cookies persist across restarts.
@@ -27,7 +29,7 @@ class LinkedInBrowserService {
     try {
       this.browser = await puppeteer.connect({ browserURL: `http://127.0.0.1:${CDP_PORT}` });
       if (this.browser.connected) {
-        console.log('[LinkedIn Browser] Reconnected to existing Chrome');
+        log.info('[LinkedIn Browser] Reconnected to existing Chrome');
         return this.browser;
       }
     } catch {
@@ -48,7 +50,7 @@ class LinkedInBrowserService {
         fs.mkdirSync(PROFILE_DIR, { recursive: true });
       }
 
-      console.log('[LinkedIn Browser] Launching Chrome with persistent profile...');
+      log.info('[LinkedIn Browser] Launching Chrome with persistent profile...');
       this.browser = await puppeteer.launch({
         executablePath: CHROME_PATH,
         userDataDir: PROFILE_DIR,
@@ -64,11 +66,11 @@ class LinkedInBrowserService {
 
       // Handle disconnect
       this.browser.on('disconnected', () => {
-        console.log('[LinkedIn Browser] Chrome disconnected');
+        log.info('[LinkedIn Browser] Chrome disconnected');
         this.browser = null;
       });
 
-      console.log('[LinkedIn Browser] Chrome launched successfully');
+      log.info('[LinkedIn Browser] Chrome launched successfully');
       return this.browser;
     } finally {
       this.launching = false;
@@ -119,7 +121,7 @@ class LinkedInBrowserService {
     const pages = await browser.pages();
     const page = pages.length > 0 ? pages[0] : await browser.newPage();
     await page.goto('https://www.linkedin.com/login', { waitUntil: 'domcontentloaded', timeout: 30000 });
-    console.log('[LinkedIn Browser] Login page opened — user must log in manually');
+    log.info('[LinkedIn Browser] Login page opened — user must log in manually');
   }
 
   /** Look up a LinkedIn profile URN by vanity name */
@@ -186,7 +188,7 @@ class LinkedInBrowserService {
     try {
       const profile = await this.lookupProfile(vanityName);
       profileUrn = profile.profileUrn;
-      console.log(`[LinkedIn Browser] Found profile: ${profile.firstName} ${profile.lastName} (${profileUrn})`);
+      log.info(`[LinkedIn Browser] Found profile: ${profile.firstName} ${profile.lastName} (${profileUrn})`);
     } catch (err: any) {
       return { success: false, error: `Profile lookup failed: ${err.message}` };
     }
@@ -230,9 +232,9 @@ class LinkedInBrowserService {
     }, profileUrn, truncatedMessage);
 
     if (result.success) {
-      console.log(`[LinkedIn Browser] Connection sent to ${vanityName}: ${result.invitationUrn}`);
+      log.info(`[LinkedIn Browser] Connection sent to ${vanityName}: ${result.invitationUrn}`);
     } else {
-      console.error(`[LinkedIn Browser] Failed for ${vanityName}: ${result.error}`);
+      log.error(`[LinkedIn Browser] Failed for ${vanityName}: ${result.error}`);
     }
 
     return result;
@@ -285,7 +287,7 @@ class LinkedInBrowserService {
     });
 
     if ('error' in result && result.error) {
-      console.warn(`[LinkedIn Browser] getAcceptedInvitations warning: ${result.error}`);
+      log.warn(`[LinkedIn Browser] getAcceptedInvitations warning: ${result.error}`);
     }
     return result.accepted || [];
   }
@@ -351,9 +353,9 @@ class LinkedInBrowserService {
     }, memberId, messageText);
 
     if (result.success) {
-      console.log(`[LinkedIn Browser] DM sent to ${vanityName}`);
+      log.info(`[LinkedIn Browser] DM sent to ${vanityName}`);
     } else {
-      console.error(`[LinkedIn Browser] DM failed for ${vanityName}: ${result.error}`);
+      log.error(`[LinkedIn Browser] DM failed for ${vanityName}: ${result.error}`);
     }
     return result;
   }
@@ -415,7 +417,7 @@ class LinkedInBrowserService {
     if (this.browser?.connected) {
       await this.browser.close();
       this.browser = null;
-      console.log('[LinkedIn Browser] Chrome closed');
+      log.info('[LinkedIn Browser] Chrome closed');
     }
   }
 

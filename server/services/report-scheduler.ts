@@ -6,6 +6,8 @@ import { reportDataService } from './report-data-service';
 import { renderReportHtml } from './report-renderer';
 import { createAlert } from './alert-service';
 import { wsServer } from '../websocket/ws-server';
+import { createLogger } from '../utils/logger';
+const log = createLogger('report-scheduler');
 
 class ReportScheduler {
   private morningJob: ScheduledTask | null = null;
@@ -13,7 +15,7 @@ class ReportScheduler {
 
   start() {
     if (!config.report.enabled) {
-      console.log('[Reports] Scheduler disabled (REPORT_ENABLED=false)');
+      log.info('[Reports] Scheduler disabled (REPORT_ENABLED=false)');
       return;
     }
 
@@ -27,7 +29,7 @@ class ReportScheduler {
       timezone: 'America/New_York',
     });
 
-    console.log('[Reports] Scheduler started — 8:00 AM + 6:00 PM ET');
+    log.info('[Reports] Scheduler started — 8:00 AM + 6:00 PM ET');
   }
 
   stop() {
@@ -35,7 +37,7 @@ class ReportScheduler {
     this.eveningJob?.stop();
     this.morningJob = null;
     this.eveningJob = null;
-    console.log('[Reports] Scheduler stopped');
+    log.info('[Reports] Scheduler stopped');
   }
 
   async run(type: 'morning' | 'evening', companyId?: number): Promise<{ id: number; html: string }> {
@@ -56,7 +58,7 @@ class ReportScheduler {
       return lastResult;
     }
 
-    console.log(`[Reports] Generating ${label} for company ${companyId}...`);
+    log.info(`[Reports] Generating ${label} for company ${companyId}...`);
 
     const data = await reportDataService.gatherReportData(type, companyId);
     const html = renderReportHtml(data);
@@ -87,7 +89,7 @@ class ReportScheduler {
           [reportId]
         );
         saveDb();
-        console.log(`[Reports] ${label} sent to ${recipientStr} (company ${companyId})`);
+        log.info(`[Reports] ${label} sent to ${recipientStr} (company ${companyId})`);
       } catch (err: any) {
         const errorMsg = err.message || 'Send failed';
         runSql(
@@ -98,7 +100,7 @@ class ReportScheduler {
         createAlert('report_send_failed', 'warning', `Failed to send ${label}: ${errorMsg}`, 'report-scheduler');
       }
     } else {
-      console.log(`[Reports] ${label} generated but email not configured — report stored in DB`);
+      log.info(`[Reports] ${label} generated but email not configured — report stored in DB`);
     }
 
     wsServer.broadcast({ type: 'report_generated', reportType: type, date: data.date });

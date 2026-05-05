@@ -1,5 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 import { config } from '../config';
+import { createLogger } from '../utils/logger';
+const log = createLogger('ghl-service');
 
 interface GhlLocation {
   name: string;
@@ -38,14 +40,14 @@ class GhlLocationClient {
     if (status === 403) {
       this._hasAccess = false;
       this._lastError = `403 Forbidden: ${msg}`;
-      console.error(`[GHL:${this.location.name}] ${endpoint} → 403: ${msg}`);
+      log.error(`[GHL:${this.location.name}] ${endpoint} → 403: ${msg}`);
     } else if (status === 401) {
       this._hasAccess = false;
       this._lastError = `401 Unauthorized: Invalid API key`;
-      console.error(`[GHL:${this.location.name}] ${endpoint} → 401`);
+      log.error(`[GHL:${this.location.name}] ${endpoint} → 401`);
     } else {
       this._lastError = msg;
-      console.error(`[GHL:${this.location.name}] ${endpoint} error:`, msg);
+      log.error(`[GHL:${this.location.name}] ${endpoint} error:`, msg);
     }
   }
 
@@ -88,7 +90,7 @@ class GhlLocationClient {
         }
         page++;
         if (page % 10 === 0) {
-          console.log(`[GHL:${this.location.name}] getAllContacts: fetched ${all.length} contacts (${page} pages)`);
+          log.info(`[GHL:${this.location.name}] getAllContacts: fetched ${all.length} contacts (${page} pages)`);
         }
         if (!data?.meta?.nextPageUrl || contacts.length === 0) break;
         startAfter = data.meta.startAfter;
@@ -102,7 +104,7 @@ class GhlLocationClient {
       }
     }
 
-    console.log(`[GHL:${this.location.name}] getAllContacts: completed with ${all.length} contacts (${page} pages)`);
+    log.info(`[GHL:${this.location.name}] getAllContacts: completed with ${all.length} contacts (${page} pages)`);
     return all;
   }
 
@@ -413,14 +415,30 @@ class GhlLocationClient {
     }
   }
 
-  async createCustomField(field: { name: string; dataType: string; placeholder?: string }): Promise<any> {
+  async createCustomField(field: {
+    name: string;
+    dataType: string;
+    placeholder?: string;
+    position?: number;
+    picklistOptions?: string[];
+    options?: { label?: string; value?: string }[] | string[];
+    textBoxListOptions?: { label: string; prefillValue?: string }[];
+    acceptedFormats?: string;
+    isMultipleFile?: boolean;
+    maxFileLimit?: number;
+  }): Promise<any> {
     try {
-      const { data } = await this.client.post(`/locations/${this.location.locationId}/customFields`, field);
+      const { picklistOptions, ...rest } = field;
+      const payload: any = { ...rest };
+      if (picklistOptions && picklistOptions.length > 0 && !payload.options) {
+        payload.options = picklistOptions;
+      }
+      const { data } = await this.client.post(`/locations/${this.location.locationId}/customFields`, payload);
       this.ok();
       return data?.customField || data;
     } catch (err: any) {
       this.handleError('createCustomField', err);
-      return null;
+      throw err;
     }
   }
 

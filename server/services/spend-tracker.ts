@@ -1,5 +1,7 @@
 import { runSql, queryAll, queryOne } from '../db';
 import { createAlert } from './alert-service';
+import { createLogger } from '../utils/logger';
+const log = createLogger('spend-tracker');
 
 // Known provider limits and costs (in cents)
 const PROVIDER_LIMITS: Record<string, { monthlyCredits?: number; description: string }> = {
@@ -54,7 +56,7 @@ export function trackApiCall(
       checkCreditsRemaining(provider);
     }
   } catch (err: any) {
-    console.error(`[SpendTracker] Failed to track ${provider}/${callType}:`, err.message);
+    log.error(`[SpendTracker] Failed to track ${provider}/${callType}:`, err.message);
   }
 }
 

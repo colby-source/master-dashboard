@@ -4,6 +4,8 @@
 
 import { Router } from 'express';
 import { handlePropertyAnnouncementReply } from '../services/property-announcement-reply-handler';
+import { createLogger } from '../utils/logger';
+const log = createLogger('property-announcement-webhook');
 
 const router = Router();
 
@@ -19,7 +21,7 @@ router.post('/webhook/property-announcement-reply', (req, res) => {
 
   // Validate minimal payload shape before async processing
   if (!payload || !payload.contactId) {
-    console.warn('[PropertyAnnouncement:Webhook] Received payload without contactId — ignoring');
+    log.warn('[PropertyAnnouncement:Webhook] Received payload without contactId — ignoring');
     return;
   }
 
@@ -34,7 +36,7 @@ router.post('/webhook/property-announcement-reply', (req, res) => {
     messageId: payload.messageId,
     dateAdded: payload.dateAdded,
   }).catch((err) => {
-    console.error('[PropertyAnnouncement:Webhook] Unhandled error:', err.message);
+    log.error('[PropertyAnnouncement:Webhook] Unhandled error:', err.message);
   });
 });
 

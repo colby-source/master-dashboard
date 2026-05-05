@@ -2,10 +2,12 @@ import { instantlyService } from '../services/instantly-service';
 import { queryOne, runSql } from '../db';
 import { saveDb } from '../db';
 import { createAlert } from '../services/alert-service';
+import { createLogger } from '../utils/logger';
+const log = createLogger('instantly-sync');
 
 class InstantlySync {
   async sync() {
-    console.log('[Sync:Instantly] Starting...');
+    log.info('[Sync:Instantly] Starting...');
     const result = await instantlyService.listCampaigns({ limit: 100 });
     const campaigns = result?.items ?? result ?? [];
     if (!campaigns || campaigns.length === 0) return;
@@ -15,7 +17,7 @@ class InstantlySync {
       try {
         analytics = await instantlyService.getCampaignAnalytics(campaign.id);
         if (Array.isArray(analytics)) analytics = analytics[0];
-      } catch { /* expected */ }
+      } catch (_e) { /* campaign analytics fetch may fail for inactive campaigns */ }
 
       const statsJson = analytics ? JSON.stringify({
         sent: analytics.sent || 0,
@@ -51,7 +53,7 @@ class InstantlySync {
     }
 
     saveDb();
-    console.log(`[Sync:Instantly] Synced ${campaigns.length} campaigns`);
+    log.info(`[Sync:Instantly] Synced ${campaigns.length} campaigns`);
   }
 
   private mapStatus(status: number | string): string {

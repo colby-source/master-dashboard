@@ -6,6 +6,8 @@ import { emailService } from './email-service';
 import { wsServer } from '../websocket/ws-server';
 import { runBackup } from './backup-service';
 import { runInstantlyAudit, renderInstantlyAuditHtml, InstantlyAuditReport } from './instantly-audit-service';
+import { createLogger } from '../utils/logger';
+const log = createLogger('daily-audit-service');
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -207,7 +209,7 @@ function checkSyncStatuses(): SyncCheck[] {
 function checkDatabase(): AuditResult['database'] {
   try {
     const tables = queryAll(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'`);
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     const fs = require('fs');
     let sizeBytes = 0;
     try { sizeBytes = fs.statSync(config.dbPath).size; } catch { /* file may not exist yet */ }
@@ -364,7 +366,7 @@ class DailyAuditService {
     this.job = schedule('0 7 * * *', () => this.run(), {
       timezone: 'America/New_York',
     });
-    console.log('[Audit] Daily audit scheduled — 7:00 AM ET');
+    log.info('[Audit] Daily audit scheduled — 7:00 AM ET');
   }
 
   stop() {
@@ -373,7 +375,7 @@ class DailyAuditService {
   }
 
   async run(): Promise<AuditResult> {
-    console.log('[Audit] Running daily audit...');
+    log.info('[Audit] Running daily audit...');
     const timestamp = new Date().toISOString();
 
     // Run enrichment-sequence API checks in parallel
@@ -412,9 +414,9 @@ class DailyAuditService {
     try {
       const instantlyAuditResult = await runInstantlyAudit();
       result.instantlyAudit = instantlyAuditResult;
-      console.log(`[Audit] Instantly audit — OK: ${instantlyAuditResult.summary.ok}, Warnings: ${instantlyAuditResult.summary.warnings}, Critical: ${instantlyAuditResult.summary.critical}`);
+      log.info(`[Audit] Instantly audit — OK: ${instantlyAuditResult.summary.ok}, Warnings: ${instantlyAuditResult.summary.warnings}, Critical: ${instantlyAuditResult.summary.critical}`);
     } catch (err: any) {
-      console.error('[Audit] Instantly audit failed:', err.message);
+      log.error('[Audit] Instantly audit failed:', err.message);
       createAlert('instantly_audit_error', 'warning', `Instantly audit failed: ${err.message}`, 'daily-audit');
     }
 
@@ -426,7 +428,7 @@ class DailyAuditService {
       );
       saveDb();
     } catch (err) {
-      console.error('[Audit] Failed to store audit result:', err);
+      log.error('[Audit] Failed to store audit result:', err);
     }
 
     // Create alerts for errors
@@ -449,13 +451,13 @@ class DailyAuditService {
     try {
       const backupResult = await runBackup();
       if (backupResult.success) {
-        console.log(`[Audit] Database backup completed — local: ${backupResult.localPath}, onedrive: ${backupResult.onedrivePath ?? 'unavailable'}, cleaned: ${backupResult.cleanedCount}`);
+        log.info(`[Audit] Database backup completed — local: ${backupResult.localPath}, onedrive: ${backupResult.onedrivePath ?? 'unavailable'}, cleaned: ${backupResult.cleanedCount}`);
       } else {
-        console.error(`[Audit] Database backup failed: ${backupResult.error}`);
+        log.error(`[Audit] Database backup failed: ${backupResult.error}`);
         createAlert('backup_failure', 'critical', `Database backup failed: ${backupResult.error}`, 'daily-audit');
       }
     } catch (err: any) {
-      console.error('[Audit] Database backup threw an exception:', err);
+      log.error('[Audit] Database backup threw an exception:', err);
       createAlert('backup_failure', 'critical', `Database backup exception: ${err.message}`, 'daily-audit');
     }
 
@@ -466,14 +468,14 @@ class DailyAuditService {
         const statusEmoji = summary.error > 0 ? 'ERRORS' : summary.warning > 0 ? 'WARNINGS' : 'ALL OK';
         const subject = `Command Center Audit [${statusEmoji}] — ${new Date(timestamp).toLocaleDateString('en-US')}`;
         await emailService.sendMail(config.report.recipients, subject, html);
-        console.log('[Audit] Audit report emailed');
+        log.info('[Audit] Audit report emailed');
       } catch (err) {
-        console.error('[Audit] Failed to send audit email:', err);
+        log.error('[Audit] Failed to send audit email:', err);
       }
     }
 
     wsServer.broadcast({ type: 'audit_complete', summary });
-    console.log(`[Audit] Complete — OK: ${summary.ok}, Warnings: ${summary.warning}, Errors: ${summary.error}`);
+    log.info(`[Audit] Complete — OK: ${summary.ok}, Warnings: ${summary.warning}, Errors: ${summary.error}`);
 
     return result;
   }

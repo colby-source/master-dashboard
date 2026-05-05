@@ -8,6 +8,8 @@ import { config } from '../config';
 import { ghlService } from './ghl-service';
 import { instantlyService } from './instantly-service';
 import { queryOne, queryAll } from '../db';
+import { createLogger } from '../utils/logger';
+const log = createLogger('sms-notifications');
 
 // ── Config ────────────────────────────────────────────────
 // Each company has its own operator who receives SMS alerts via that company's GHL client
@@ -63,7 +65,7 @@ async function sendEmailToOperator(companyId: number, subject: string, message: 
   const recipient = OPERATOR_MAP[companyId] || DEFAULT_RECIPIENT;
   const client = ghlService.getClient(recipient.companyId);
   if (!client) {
-    console.error(`[Notify] No GHL client for company ${recipient.companyId}`);
+    log.error(`[Notify] No GHL client for company ${recipient.companyId}`);
     return false;
   }
   try {
@@ -79,10 +81,10 @@ async function sendEmailToOperator(companyId: number, subject: string, message: 
       subject,
       html,
     });
-    console.log(`[Notify] Email sent to operator (company ${companyId}): ${subject}`);
+    log.info(`[Notify] Email sent to operator (company ${companyId}): ${subject}`);
     return true;
   } catch (err: any) {
-    console.error('[Notify] Email send failed:', err.message);
+    log.error('[Notify] Email send failed:', err.message);
     return false;
   }
 }
@@ -103,9 +105,9 @@ async function sendDirectEmailToTeam(companyId: number, subject: string, htmlBod
         body: htmlBody,
       });
       sent++;
-      console.log(`[Notify] Direct email sent to ${recipientEmail}: ${subject}`);
+      log.info(`[Notify] Direct email sent to ${recipientEmail}: ${subject}`);
     } catch (err: any) {
-      console.error(`[Notify] Direct email to ${recipientEmail} failed:`, err.message);
+      log.error(`[Notify] Direct email to ${recipientEmail} failed:`, err.message);
     }
   }
   return sent > 0;
@@ -142,7 +144,7 @@ async function sendDailyCampaignReport(): Promise<void> {
   try {
     const companies = getActiveCompanies();
     if (companies.length === 0) {
-      console.log('[SMS] No active companies with campaigns — skipping daily report');
+      log.info('[SMS] No active companies with campaigns — skipping daily report');
       return;
     }
 
@@ -236,7 +238,7 @@ async function sendDailyCampaignReport(): Promise<void> {
       await sendSmsToOperator(Number(coId), msg);
     }
   } catch (err: any) {
-    console.error('[SMS] Daily report error:', err.message);
+    log.error('[SMS] Daily report error:', err.message);
   }
 }
 
@@ -264,7 +266,7 @@ export async function evaluateHotLeadAlert(
 
     // Parse enrichment data for context
     let enrichment: any = {};
-    try { enrichment = JSON.parse(lead.enrichment_data || '{}'); } catch { /* expected */ }
+    try { enrichment = JSON.parse(lead.enrichment_data || '{}'); } catch (_e) { /* malformed JSON in enrichment_data */ }
 
     const companyName = enrichment?.apollo_org?.name || lead.company_name || 'Unknown';
     const title = enrichment?.apollo_person?.title || '';
@@ -332,7 +334,7 @@ Only output valid JSON.`,
 
     await sendSmsToOperator(leadCompanyId, msg);
   } catch (err: any) {
-    console.error('[SMS] Hot lead alert error:', err.message);
+    log.error('[SMS] Hot lead alert error:', err.message);
   }
 }
 
@@ -375,12 +377,12 @@ export function initSmsNotifications(): void {
   // Daily campaign report at 8:00 AM ET
   cronSchedule('0 8 * * *', () => {
     sendDailyCampaignReport().catch(err => {
-      console.error('[SMS] Cron report error:', err.message);
+      log.error('[SMS] Cron report error:', err.message);
     });
   }, { timezone: 'America/New_York' });
 
-  console.log('[Notify] Daily campaign report scheduled — 8:00 AM ET');
-  console.log('[Notify] Hot lead alerts active — real-time via Claude analysis (Email)');
+  log.info('[Notify] Daily campaign report scheduled — 8:00 AM ET');
+  log.info('[Notify] Hot lead alerts active — real-time via Claude analysis (Email)');
 }
 
 // Export for manual testing and other services

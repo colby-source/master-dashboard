@@ -3,6 +3,8 @@ import { queryAll, queryOne, runSql, saveDb } from '../db';
 import { createAlert } from './alert-service';
 import { wsServer } from '../websocket/ws-server';
 import { instantlyService } from './instantly-service';
+import { createLogger } from '../utils/logger';
+const log = createLogger('domain-health-service');
 
 // ── Types ───────────────────────────────────────────────────────
 
@@ -272,7 +274,7 @@ async function runAutoActions(
         await instantlyService.pauseAccount(account.email);
         actions.push(`Paused ${account.email} (blacklisted on ${blacklistResult.listings.join(', ')})`);
       } catch (err: any) {
-        console.error(`[DomainHealth] Failed to pause ${account.email}:`, err.message);
+        log.error(`[DomainHealth] Failed to pause ${account.email}:`, err.message);
       }
     }
     createAlert(
@@ -453,7 +455,7 @@ async function fullHealthCheck(targetDomain?: string): Promise<any[]> {
 
       snapshots.push(snapshot);
     } catch (err: any) {
-      console.error(`[DomainHealth] Error checking ${domain}:`, err.message);
+      log.error(`[DomainHealth] Error checking ${domain}:`, err.message);
     }
   }
 

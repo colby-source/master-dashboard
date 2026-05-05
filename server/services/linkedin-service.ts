@@ -5,6 +5,8 @@ import { apolloClient } from './apollo-client';
 import { config } from '../config';
 import { queryAll, queryOne, runSql, saveDb } from '../db';
 import { wsServer } from '../websocket/ws-server';
+import { createLogger } from '../utils/logger';
+const log = createLogger('linkedin-service');
 
 // LinkedIn service orchestrates Apify scrapers + lead enrichment
 // Connection requests use Puppeteer + Voyager API (browser-based)
@@ -224,7 +226,7 @@ class LinkedInService {
       if (!result.success) {
         throw new Error(result.error || 'Connection request failed');
       }
-      console.log(`[LinkedIn] Connection request sent for lead ${leadId} (${lead.first_name} ${lead.last_name}): ${result.invitationUrn}`);
+      log.info(`[LinkedIn] Connection request sent for lead ${leadId} (${lead.first_name} ${lead.last_name}): ${result.invitationUrn}`);
 
       // Mark as sent
       runSql(`UPDATE enrichment_leads SET linkedin_outreach_status = 'sent', updated_at = datetime('now') WHERE id = ?`, [leadId]);
@@ -233,7 +235,7 @@ class LinkedInService {
 
       return { success: true };
     } catch (err: any) {
-      console.error(`[LinkedIn] Connection request failed for lead ${leadId}:`, err.message);
+      log.error(`[LinkedIn] Connection request failed for lead ${leadId}:`, err.message);
       // Revert to queued so it can be retried
       runSql(`UPDATE enrichment_leads SET linkedin_outreach_status = 'queued', updated_at = datetime('now') WHERE id = ?`, [leadId]);
       saveDb();
@@ -260,7 +262,7 @@ class LinkedInService {
     const remaining = Math.max(0, config.linkedinDailyLimit - alreadySent);
 
     if (remaining === 0) {
-      console.log(`[LinkedIn] Daily limit reached (${config.linkedinDailyLimit} sent today). Skipping.`);
+      log.info(`[LinkedIn] Daily limit reached (${config.linkedinDailyLimit} sent today). Skipping.`);
       return { sent: 0, failed: 0, errors: [{ leadId: 0, error: `Daily limit reached (${alreadySent}/${config.linkedinDailyLimit})` }] };
     }
 
@@ -275,11 +277,11 @@ class LinkedInService {
     ) as any[];
 
     if (!leads.length) {
-      console.log('[LinkedIn] No queued leads to send.');
+      log.info('[LinkedIn] No queued leads to send.');
       return { sent: 0, failed: 0, errors: [] };
     }
 
-    console.log(`[LinkedIn] Processing ${leads.length} queued leads (${alreadySent} already sent today, limit ${config.linkedinDailyLimit})`);
+    log.info(`[LinkedIn] Processing ${leads.length} queued leads (${alreadySent} already sent today, limit ${config.linkedinDailyLimit})`);
 
     let sent = 0;
     let failed = 0;
@@ -301,7 +303,7 @@ class LinkedInService {
       }
     }
 
-    console.log(`[LinkedIn] Batch complete: ${sent} sent, ${failed} failed`);
+    log.info(`[LinkedIn] Batch complete: ${sent} sent, ${failed} failed`);
     return { sent, failed, errors };
   }
 
@@ -318,7 +320,7 @@ class LinkedInService {
       LIMIT 50
     `) as any[];
 
-    console.log(`[LinkedIn] queueMissedHotLeads: found ${missed.length} hot leads to process`);
+    log.info(`[LinkedIn] queueMissedHotLeads: found ${missed.length} hot leads to process`);
 
     let queued = 0;
     for (const lead of missed) {
@@ -347,10 +349,10 @@ class LinkedInService {
               [JSON.stringify(enrichment), lead.id],
             );
             saveDb();
-            console.log(`[LinkedIn] Apollo backfill found LI URL for lead ${lead.id} (${lead.first_name} ${lead.last_name}): ${linkedInUrl}`);
+            log.info(`[LinkedIn] Apollo backfill found LI URL for lead ${lead.id} (${lead.first_name} ${lead.last_name}): ${linkedInUrl}`);
           }
         } catch (err: any) {
-          console.warn(`[LinkedIn] Apollo backfill failed for lead ${lead.id}:`, err.message);
+          log.warn(`[LinkedIn] Apollo backfill failed for lead ${lead.id}:`, err.message);
         }
       }
 
@@ -372,14 +374,14 @@ class LinkedInService {
         saveDb();
 
         wsServer.broadcast({ type: 'enrichment_update', leadId: lead.id, linkedin_outreach_status: 'queued' });
-        console.log(`[LinkedIn] Catch-up queued lead ${lead.id} (${lead.first_name} ${lead.last_name}) — score ${lead.score}`);
+        log.info(`[LinkedIn] Catch-up queued lead ${lead.id} (${lead.first_name} ${lead.last_name}) — score ${lead.score}`);
         queued++;
       } catch (err: any) {
-        console.error(`[LinkedIn] Catch-up message gen failed for lead ${lead.id}:`, err.message);
+        log.error(`[LinkedIn] Catch-up message gen failed for lead ${lead.id}:`, err.message);
       }
     }
 
-    if (queued > 0) console.log(`[LinkedIn] Catch-up: queued ${queued} missed hot leads`);
+    if (queued > 0) log.info(`[LinkedIn] Catch-up: queued ${queued} missed hot leads`);
     return queued;
   }
 
@@ -387,18 +389,18 @@ class LinkedInService {
 
   /** Check for accepted connection requests and update lead statuses */
   async checkAcceptances(): Promise<number> {
-    console.log('[LinkedIn] Checking for accepted connections...');
+    log.info('[LinkedIn] Checking for accepted connections...');
 
     let accepted: Awaited<ReturnType<typeof linkedInBrowserService.getAcceptedInvitations>>;
     try {
       accepted = await linkedInBrowserService.getAcceptedInvitations();
     } catch (err: any) {
-      console.error('[LinkedIn] Failed to check acceptances:', err.message);
+      log.error('[LinkedIn] Failed to check acceptances:', err.message);
       return 0;
     }
 
     if (!accepted.length) {
-      console.log('[LinkedIn] No accepted invitations found.');
+      log.info('[LinkedIn] No accepted invitations found.');
       return 0;
     }
 
@@ -433,7 +435,7 @@ class LinkedInService {
         );
         saveDb();
         wsServer.broadcast({ type: 'enrichment_update', leadId: matchedLead.id, linkedin_outreach_status: 'connected' });
-        console.log(`[LinkedIn] Connection accepted: lead ${matchedLead.id} (${matchedLead.first_name} ${matchedLead.last_name})`);
+        log.info(`[LinkedIn] Connection accepted: lead ${matchedLead.id} (${matchedLead.first_name} ${matchedLead.last_name})`);
         matched++;
 
         // Remove from sentLeads so we don't double-match
@@ -442,13 +444,13 @@ class LinkedInService {
       }
     }
 
-    if (matched > 0) console.log(`[LinkedIn] ${matched} new connections detected`);
+    if (matched > 0) log.info(`[LinkedIn] ${matched} new connections detected`);
     return matched;
   }
 
   /** Process DM sequence for connected leads */
   async processSequence(): Promise<{ sent: number; replied: number; errors: string[] }> {
-    console.log('[LinkedIn] Processing DM sequence...');
+    log.info('[LinkedIn] Processing DM sequence...');
 
     // Step delays: step 1 = 24h after connect, step 2 = 72h after step 1, step 3 = 168h after step 2
     const STEP_DELAYS_MS = [
@@ -467,7 +469,7 @@ class LinkedInService {
     ) as any[];
 
     if (!leads.length) {
-      console.log('[LinkedIn] No leads in active sequence.');
+      log.info('[LinkedIn] No leads in active sequence.');
       return { sent: 0, replied: 0, errors: [] };
     }
 
@@ -508,12 +510,12 @@ class LinkedInService {
           }
           saveDb();
           wsServer.broadcast({ type: 'enrichment_update', leadId: lead.id, linkedin_outreach_status: 'replied' });
-          console.log(`[LinkedIn] Lead ${lead.id} (${lead.first_name} ${lead.last_name}) REPLIED — pausing sequence`);
+          log.info(`[LinkedIn] Lead ${lead.id} (${lead.first_name} ${lead.last_name}) REPLIED — pausing sequence`);
           replied++;
           continue;
         }
       } catch (err: any) {
-        console.warn(`[LinkedIn] Reply check failed for lead ${lead.id}:`, err.message);
+        log.warn(`[LinkedIn] Reply check failed for lead ${lead.id}:`, err.message);
       }
 
       // Check timing — is it time for the next step?
@@ -578,18 +580,18 @@ class LinkedInService {
         );
         saveDb();
         wsServer.broadcast({ type: 'enrichment_update', leadId: lead.id, linkedin_outreach_status: newStatus, linkedin_sequence_step: nextStep });
-        console.log(`[LinkedIn] DM step ${nextStep} sent to lead ${lead.id} (${lead.first_name} ${lead.last_name})`);
+        log.info(`[LinkedIn] DM step ${nextStep} sent to lead ${lead.id} (${lead.first_name} ${lead.last_name})`);
         sent++;
 
         // Delay between DMs
         await new Promise(resolve => setTimeout(resolve, 5000 + Math.random() * 5000));
       } catch (err: any) {
-        console.error(`[LinkedIn] DM step ${nextStep} failed for lead ${lead.id}:`, err.message);
+        log.error(`[LinkedIn] DM step ${nextStep} failed for lead ${lead.id}:`, err.message);
         errors.push(`Lead ${lead.id} step ${nextStep}: ${err.message}`);
       }
     }
 
-    console.log(`[LinkedIn] Sequence processing done: ${sent} DMs sent, ${replied} replies detected`);
+    log.info(`[LinkedIn] Sequence processing done: ${sent} DMs sent, ${replied} replies detected`);
     return { sent, replied, errors };
   }
 
@@ -600,7 +602,7 @@ class LinkedInService {
     failed: number;
     errors: Array<{ leadId: number; error: string }>;
   }> {
-    console.log('[LinkedIn] === Daily Outreach Run ===');
+    log.info('[LinkedIn] === Daily Outreach Run ===');
 
     // Step 1: Queue any missed hot leads
     const newlyQueued = await this.queueMissedHotLeads();
@@ -608,7 +610,7 @@ class LinkedInService {
     // Step 2: Send the queue
     const result = await this.processOutreachQueue();
 
-    console.log(`[LinkedIn] Daily run complete: ${newlyQueued} newly queued, ${result.sent} sent, ${result.failed} failed`);
+    log.info(`[LinkedIn] Daily run complete: ${newlyQueued} newly queued, ${result.sent} sent, ${result.failed} failed`);
     return { newlyQueued, ...result };
   }
 }

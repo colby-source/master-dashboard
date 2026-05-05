@@ -4,18 +4,20 @@
 
 import TelegramBot from 'node-telegram-bot-api';
 import { config } from '../config';
+import { createLogger } from '../utils/logger';
+const log = createLogger('telegram-service');
 
 let bot: TelegramBot | null = null;
 
 function getBot(): TelegramBot | null {
   if (bot) return bot;
   if (!config.telegramBotToken) {
-    console.warn('[Telegram] No TELEGRAM_BOT_TOKEN set — notifications disabled');
+    log.warn('[Telegram] No TELEGRAM_BOT_TOKEN set — notifications disabled');
     return null;
   }
   // polling: false — we only send messages, don't listen for commands
   bot = new TelegramBot(config.telegramBotToken, { polling: false });
-  console.log('[Telegram] Bot initialized (send-only mode)');
+  log.info('[Telegram] Bot initialized (send-only mode)');
   return bot;
 }
 
@@ -24,11 +26,11 @@ function getBot(): TelegramBot | null {
 export async function sendTelegram(
   chatId: string,
   message: string,
-  options?: { parse_mode?: 'Markdown' | 'HTML'; disable_web_page_preview?: boolean },
+  options?: { parse_mode?: 'Markdown' | 'MarkdownV2' | 'HTML'; disable_web_page_preview?: boolean },
 ): Promise<boolean> {
   const client = getBot();
   if (!client || !chatId) {
-    console.warn('[Telegram] Cannot send — bot or chatId not configured');
+    log.warn('[Telegram] Cannot send — bot or chatId not configured');
     return false;
   }
 
@@ -39,7 +41,7 @@ export async function sendTelegram(
     });
     return true;
   } catch (err: any) {
-    console.error('[Telegram] Send failed:', err.message);
+    log.error('[Telegram] Send failed:', err.message);
     return false;
   }
 }
@@ -49,11 +51,11 @@ export async function sendTelegram(
 export async function sendTelegramToOperator(
   companyId: number,
   message: string,
-  options?: { parse_mode?: 'Markdown' | 'HTML'; disable_web_page_preview?: boolean },
+  options?: { parse_mode?: 'Markdown' | 'MarkdownV2' | 'HTML'; disable_web_page_preview?: boolean },
 ): Promise<boolean> {
   const chatId = config.telegramChatIdByCompany[companyId] || config.telegramChatId;
   if (!chatId) {
-    console.warn(`[Telegram] No chat ID for company ${companyId} — skipping`);
+    log.warn(`[Telegram] No chat ID for company ${companyId} — skipping`);
     return false;
   }
   return sendTelegram(chatId, message, options);
@@ -63,7 +65,7 @@ export async function sendTelegramToOperator(
 
 export async function sendTelegramToDefault(
   message: string,
-  options?: { parse_mode?: 'Markdown' | 'HTML'; disable_web_page_preview?: boolean },
+  options?: { parse_mode?: 'Markdown' | 'MarkdownV2' | 'HTML'; disable_web_page_preview?: boolean },
 ): Promise<boolean> {
   return sendTelegram(config.telegramChatId, message, options);
 }

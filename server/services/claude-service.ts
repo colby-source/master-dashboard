@@ -1,5 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { config } from '../config';
+import { createLogger } from '../utils/logger';
+const log = createLogger('claude-service');
 
 class ClaudeService {
   private client: Anthropic | null = null;
@@ -250,7 +252,7 @@ CRITICAL: Output raw JSON only. No \`\`\`json blocks, no markdown, no extra text
 
       // Log low-confidence personalizations for QA
       if (confidence < 0.5) {
-        console.warn(`[Claude] Low personalization confidence (${confidence}) for lead: ${enrichmentData.email || 'unknown'}`);
+        log.warn(`[Claude] Low personalization confidence (${confidence}) for lead: ${enrichmentData.email || 'unknown'}`);
       }
 
       return {
@@ -261,7 +263,7 @@ CRITICAL: Output raw JSON only. No \`\`\`json blocks, no markdown, no extra text
         personalizations: { ...personalizations, confidence },
       };
     } catch (err: any) {
-      console.error('[Claude] classifyLead error:', err.message);
+      log.error('[Claude] classifyLead error:', err.message);
       return {
         score: 0,
         score_label: 'cold',
@@ -325,7 +327,7 @@ Return ONLY the message text. No quotes, no explanation.`
       const text = response.content[0].type === 'text' ? response.content[0].text : '';
       return text.trim().replace(/^["']|["']$/g, '');
     } catch (err: any) {
-      console.error('[Claude] generateLinkedInMessage error:', err.message);
+      log.error('[Claude] generateLinkedInMessage error:', err.message);
       return `Hi ${firstName}, I noticed your work in ${company || 'the industry'} — would love to connect and exchange ideas.`;
     }
   }
@@ -398,7 +400,7 @@ Return ONLY the message text. No quotes, no explanation.`
       const text = response.content[0].type === 'text' ? response.content[0].text : '';
       return text.trim().replace(/^["']|["']$/g, '');
     } catch (err: any) {
-      console.error('[Claude] generateLinkedInDM error:', err.message);
+      log.error('[Claude] generateLinkedInDM error:', err.message);
       if (step === 1) return `Thanks for connecting, ${firstName}! I've been following what ${company || 'your team'} is doing — really impressive work.`;
       if (step === 2) return `Hi ${firstName}, came across something that made me think of you and your work at ${company || 'your company'}. Would love to share some thoughts sometime.`;
       return `${firstName}, I've really enjoyed our exchange. Would you be open to a quick 15-min call sometime? I think there could be some mutual value.`;
@@ -445,7 +447,7 @@ Only output valid JSON.`
       const text = response.content[0].type === 'text' ? response.content[0].text : '';
       return JSON.parse(this.stripCodeFences(text));
     } catch (err: any) {
-      console.error('[Claude] analyzeReplySentiment error:', err.message);
+      log.error('[Claude] analyzeReplySentiment error:', err.message);
       return {
         sentiment: 'question',
         confidence: 0,
@@ -528,31 +530,39 @@ Only output valid JSON.`
     const senderName = context.playbook.sender_name || '';
     const companyName = context.playbook.company_name || '';
 
-    const systemPrompt = `You are ${senderName}${companyName ? ` from ${companyName}` : ''}. You are replying to a real email thread with a real person. Sign off as ${senderName || 'the sender'}. Your replies should feel human, warm, and genuinely helpful — like a friend who happens to have something amazing to share.
+    const systemPrompt = `You are ${senderName}${companyName ? ` from ${companyName}` : ''}. You are replying to a real email thread with a real person. Sign off as ${senderName || 'the sender'}. You are an investor who funds creators to build their own brands. Your tone is confident, knowledgeable, and warm — like someone who has conviction about this creator's potential. You are NOT a salesperson. You are someone who puts real money behind creators you believe in.
 
 GOLDEN RULE: ANSWER WHAT THEY ASKED FIRST, THEN GUIDE TO THE NEXT STEP.
 If they asked a question, answer it directly. If they asked multiple questions, answer every single one. NEVER ignore what they said to push your own agenda. Creators get 50+ generic pitches a day — the ones that reply thoughtfully to THEIR specific words are the ones that close.
 
+POSITIONING (this is how you frame EVERY conversation):
+- You are an INVESTOR, not a service provider. You invest capital to build brands around creators.
+- The creator OWNS the brand. This is not a brand deal — this is brand ownership.
+- You are selective. You only take on a few creators per quarter because each brand is a real investment.
+- Your incentives are aligned. You only make money when the creator makes money.
+- Frame brand deals as "renting your audience" vs this as "owning the asset."
+
 SOCIAL PROOF (use naturally when relevant — don't force it):
-- Creators who launch with us are seeing $15K-50K/month in royalties within the first 90 days
-- We've helped creators across beauty, wellness, supplements, skincare, and lifestyle build 7-figure brands
-- Our model generates more revenue per creator than traditional brand deals — by a lot
-- Use phrases like "creators we work with", "one of our partners", "a creator with an audience like yours"
-- NEVER make up specific creator names. Keep it anonymous: "a wellness creator", "a fitness influencer"
+- Creators we have invested in are seeing $15K-50K/month in royalties within the first 90 days
+- We have backed creators across beauty, wellness, skincare, and lifestyle — some are building 7-figure brands
+- Our creators earn more from royalties than they ever made from brand deals combined
+- Use phrases like "creators we have invested in", "a creator we backed", "one of our portfolio creators"
+- NEVER make up specific creator names. Keep it anonymous: "a skincare creator we backed", "a wellness creator in our portfolio"
 - Vary the social proof — don't use the same stat twice in a thread
 
 REPLY LENGTH RULES:
 - If they said "yes" / "interested" / one word → 1-2 sentences + link. Don't over-explain.
 - If they asked specific questions → answer each one clearly, THEN include the link. 3-6 sentences is fine.
-- If they have objections or concerns → address the concern empathetically, THEN redirect. 2-4 sentences.
+- If they have objections or concerns → address the concern directly, THEN redirect. 2-4 sentences.
 - NEVER exceed 8 sentences. If you need more, you're rambling.
 
 VOICE & TONE:
-- Sound like a real person, not a sales bot. Read it back — would you actually send this?
-- Never open with: "I completely understand", "That's exactly why", "I'd love to", "Just following up", "Hope this finds you", "Absolutely", "No worries at all"
+- Sound like a real person who genuinely believes in this creator's potential. Confident, not eager.
+- Never open with: "I completely understand", "That's exactly why", "I'd love to", "Just following up", "Hope this finds you", "Absolutely", "No worries at all", "Great question"
 - No bullet points in replies. Write conversational prose.
 - Match their energy. If they're casual, be casual. If they're professional, be professional.
 - Use their first name naturally once, not robotically at the start.
+- You are an investor with conviction — not a salesperson with a quota. Act like it.
 
 COMPANY: ${context.playbook.company_description}
 
@@ -630,7 +640,7 @@ JSON only:
         suggestedNextStep: parsed.suggestedNextStep || '',
       };
     } catch (err: any) {
-      console.error('[Claude] generateIntelligentReply error:', err.message);
+      log.error('[Claude] generateIntelligentReply error:', err.message);
       return {
         reply: '',
         strategy: 'Generation failed',
@@ -774,7 +784,7 @@ Output raw JSON only. No code fences, no markdown.`;
         personalized_follow_up: parsed.personalized_follow_up || '',
       };
     } catch (err: any) {
-      console.error('[Claude] analyzeMeetingTranscript error:', err.message);
+      log.error('[Claude] analyzeMeetingTranscript error:', err.message);
       return {
         sentiment: 'lukewarm',
         key_topics: [],

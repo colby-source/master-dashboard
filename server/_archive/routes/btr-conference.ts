@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { ghlService } from '../services/ghl-service';
 import { instantlyService } from '../services/instantly-service';
+import { createLogger } from '../utils/logger';
+const log = createLogger('btr-conference');
 
 const router = Router();
 
@@ -133,7 +135,7 @@ router.get('/dashboard', async (req, res) => {
       pipeline: { id: PIPELINE_ID, stages: PIPELINE_STAGES },
     });
   } catch (err: any) {
-    console.error('[BTR] Dashboard error:', err.message);
+    log.error('[BTR] Dashboard error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -227,7 +229,7 @@ router.post('/sync-to-instantly', async (_req, res) => {
 
     res.json({ success: true, results });
   } catch (err: any) {
-    console.error('[BTR] sync-to-instantly error:', err.message);
+    log.error('[BTR] sync-to-instantly error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -275,14 +277,14 @@ router.post('/sync-from-instantly', async (_req, res) => {
             updates.push({ email: lead.email, segment, from: currentStatus, to: newStatus });
           }
         } catch (err: any) {
-          console.error(`[BTR] sync contact ${lead.email}:`, err.message);
+          log.error(`[BTR] sync contact ${lead.email}:`, err.message);
         }
       }
     }
 
     res.json({ success: true, updated: updates.length, updates });
   } catch (err: any) {
-    console.error('[BTR] sync-from-instantly error:', err.message);
+    log.error('[BTR] sync-from-instantly error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -291,7 +293,7 @@ router.post('/sync-from-instantly', async (_req, res) => {
 router.post('/instantly-webhook', async (req, res) => {
   try {
     const { event_type, email, campaign_id, data: eventData } = req.body;
-    console.log(`[BTR Webhook] ${event_type} for ${email} in campaign ${campaign_id}`);
+    log.info(`[BTR Webhook] ${event_type} for ${email} in campaign ${campaign_id}`);
 
     const newStatus = EVENT_TO_STATUS[event_type];
     if (!newStatus || !email) {
@@ -324,7 +326,7 @@ router.post('/instantly-webhook', async (req, res) => {
 
     res.json({ received: true, action: 'updated', contact_id: contact.id, new_status: newStatus });
   } catch (err: any) {
-    console.error('[BTR Webhook] error:', err.message);
+    log.error('[BTR Webhook] error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -349,7 +351,7 @@ router.get('/campaign-status', async (_req, res) => {
 
     res.json({ campaigns: statuses });
   } catch (err: any) {
-    console.error('[BTR] campaign-status error:', err.message);
+    log.error('[BTR] campaign-status error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

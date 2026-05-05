@@ -8,6 +8,8 @@ import path from 'path';
 import { config } from '../config';
 import { ghlService } from './ghl-service';
 import { sendTelegram } from './telegram-service';
+import { createLogger } from '../utils/logger';
+const log = createLogger('property-announcement-reply-handler');
 
 // ── Constants ────────────────────────────────────────────────
 
@@ -126,7 +128,7 @@ function appendToLog(entry: ReplyLogEntry): void {
     const updated = [...existing, entry];
     fs.writeFileSync(LOG_FILE, JSON.stringify(updated, null, 2), 'utf-8');
   } catch (err: any) {
-    console.error('[PropertyAnnouncement] Log write error:', err.message);
+    log.error('[PropertyAnnouncement] Log write error:', err.message);
   }
 }
 
@@ -180,13 +182,13 @@ export async function handlePropertyAnnouncementReply(
   // Fetch contact from GHL to verify tag and get details
   const ghlClient = ghlService.getClient(GPC_COMPANY_ID);
   if (!ghlClient) {
-    console.error('[PropertyAnnouncement] No GHL client for GPC (company 1)');
+    log.error('[PropertyAnnouncement] No GHL client for GPC (company 1)');
     return { processed: false, reason: 'no_ghl_client' };
   }
 
   const contact = await ghlClient.getContact(contactId);
   if (!contact) {
-    console.error(`[PropertyAnnouncement] Contact ${contactId} not found in GHL`);
+    log.error(`[PropertyAnnouncement] Contact ${contactId} not found in GHL`);
     return { processed: false, reason: 'contact_not_found' };
   }
 
@@ -202,7 +204,7 @@ export async function handlePropertyAnnouncementReply(
   const contactName = [contact.firstName, contact.lastName].filter(Boolean).join(' ') || 'Unknown';
   const contactEmail = contact.email || '';
 
-  console.log(`[PropertyAnnouncement] Processing reply from ${contactName} (${contactEmail}): ${classification}`);
+  log.info(`[PropertyAnnouncement] Processing reply from ${contactName} (${contactEmail}): ${classification}`);
 
   // ── Execute actions based on classification ────────────────
 
@@ -232,7 +234,7 @@ export async function handlePropertyAnnouncementReply(
           errors.push('failed to update opportunity stage');
         }
       } else {
-        console.warn(`[PropertyAnnouncement] No opportunity found for contact ${contactId} in pipeline ${PIPELINE_ID}`);
+        log.warn(`[PropertyAnnouncement] No opportunity found for contact ${contactId} in pipeline ${PIPELINE_ID}`);
       }
     } catch (err: any) {
       errors.push(`opportunity search/update error: ${err.message}`);
@@ -345,9 +347,9 @@ export async function handlePropertyAnnouncementReply(
   appendToLog(logEntry);
 
   if (errors.length > 0) {
-    console.warn(`[PropertyAnnouncement] Completed with errors for ${contactEmail}:`, errors);
+    log.warn(`[PropertyAnnouncement] Completed with errors for ${contactEmail}:`, errors);
   } else {
-    console.log(`[PropertyAnnouncement] Successfully processed ${classification} reply from ${contactEmail}`);
+    log.info(`[PropertyAnnouncement] Successfully processed ${classification} reply from ${contactEmail}`);
   }
 
   return { processed: true, classification };

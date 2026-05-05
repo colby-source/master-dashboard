@@ -308,6 +308,131 @@ router.get('/custom-fields', async (req: Request, res: Response, next: NextFunct
   }
 });
 
+router.post('/custom-fields/audit-presence', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const client = requireClient(req);
+    const { fieldId } = req.body || {};
+    if (!fieldId) return res.status(400).json({ success: false, error: { message: 'fieldId required' } });
+    const all = await client.getAllContacts();
+    const hasValue = (c: any, id: string) => {
+      const f = (c.customFields || []).find((x: any) => x.id === id);
+      return f?.value != null && String(f.value).trim().length > 0;
+    };
+    const withField: any[] = [];
+    const withoutField: any[] = [];
+    for (const c of all) (hasValue(c, fieldId) ? withField : withoutField).push(c);
+    const tagHist = (contacts: any[]) => {
+      const counts: Record<string, number> = {};
+      for (const c of contacts) {
+        for (const t of c.tags || []) counts[t] = (counts[t] || 0) + 1;
+      }
+      return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 20);
+    };
+    const sourceHist = (contacts: any[]) => {
+      const counts: Record<string, number> = {};
+      for (const c of contacts) {
+        const s = c.source || '(none)';
+        counts[s] = (counts[s] || 0) + 1;
+      }
+      return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 15);
+    };
+    const monthHist = (contacts: any[]) => {
+      const counts: Record<string, number> = {};
+      for (const c of contacts) {
+        const m = c.dateAdded ? String(c.dateAdded).slice(0, 7) : '(none)';
+        counts[m] = (counts[m] || 0) + 1;
+      }
+      return Object.entries(counts).sort();
+    };
+    const relatedFieldIds: Record<string, string> = {
+      enrichment_score: 'OYKcSjyuA6SR1f662e81',
+      lead_grade: '4y4wuwqboCHAthNaUw3N',
+      score_label: '8zJs0yFDcSD65Zsqug5t',
+      enrichment_source: '4ZZHt91KUeviHGT5V5rk',
+    };
+    const relatedPresence = (contacts: any[]) => {
+      const out: Record<string, number> = {};
+      for (const [k, id] of Object.entries(relatedFieldIds)) {
+        out[k] = contacts.filter((c) => hasValue(c, id)).length;
+      }
+      return out;
+    };
+    res.json({
+      success: true,
+      total: all.length,
+      withField: { count: withField.length, tags: tagHist(withField), sources: sourceHist(withField), byMonth: monthHist(withField), relatedFields: relatedPresence(withField) },
+      withoutField: { count: withoutField.length, tags: tagHist(withoutField), sources: sourceHist(withoutField), byMonth: monthHist(withoutField), relatedFields: relatedPresence(withoutField), sampleIds: withoutField.slice(0, 5).map((c: any) => ({ id: c.id, email: c.email, dateAdded: c.dateAdded, source: c.source, tags: c.tags })) },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/custom-fields/migrate', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const client = requireClient(req);
+    const { fromFieldId, toFieldId, dryRun = true, limit } = req.body || {};
+    if (!fromFieldId || !toFieldId) {
+      return res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'fromFieldId and toFieldId required' } });
+    }
+    const allContacts = await client.getAllContacts();
+    const candidates = allContacts
+      .map((c: any) => {
+        const cf = (c.customFields || []).find((f: any) => f.id === fromFieldId);
+        const srcValue = cf?.value != null ? String(cf.value).trim() : '';
+        const existingTarget = (c.customFields || []).find((f: any) => f.id === toFieldId);
+        const targetHasValue = existingTarget?.value != null && String(existingTarget.value).trim().length > 0;
+        return { id: c.id, email: c.email, srcValue, targetHasValue };
+      })
+      .filter((x: any) => x.srcValue.length > 0 && !x.targetHasValue);
+    const toProcess = limit ? candidates.slice(0, limit) : candidates;
+    if (dryRun) {
+      return res.json({
+        success: true,
+        dryRun: true,
+        totalContacts: allContacts.length,
+        candidatesWithSource: candidates.length,
+        candidatesAlreadyHaveTarget: allContacts.filter((c: any) => (c.customFields || []).some((f: any) => f.id === toFieldId && String(f.value || '').trim().length > 0)).length,
+        sampleFirst3: toProcess.slice(0, 3).map((x: any) => ({ id: x.id, email: x.email, srcPreview: x.srcValue.slice(0, 80) })),
+      });
+    }
+    let migrated = 0;
+    const errors: any[] = [];
+    for (const c of toProcess) {
+      try {
+        await client.updateContact(c.id, { customFields: [{ id: toFieldId, value: c.srcValue }] });
+        migrated++;
+        await new Promise((r) => setTimeout(r, 150));
+      } catch (err: any) {
+        errors.push({ contactId: c.id, email: c.email, error: err?.message || 'unknown' });
+      }
+    }
+    res.json({ success: true, dryRun: false, migrated, attempted: toProcess.length, errorCount: errors.length, errors: errors.slice(0, 10) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/custom-fields', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const client = requireClient(req);
+    const { name, dataType, placeholder, position, picklistOptions, textBoxListOptions, acceptedFormats, isMultipleFile, maxFileLimit } = req.body || {};
+    if (!name || !dataType) {
+      return res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'name and dataType are required' } });
+    }
+    try {
+      const created = await client.createCustomField({ name, dataType, placeholder, position, picklistOptions, textBoxListOptions, acceptedFormats, isMultipleFile, maxFileLimit });
+      res.json({ success: true, customField: created });
+    } catch (ghlErr: any) {
+      const status = ghlErr?.response?.status || 500;
+      const upstream = ghlErr?.response?.data || { message: ghlErr?.message || 'Unknown GHL error' };
+      res.status(status).json({ success: false, error: { code: 'GHL_ERROR', status, upstream } });
+    }
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/templates', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { type } = req.query;

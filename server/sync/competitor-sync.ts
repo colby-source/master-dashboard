@@ -1,13 +1,15 @@
 import { competitorService } from '../services/competitor-service';
 import { queryOne, queryAll, runSql } from '../db';
 import { saveDb } from '../db';
+import { createLogger } from '../utils/logger';
+const log = createLogger('competitor-sync');
 
 class CompetitorSync {
   async sync() {
     const competitors = queryAll('SELECT * FROM competitors WHERE active = 1');
     if (competitors.length === 0) return;
 
-    console.log(`[Sync:Competitors] Checking ${competitors.length} competitors...`);
+    log.info(`[Sync:Competitors] Checking ${competitors.length} competitors...`);
     let changes = 0;
 
     for (const competitor of competitors) {
@@ -47,7 +49,7 @@ class CompetitorSync {
     }
 
     if (changes > 0) saveDb();
-    console.log(`[Sync:Competitors] Done. ${changes} changes detected.`);
+    log.info(`[Sync:Competitors] Done. ${changes} changes detected.`);
   }
 }
 

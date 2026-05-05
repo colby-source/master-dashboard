@@ -4,5 +4,5 @@
     "outDir": "dist"
   },
   "include": ["server/**/*", "database/**/*"],
-  "exclude": ["server/__tests__/**"]
+  "exclude": ["server/__tests__/**", "server/_archive/**"]
 }

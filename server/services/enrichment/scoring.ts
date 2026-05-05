@@ -3,6 +3,8 @@ import { claudeService } from '../claude-service';
 import { wsServer } from '../../websocket/ws-server';
 import { EnrichmentLead } from './types';
 import { getCompanyConfig, updateLead, logEvent } from './helpers';
+import { createLogger } from '../../utils/logger';
+const log = createLogger('scoring');
 
 export async function scoreLead(leadId: number): Promise<boolean> {
   const lead = queryOne('SELECT * FROM enrichment_leads WHERE id = ?', [leadId]) as EnrichmentLead | null;
@@ -40,7 +42,7 @@ export async function scoreLead(leadId: number): Promise<boolean> {
     wsServer.broadcast({ type: 'enrichment_update', leadId, status: 'scored', score: classification.score, score_label: classification.score_label });
     return true;
   } catch (err: any) {
-    console.error(`[Enrichment] scoreLead(${leadId}) error:`, err.message);
+    log.error(`[Enrichment] scoreLead(${leadId}) error:`, err.message);
     logEvent(leadId, lead.company_id, 'error', { error: err.message, step: 'scoring' });
     return false;
   }

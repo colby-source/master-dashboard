@@ -2,6 +2,8 @@ import axios, { AxiosInstance } from 'axios';
 import { config } from '../config';
 import { queryOne, runSql } from '../db';
 import { trackApiCall } from './spend-tracker';
+import { createLogger } from '../utils/logger';
+const log = createLogger('anymailfinder-client');
 
 export interface AnymailfinderPersonResult {
   email: string | null;
@@ -73,7 +75,7 @@ class AnymailfinderClient {
       trackApiCall('anymailfinder', 'find_person_email', 0, 1);
       return result;
     } catch (err: any) {
-      console.error('[Anymailfinder] findPersonEmail error:', err.response?.data?.message || err.message);
+      log.error('[Anymailfinder] findPersonEmail error:', err.response?.data?.message || err.message);
       return null;
     }
   }
@@ -108,7 +110,7 @@ class AnymailfinderClient {
       trackApiCall('anymailfinder', 'find_company_emails', 0, 1);
       return result;
     } catch (err: any) {
-      console.error('[Anymailfinder] findCompanyEmails error:', err.response?.data?.message || err.message);
+      log.error('[Anymailfinder] findCompanyEmails error:', err.response?.data?.message || err.message);
       return null;
     }
   }
@@ -136,7 +138,7 @@ class AnymailfinderClient {
       trackApiCall('anymailfinder', 'verify_email', 0, 0);
       return result;
     } catch (err: any) {
-      console.error('[Anymailfinder] verifyEmail error:', err.response?.data?.message || err.message);
+      log.error('[Anymailfinder] verifyEmail error:', err.response?.data?.message || err.message);
       return null;
     }
   }
@@ -163,7 +165,7 @@ class AnymailfinderClient {
         [key, provider, JSON.stringify(data), expiresAt.toISOString()]
       );
     } catch (err: any) {
-      console.error('[Anymailfinder] Cache write error:', err.message);
+      log.error('[Anymailfinder] Cache write error:', err.message);
     }
   }
 }

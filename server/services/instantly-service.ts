@@ -1,5 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 import { config } from '../config';
+import { createLogger } from '../utils/logger';
+const log = createLogger('instantly-service');
 
 class InstantlyService {
   private client: AxiosInstance;
@@ -21,7 +23,7 @@ class InstantlyService {
       const { data } = await this.client.get('/campaigns', { params: { limit: opts?.limit ?? 100, ...opts } });
       return data;
     } catch (err: any) {
-      console.error('[Instantly] listCampaigns error:', err.message);
+      log.error('[Instantly] listCampaigns error:', err.message);
       return { items: [] };
     }
   }
@@ -31,7 +33,7 @@ class InstantlyService {
       const { data } = await this.client.get(`/campaigns/${campaignId}`);
       return data;
     } catch (err: any) {
-      console.error('[Instantly] getCampaign error:', err.message);
+      log.error('[Instantly] getCampaign error:', err.message);
       return null;
     }
   }
@@ -81,7 +83,7 @@ class InstantlyService {
       const { data } = await this.client.get(`/campaigns/${campaignId}/sending-status`);
       return data;
     } catch (err: any) {
-      console.error('[Instantly] getSendingStatus error:', err.message);
+      log.error('[Instantly] getSendingStatus error:', err.message);
       return null;
     }
   }
@@ -91,7 +93,7 @@ class InstantlyService {
       const { data } = await this.client.get('/campaigns/search-by-contact', { params: { email } });
       return data;
     } catch (err: any) {
-      console.error('[Instantly] searchByContact error:', err.message);
+      log.error('[Instantly] searchByContact error:', err.message);
       return [];
     }
   }
@@ -101,7 +103,7 @@ class InstantlyService {
       const { data } = await this.client.get('/campaigns/count-launched');
       return data;
     } catch (err: any) {
-      console.error('[Instantly] countLaunched error:', err.message);
+      log.error('[Instantly] countLaunched error:', err.message);
       return null;
     }
   }
@@ -112,7 +114,7 @@ class InstantlyService {
       const { data } = await this.client.get('/campaign-subsequences', { params: { campaign_id: campaignId } });
       return data?.items ?? data ?? [];
     } catch (err: any) {
-      console.error('[Instantly] listSubsequences error:', err.message);
+      log.error('[Instantly] listSubsequences error:', err.message);
       return [];
     }
   }
@@ -141,7 +143,7 @@ class InstantlyService {
       const { data } = await this.client.get('/accounts', { params });
       return data;
     } catch (err: any) {
-      console.error('[Instantly] listAccounts error:', err.message, err.response?.status, JSON.stringify(err.response?.data)?.slice(0, 300));
+      log.error(`[Instantly] listAccounts error: ${err.message} status=${err.response?.status}`, err.response?.data);
       return { items: [] };
     }
   }
@@ -211,7 +213,7 @@ class InstantlyService {
       const { data } = await this.client.get(`/accounts/${encodeURIComponent(email)}`);
       return data;
     } catch (err: any) {
-      console.error('[Instantly] getAccount error:', err.message);
+      log.error('[Instantly] getAccount error:', err.message);
       return null;
     }
   }
@@ -243,7 +245,7 @@ class InstantlyService {
       const { data } = await this.client.post('/accounts/test-vitals', { email });
       return data;
     } catch (err: any) {
-      console.error('[Instantly] testVitals error:', err.message);
+      log.error('[Instantly] testVitals error:', err.message);
       return null;
     }
   }
@@ -279,7 +281,7 @@ class InstantlyService {
       const { data } = await this.client.get(`/account-campaign-mappings/${encodeURIComponent(email)}`);
       return data;
     } catch (err: any) {
-      console.error('[Instantly] accountCampaignMapping error:', err.message);
+      log.error('[Instantly] accountCampaignMapping error:', err.message);
       return null;
     }
   }
@@ -294,7 +296,7 @@ class InstantlyService {
       const { data } = await this.client.post('/leads/list', body);
       return data;
     } catch (err: any) {
-      console.error('[Instantly] listLeads error:', err.message);
+      log.error('[Instantly] listLeads error:', err.message);
       return { items: [] };
     }
   }
@@ -312,7 +314,7 @@ class InstantlyService {
       });
       return data;
     } catch (err: any) {
-      console.error('[Instantly] getLead error:', err.message);
+      log.error('[Instantly] getLead error:', err.message);
       return null;
     }
   }
@@ -350,7 +352,7 @@ class InstantlyService {
         });
         results.push(data);
       } catch (err: any) {
-        console.error(`[Instantly] addLead ${lead.email} error:`, err.message);
+        log.error(`[Instantly] addLead ${lead.email} error:`, err.message);
         results.push({ email: lead.email, error: err.message });
       }
     }
@@ -382,7 +384,7 @@ class InstantlyService {
       const { data } = await this.client.get('/lead-lists', { params: opts });
       return data;
     } catch (err: any) {
-      console.error('[Instantly] listLeadLists error:', err.message);
+      log.error('[Instantly] listLeadLists error:', err.message);
       return { items: [] };
     }
   }
@@ -403,7 +405,7 @@ class InstantlyService {
       const { data } = await this.client.get('/lead-labels');
       return data?.items ?? data ?? [];
     } catch (err: any) {
-      console.error('[Instantly] listLeadLabels error:', err.message);
+      log.error('[Instantly] listLeadLabels error:', err.message);
       return [];
     }
   }
@@ -436,7 +438,7 @@ class InstantlyService {
       const { data } = await this.client.get('/emails', { params });
       return data;
     } catch (err: any) {
-      console.error('[Instantly] listEmails error:', err.message, err.response?.status, JSON.stringify(err.response?.data)?.slice(0, 300));
+      log.error(`[Instantly] listEmails error: ${err.message} status=${err.response?.status}`, err.response?.data);
       return { items: [] };
     }
   }
@@ -446,7 +448,7 @@ class InstantlyService {
       const { data } = await this.client.get(`/emails/${emailId}`);
       return data;
     } catch (err: any) {
-      console.error('[Instantly] getEmail error:', err.message);
+      log.error('[Instantly] getEmail error:', err.message);
       return null;
     }
   }
@@ -487,7 +489,7 @@ class InstantlyService {
       const { data } = await this.client.get('/emails/count-unread');
       return data;
     } catch (err: any) {
-      console.error('[Instantly] countUnread error:', err.message);
+      log.error('[Instantly] countUnread error:', err.message);
       return { count: 0 };
     }
   }
@@ -505,7 +507,7 @@ class InstantlyService {
       });
       return data;
     } catch (err: any) {
-      console.error('[Instantly] getCampaignAnalytics error:', err.message);
+      log.error('[Instantly] getCampaignAnalytics error:', err.message);
       return null;
     }
   }
@@ -517,7 +519,7 @@ class InstantlyService {
       });
       return data;
     } catch (err: any) {
-      console.error('[Instantly] analyticsOverview error:', err.message);
+      log.error('[Instantly] analyticsOverview error:', err.message);
       return null;
     }
   }
@@ -529,7 +531,7 @@ class InstantlyService {
       });
       return data;
     } catch (err: any) {
-      console.error('[Instantly] dailyAnalytics error:', err.message);
+      log.error('[Instantly] dailyAnalytics error:', err.message);
       return null;
     }
   }
@@ -541,7 +543,7 @@ class InstantlyService {
       });
       return data;
     } catch (err: any) {
-      console.error('[Instantly] stepsAnalytics error:', err.message);
+      log.error('[Instantly] stepsAnalytics error:', err.message);
       return null;
     }
   }
@@ -553,7 +555,7 @@ class InstantlyService {
       });
       return data;
     } catch (err: any) {
-      console.error('[Instantly] dailyAccountAnalytics error:', err.message);
+      log.error('[Instantly] dailyAccountAnalytics error:', err.message);
       return null;
     }
   }
@@ -564,7 +566,7 @@ class InstantlyService {
       const { data } = await this.client.post('/email-verification', { email });
       return data;
     } catch (err: any) {
-      console.error('[Instantly] verifyEmail error:', err.message);
+      log.error('[Instantly] verifyEmail error:', err.message);
       return null;
     }
   }
@@ -574,7 +576,7 @@ class InstantlyService {
       const { data } = await this.client.get('/email-verification/status', { params: { email } });
       return data;
     } catch (err: any) {
-      console.error('[Instantly] checkVerification error:', err.message);
+      log.error('[Instantly] checkVerification error:', err.message);
       return null;
     }
   }
@@ -585,7 +587,7 @@ class InstantlyService {
       const { data } = await this.client.get('/block-list-entries', { params: opts });
       return data;
     } catch (err: any) {
-      console.error('[Instantly] listBlockList error:', err.message);
+      log.error('[Instantly] listBlockList error:', err.message);
       return { items: [] };
     }
   }
@@ -606,7 +608,7 @@ class InstantlyService {
       const { data } = await this.client.get('/custom-tags');
       return data?.items ?? data ?? [];
     } catch (err: any) {
-      console.error('[Instantly] listCustomTags error:', err.message);
+      log.error('[Instantly] listCustomTags error:', err.message);
       return [];
     }
   }
@@ -631,7 +633,7 @@ class InstantlyService {
       const { data } = await this.client.get('/email-templates');
       return data?.items ?? data ?? [];
     } catch (err: any) {
-      console.error('[Instantly] listTemplates error:', err.message);
+      log.error('[Instantly] listTemplates error:', err.message);
       return [];
     }
   }
@@ -642,7 +644,7 @@ class InstantlyService {
       const { data } = await this.client.get('/webhooks');
       return data?.items ?? data ?? [];
     } catch (err: any) {
-      console.error('[Instantly] listWebhooks error:', err.message);
+      log.error('[Instantly] listWebhooks error:', err.message);
       return [];
     }
   }
@@ -662,7 +664,7 @@ class InstantlyService {
       const { data } = await this.client.get('/webhooks/event-types');
       return data ?? [];
     } catch (err: any) {
-      console.error('[Instantly] webhookEventTypes error:', err.message);
+      log.error('[Instantly] webhookEventTypes error:', err.message);
       return [];
     }
   }
@@ -673,7 +675,7 @@ class InstantlyService {
       const { data } = await this.client.get('/inbox-placement-tests');
       return data?.items ?? data ?? [];
     } catch (err: any) {
-      console.error('[Instantly] listIPTests error:', err.message);
+      log.error('[Instantly] listIPTests error:', err.message);
       return [];
     }
   }
@@ -689,7 +691,7 @@ class InstantlyService {
       const { data } = await this.client.get('/workspace');
       return data;
     } catch (err: any) {
-      console.error('[Instantly] getWorkspace error:', err.message);
+      log.error('[Instantly] getWorkspace error:', err.message);
       return null;
     }
   }
@@ -699,7 +701,7 @@ class InstantlyService {
       const { data } = await this.client.get('/workspace-billing/plan');
       return data;
     } catch (err: any) {
-      console.error('[Instantly] getWorkspacePlan error:', err.message);
+      log.error('[Instantly] getWorkspacePlan error:', err.message);
       return null;
     }
   }
@@ -742,7 +744,7 @@ class InstantlyService {
       });
 
       if (result) {
-        console.log(
+        log.info(
           `[Instantly] Configured ${stepCount}-step personalized templates for campaign ${campaignId}`,
         );
         return {
@@ -754,7 +756,7 @@ class InstantlyService {
 
       return { success: false, steps: 0, message: 'Campaign update returned no result' };
     } catch (err: any) {
-      console.error('[Instantly] configurePersonalizedTemplates error:', err.message);
+      log.error('[Instantly] configurePersonalizedTemplates error:', err.message);
       return { success: false, steps: 0, message: err.message };
     }
   }

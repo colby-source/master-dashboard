@@ -6,6 +6,8 @@ import { EnrichmentLead } from './types';
 import { getCompanyConfig, updateLead, logEvent } from './helpers';
 import { claudeService } from '../claude-service';
 import { generateEmailSequence, sequenceToCustomVariables } from './email-generator';
+import { createLogger } from '../../utils/logger';
+const log = createLogger('lead-approval');
 
 // Enrichment custom field definitions for GHL contact cards
 export const ENRICHMENT_CUSTOM_FIELDS = [
@@ -52,7 +54,7 @@ async function ensureCustomFields(companyId: number): Promise<Map<string, string
       });
       if (created?.id) {
         fieldMap.set(fieldDef.key, created.id);
-        console.log(`[Enrichment] Created GHL custom field: ${fieldDef.name} (${created.id})`);
+        log.info(`[Enrichment] Created GHL custom field: ${fieldDef.name} (${created.id})`);
       }
     }
   }
@@ -68,7 +70,7 @@ export async function pushToGhl(leadId: number): Promise<boolean> {
   const companyConfig = getCompanyConfig(lead.company_id);
   const ghlClient = ghlService.getClient(lead.company_id);
   if (!ghlClient) {
-    console.error(`[Enrichment] No GHL client for company ${lead.company_id}`);
+    log.error(`[Enrichment] No GHL client for company ${lead.company_id}`);
     return false;
   }
 
@@ -165,7 +167,7 @@ export async function pushToGhl(leadId: number): Promise<boolean> {
           await ghlClient.updateContact(contactId, { customFields });
         }
       } else {
-        console.warn(`[Enrichment] pushToGhl(${leadId}): could not create GHL contact, skipping`);
+        log.warn(`[Enrichment] pushToGhl(${leadId}): could not create GHL contact, skipping`);
         updateLead(leadId, { ghl_push_status: 'failed', error_message: 'GHL contact creation failed' });
         return false;
       }
@@ -300,7 +302,7 @@ export async function pushToGhl(leadId: number): Promise<boolean> {
     wsServer.broadcast({ type: 'enrichment_update', leadId, status: 'ghl_pushed' });
     return true;
   } catch (err: any) {
-    console.error(`[Enrichment] pushToGhl(${leadId}) error:`, err.message);
+    log.error(`[Enrichment] pushToGhl(${leadId}) error:`, err.message);
     updateLead(leadId, { ghl_push_status: 'failed', error_message: err.message });
     logEvent(leadId, lead.company_id, 'error', { error: err.message, step: 'ghl_push' });
     return false;
@@ -312,7 +314,7 @@ export async function approveForColdEmail(leadId: number, campaignId: string): P
   if (!lead || !lead.email) return false;
 
   if (lead.instantly_push_status === 'excluded') {
-    console.warn(`[Enrichment] Lead ${leadId} is excluded from cold email`);
+    log.warn(`[Enrichment] Lead ${leadId} is excluded from cold email`);
     return false;
   }
 
@@ -331,7 +333,7 @@ export async function approveForColdEmail(leadId: number, campaignId: string): P
       try {
         emailSequence = await generateEmailSequence(leadId, lead.company_id);
       } catch (err: any) {
-        console.warn(`[Enrichment] Email generation failed for lead ${leadId}, falling back to snippet mode:`, err.message);
+        log.warn(`[Enrichment] Email generation failed for lead ${leadId}, falling back to snippet mode:`, err.message);
       }
     }
 
@@ -361,7 +363,7 @@ export async function approveForColdEmail(leadId: number, campaignId: string): P
       // Fallback: use scoring snippets only (legacy mode)
       const confidence = Number(personalizations.confidence) || 0;
       if (confidence < 0.4 && personalizations.opener) {
-        console.warn(`[Enrichment] Low personalization confidence (${confidence}) for lead ${leadId}`);
+        log.warn(`[Enrichment] Low personalization confidence (${confidence}) for lead ${leadId}`);
         logEvent(leadId, lead.company_id, 'low_personalization_confidence', { confidence });
       }
 
@@ -403,7 +405,7 @@ export async function approveForColdEmail(leadId: number, campaignId: string): P
     }
     return false;
   } catch (err: any) {
-    console.error(`[Enrichment] approveForColdEmail(${leadId}) error:`, err.message);
+    log.error(`[Enrichment] approveForColdEmail(${leadId}) error:`, err.message);
     updateLead(leadId, { instantly_push_status: 'failed', error_message: err.message });
     logEvent(leadId, lead.company_id, 'error', { error: err.message, step: 'instantly_push' });
     return false;
@@ -449,14 +451,14 @@ export async function retryFailedInstantlyPushes(): Promise<{ retried: number; s
     const ok = await approveForColdEmail(lead.id, lead.default_campaign_id);
     if (ok) {
       succeeded++;
-      console.log(`[Enrichment] Retry #${currentRetry} succeeded for lead ${lead.id}`);
+      log.info(`[Enrichment] Retry #${currentRetry} succeeded for lead ${lead.id}`);
     } else {
-      console.warn(`[Enrichment] Retry #${currentRetry}/${MAX_PUSH_RETRIES} failed for lead ${lead.id}`);
+      log.warn(`[Enrichment] Retry #${currentRetry}/${MAX_PUSH_RETRIES} failed for lead ${lead.id}`);
     }
   }
 
   if (retried > 0) {
-    console.log(`[Enrichment] Retried ${retried} failed pushes, ${succeeded} succeeded`);
+    log.info(`[Enrichment] Retried ${retried} failed pushes, ${succeeded} succeeded`);
   }
   return { retried, succeeded };
 }

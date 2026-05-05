@@ -19,6 +19,8 @@ import { sendTelegramToOperator, isTelegramConfigured } from './telegram-service
 import { getStats, getAutoReplyStats } from './enrichment/scoring';
 import { getCampaignTrend } from './enrichment/campaign-tracker';
 import { getLatestInsights } from './enrichment/feedback-loop';
+import { createLogger } from '../utils/logger';
+const log = createLogger('cmo-health-monitor');
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -410,7 +412,7 @@ Be direct. No fluff. Talk like you're texting a busy executive.`,
 
     return (response.content[0] as any).text?.trim() || 'Analysis unavailable.';
   } catch (err: any) {
-    console.error('[CMO] Intelligence generation error:', err.message);
+    log.error('[CMO] Intelligence generation error:', err.message);
     return `Analysis error: ${err.message}`;
   }
 }
@@ -562,9 +564,9 @@ async function sendCmoDigest(digest: HealthDigest): Promise<void> {
   if (isTelegramConfigured()) {
     const telegramMsg = buildTelegramDigest(digest);
     await sendTelegramToOperator(digest.companyId, telegramMsg);
-    console.log(`[CMO] Telegram digest sent (company ${digest.companyId}): ${criticals.length} critical, ${warnings.length} warnings`);
+    log.info(`[CMO] Telegram digest sent (company ${digest.companyId}): ${criticals.length} critical, ${warnings.length} warnings`);
   } else {
-    console.warn('[CMO] Telegram not configured — falling back to SMS for full digest');
+    log.warn('[CMO] Telegram not configured — falling back to SMS for full digest');
     // Fallback: send truncated version via SMS if Telegram isn't set up
     const ch = digest.campaignHealth;
     const ph = digest.pipelineHealth;
@@ -581,7 +583,7 @@ async function sendCmoDigest(digest: HealthDigest): Promise<void> {
   const smsAlert = buildSmsCriticalAlert(digest);
   if (smsAlert) {
     await sendSmsToOperator(digest.companyId, smsAlert);
-    console.log(`[CMO] Critical SMS alert sent (company ${digest.companyId})`);
+    log.info(`[CMO] Critical SMS alert sent (company ${digest.companyId})`);
   }
 }
 
@@ -604,7 +606,7 @@ function getActiveCompanies(): Array<{ companyId: number; campaignId: string; la
 async function runAllHealthChecks(): Promise<void> {
   const companies = getActiveCompanies();
   if (companies.length === 0) {
-    console.log('[CMO] No active companies — skipping health check');
+    log.info('[CMO] No active companies — skipping health check');
     return;
   }
 
@@ -616,7 +618,7 @@ async function runAllHealthChecks(): Promise<void> {
       // SMS only fires for critical alerts (handled inside sendCmoDigest)
       await sendCmoDigest(digest);
     } catch (err: any) {
-      console.error(`[CMO] Health check error for ${co.label}:`, err.message);
+      log.error(`[CMO] Health check error for ${co.label}:`, err.message);
     }
   }
 }
@@ -626,29 +628,29 @@ async function runAllHealthChecks(): Promise<void> {
 export function initCmoHealthMonitor(): void {
   // Morning CMO brief at 7:30 AM ET (before the 8 AM daily report)
   cronSchedule('30 7 * * *', () => {
-    console.log('[CMO] Running morning health brief...');
+    log.info('[CMO] Running morning health brief...');
     runAllHealthChecks().catch(err => {
-      console.error('[CMO] Morning brief error:', err.message);
+      log.error('[CMO] Morning brief error:', err.message);
     });
   }, { timezone: 'America/New_York' });
 
   // Midday check at 12:30 PM ET
   cronSchedule('30 12 * * *', () => {
-    console.log('[CMO] Running midday health check...');
+    log.info('[CMO] Running midday health check...');
     runAllHealthChecks().catch(err => {
-      console.error('[CMO] Midday check error:', err.message);
+      log.error('[CMO] Midday check error:', err.message);
     });
   }, { timezone: 'America/New_York' });
 
   // Evening wrap at 5:30 PM ET
   cronSchedule('30 17 * * *', () => {
-    console.log('[CMO] Running evening health wrap...');
+    log.info('[CMO] Running evening health wrap...');
     runAllHealthChecks().catch(err => {
-      console.error('[CMO] Evening wrap error:', err.message);
+      log.error('[CMO] Evening wrap error:', err.message);
     });
   }, { timezone: 'America/New_York' });
 
-  console.log('[CMO] Health monitor active — briefs at 7:30 AM, 12:30 PM, 5:30 PM ET + critical alerts anytime');
+  log.info('[CMO] Health monitor active — briefs at 7:30 AM, 12:30 PM, 5:30 PM ET + critical alerts anytime');
 }
 
 // Export for manual triggering via routes

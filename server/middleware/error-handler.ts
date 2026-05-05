@@ -1,4 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
+import { createLogger } from '../utils/logger';
+const log = createLogger('error-handler');
 
 /**
  * Standardized application error with HTTP status code and machine-readable error code.
@@ -85,7 +87,7 @@ export function errorHandler(
 
   // Unexpected / unhandled error
   const isProduction = process.env.NODE_ENV === 'production';
-  console.error('[ErrorHandler] Unhandled error:', err);
+  log.error('[ErrorHandler] Unhandled error:', err);
 
   res.status(500).json(
     buildErrorResponse(

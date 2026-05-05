@@ -13,12 +13,12 @@ export function isBmnCompany(companyId: number): boolean {
 
 /**
  * Inject BMN-specific Brand Builder goal into conversation goals.
+ * Positioning: BMN is a creator investment fund, not a service provider.
  * The #1 goal is ALWAYS to push creators to the Brand Builder funnel.
- * This is the primary conversion action for all BMN outreach.
  */
 export function injectBmnBookingGoal(conversationGoals: string[]): void {
   conversationGoals.push(
-    `BRAND BUILDER FUNNEL: The creator seems interested! Your #1 goal is to get them to the Brand Builder funnel. This is where they learn about the opportunity and start building their brand. Share the link naturally and make it feel exciting — something like "Check out how it works here: ${BMN_BRAND_BUILDER_URL}" or "Start building your brand here: ${BMN_BRAND_BUILDER_URL}". Keep it casual and low-pressure. The Brand Builder funnel IS the next step for every interested creator — do NOT suggest booking a call instead. ALWAYS include the Brand Builder link: ${BMN_BRAND_BUILDER_URL}`
+    `BRAND BUILDER FUNNEL: The creator is interested. You are an investor who believes in this creator — act like it. Your #1 goal is to get them to the Brand Builder funnel where they can see exactly what we would build for them. Frame it as: "We put together a breakdown of what your brand would look like — check it out here: ${BMN_BRAND_BUILDER_URL}". Make them feel selected, not sold to. This is an investment opportunity for them, not a product pitch. ALWAYS include the Brand Builder link: ${BMN_BRAND_BUILDER_URL}. Do NOT suggest booking a call — the funnel IS the next step.`
   );
 }
 

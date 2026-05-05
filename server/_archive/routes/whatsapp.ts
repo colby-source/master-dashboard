@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { whatsappService } from '../services/whatsapp-service';
 import { config } from '../config';
+import { createLogger } from '../utils/logger';
+const log = createLogger('whatsapp');
 
 const router = Router();
 
@@ -156,13 +158,13 @@ router.post('/webhook', (req: Request, res: Response) => {
   const parsed = whatsappService.parseWebhook(req.body);
   // Log incoming messages for now; extend with DB storage / real-time push later
   if (parsed.messages.length > 0) {
-    console.log(`[WhatsApp] ${parsed.messages.length} incoming message(s)`);
+    log.info(`[WhatsApp] ${parsed.messages.length} incoming message(s)`);
     for (const msg of parsed.messages) {
-      console.log(`  from=${msg.from} type=${msg.type} ${msg.text?.body ?? ''}`);
+      log.info(`  from=${msg.from} type=${msg.type} ${msg.text?.body ?? ''}`);
     }
   }
   if (parsed.statuses.length > 0) {
-    console.log(`[WhatsApp] ${parsed.statuses.length} status update(s)`);
+    log.info(`[WhatsApp] ${parsed.statuses.length} status update(s)`);
   }
   // Must respond 200 quickly or Meta retries
   res.sendStatus(200);

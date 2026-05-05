@@ -17,6 +17,8 @@ import path from 'path';
 // creator-specific language and flows if/when needed.
 // ═══════════════════════════════════════════════════════════════
 import { GPC_COMPANY_ID } from './gpc/config';
+import { createLogger } from '../utils/logger';
+const log = createLogger('post-event-sequence');
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -421,7 +423,7 @@ const COLBY_PHONE = '+15083973792';
 
 async function notifyColby(message: string): Promise<void> {
   const ghl = ghlService.getClient(GPC_COMPANY_ID); // Granite Park Capital
-  if (!ghl) { console.error('[Sequence] No GHL client for notifications'); return; }
+  if (!ghl) { log.error('[Sequence] No GHL client for notifications'); return; }
 
   try {
     await ghl.sendMessage({
@@ -429,9 +431,9 @@ async function notifyColby(message: string): Promise<void> {
       type: 'SMS',
       message: `[Post-Event Sequence] ${message}`,
     });
-    console.log(`[Sequence] Notified Colby: ${message.substring(0, 80)}`);
+    log.info(`[Sequence] Notified Colby: ${message.substring(0, 80)}`);
   } catch (err) {
-    console.error('[Sequence] Failed to notify Colby:', err);
+    log.error('[Sequence] Failed to notify Colby:', err);
   }
 }
 
@@ -506,17 +508,17 @@ export class PostEventSequence {
     };
     saveState(this.config.id, state);
 
-    console.log(`[Sequence:${this.config.id}] Enrolled ${enrolled.length} contacts (filtered from ${contacts.length} tagged)`);
+    log.info(`[Sequence:${this.config.id}] Enrolled ${enrolled.length} contacts (filtered from ${contacts.length} tagged)`);
     return enrolled;
   }
 
   // Process the next batch of sends
   async processSends(): Promise<{ sent: number; errors: number }> {
     const state = loadState(this.config.id);
-    if (!state) { console.log(`[Sequence:${this.config.id}] No state found`); return { sent: 0, errors: 0 }; }
+    if (!state) { log.info(`[Sequence:${this.config.id}] No state found`); return { sent: 0, errors: 0 }; }
 
     const ghl = ghlService.getClient(GPC_COMPANY_ID);
-    if (!ghl) { console.error('[Sequence] No GHL client'); return { sent: 0, errors: 0 }; }
+    if (!ghl) { log.error('[Sequence] No GHL client'); return { sent: 0, errors: 0 }; }
 
     const now = new Date();
     let sent = 0;
@@ -575,20 +577,20 @@ export class PostEventSequence {
         contact.currentStep = stepDef.step;
         sent++;
 
-        console.log(`[Sequence:${this.config.id}] Step ${stepDef.step} (${stepDef.channel}) sent to ${contact.firstName} (${contact.contactId})`);
+        log.info(`[Sequence:${this.config.id}] Step ${stepDef.step} (${stepDef.channel}) sent to ${contact.firstName} (${contact.contactId})`);
 
         // Rate limit: 500ms between sends
         await new Promise(r => setTimeout(r, 500));
       } catch (err) {
         errors++;
-        console.error(`[Sequence:${this.config.id}] Error sending step ${stepDef.step} to ${contact.firstName}:`, err);
+        log.error(`[Sequence:${this.config.id}] Error sending step ${stepDef.step} to ${contact.firstName}:`, err);
       }
     }
 
     saveState(this.config.id, state);
 
     if (sent > 0) {
-      console.log(`[Sequence:${this.config.id}] Batch complete: ${sent} sent, ${errors} errors`);
+      log.info(`[Sequence:${this.config.id}] Batch complete: ${sent} sent, ${errors} errors`);
     }
     return { sent, errors };
   }
@@ -625,7 +627,7 @@ export class PostEventSequence {
         const messageBody = conv.lastMessageBody || '';
         const classification = await classifyReply(messageBody, contact.firstName);
 
-        console.log(`[Sequence:${this.config.id}] Reply from ${contact.firstName}: ${classification.intent}`);
+        log.info(`[Sequence:${this.config.id}] Reply from ${contact.firstName}: ${classification.intent}`);
 
         if (classification.intent === 'opt-out') {
           contact.status = 'opted-out';
@@ -656,7 +658,7 @@ export class PostEventSequence {
         // Rate limit between contact checks
         await new Promise(r => setTimeout(r, 300));
       } catch (err) {
-        console.error(`[Sequence:${this.config.id}] Error checking replies for ${contact.firstName}:`, err);
+        log.error(`[Sequence:${this.config.id}] Error checking replies for ${contact.firstName}:`, err);
       }
     }
 
@@ -667,21 +669,21 @@ export class PostEventSequence {
   start(): void {
     // Process sends every hour at :05
     this.cronJob = cron.schedule('5 * * * *', async () => {
-      try { await this.processSends(); } catch (err) { console.error('[Sequence] processSends error:', err); }
+      try { await this.processSends(); } catch (err) { log.error('[Sequence] processSends error:', err); }
     });
 
     // Check replies every 30 minutes
     this.replyCheckJob = cron.schedule('*/30 * * * *', async () => {
-      try { await this.checkReplies(); } catch (err) { console.error('[Sequence] checkReplies error:', err); }
+      try { await this.checkReplies(); } catch (err) { log.error('[Sequence] checkReplies error:', err); }
     });
 
-    console.log(`[Sequence:${this.config.id}] Started — sends at :05 every hour, reply checks every 30min`);
+    log.info(`[Sequence:${this.config.id}] Started — sends at :05 every hour, reply checks every 30min`);
   }
 
   stop(): void {
     this.cronJob?.stop();
     this.replyCheckJob?.stop();
-    console.log(`[Sequence:${this.config.id}] Stopped`);
+    log.info(`[Sequence:${this.config.id}] Stopped`);
   }
 
   // Get current status

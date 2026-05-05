@@ -2,11 +2,13 @@ import { metaAdsService } from '../services/meta-ads-service';
 import { queryOne, runSql } from '../db';
 import { saveDb } from '../db';
 import { createAlert } from '../services/alert-service';
+import { createLogger } from '../utils/logger';
+const log = createLogger('meta-ads-sync');
 
 class MetaAdsSync {
   async sync() {
     if (!metaAdsService.available) return;
-    console.log('[Sync:MetaAds] Starting...');
+    log.info('[Sync:MetaAds] Starting...');
 
     try {
       // Sync campaigns
@@ -64,9 +66,9 @@ class MetaAdsSync {
       );
 
       saveDb();
-      console.log(`[Sync:MetaAds] Synced ${campaigns.length} campaigns`);
+      log.info(`[Sync:MetaAds] Synced ${campaigns.length} campaigns`);
     } catch (err: any) {
-      console.error('[Sync:MetaAds] Error:', err.message);
+      log.error('[Sync:MetaAds] Error:', err.message);
       runSql(
         `UPDATE integrations SET status = 'error', last_error = ? WHERE name = 'meta_ads'`,
         [err.message]

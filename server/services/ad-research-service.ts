@@ -1,5 +1,7 @@
 import { claudeService } from './claude-service';
 import { getDb } from '../db';
+import { createLogger } from '../utils/logger';
+const log = createLogger('ad-research-service');
 
 // ── Types ────────────────────────────────────────────────────────
 
@@ -112,7 +114,7 @@ class AdResearchService {
    * Pull top-scoring competitor ads and combine with GPC brand context.
    */
   async compileResearchContext(): Promise<ResearchContext> {
-    console.log(`${LOG_PREFIX} Compiling research context...`);
+    log.info(`${LOG_PREFIX} Compiling research context...`);
     const db = await getDb();
 
     const results = db.exec(
@@ -139,7 +141,7 @@ class AdResearchService {
       }
     }
 
-    console.log(`${LOG_PREFIX} Found ${competitorAds.length} high-scoring competitor ads`);
+    log.info(`${LOG_PREFIX} Found ${competitorAds.length} high-scoring competitor ads`);
 
     return {
       competitorAds,
@@ -154,7 +156,7 @@ class AdResearchService {
   async generateStrategicBrief(context?: ResearchContext): Promise<StrategicBrief> {
     await this.ensureTables();
     const researchContext = context ?? (await this.compileResearchContext());
-    console.log(`${LOG_PREFIX} Generating strategic brief...`);
+    log.info(`${LOG_PREFIX} Generating strategic brief...`);
 
     if (!claudeService.available) {
       throw new Error(`${LOG_PREFIX} Claude API key not configured`);
@@ -226,7 +228,7 @@ Remember this is a 506(c) offering — all messaging must be appropriate for acc
     };
 
     await this.saveBrief(brief);
-    console.log(`${LOG_PREFIX} Strategic brief generated and saved`);
+    log.info(`${LOG_PREFIX} Strategic brief generated and saved`);
 
     return brief;
   }
@@ -241,7 +243,7 @@ Remember this is a 506(c) offering — all messaging must be appropriate for acc
       throw new Error(`${LOG_PREFIX} No strategic brief available. Generate one first.`);
     }
 
-    console.log(`${LOG_PREFIX} Generating ad copy variants...`);
+    log.info(`${LOG_PREFIX} Generating ad copy variants...`);
 
     if (!claudeService.available) {
       throw new Error(`${LOG_PREFIX} Claude API key not configured`);
@@ -312,7 +314,7 @@ CONSTRAINTS:
     }));
 
     await this.saveVariants(variants);
-    console.log(`${LOG_PREFIX} Generated ${variants.length} ad copy variants`);
+    log.info(`${LOG_PREFIX} Generated ${variants.length} ad copy variants`);
 
     return variants;
   }
@@ -356,13 +358,13 @@ CONSTRAINTS:
    * Run the full pipeline: compile context -> generate brief -> generate ad copy.
    */
   async fullResearchPipeline(): Promise<{ brief: StrategicBrief; variants: AdCopyVariant[] }> {
-    console.log(`${LOG_PREFIX} Starting full research pipeline...`);
+    log.info(`${LOG_PREFIX} Starting full research pipeline...`);
 
     const context = await this.compileResearchContext();
     const brief = await this.generateStrategicBrief(context);
     const variants = await this.generateAdCopyVariants(brief);
 
-    console.log(`${LOG_PREFIX} Full research pipeline complete`);
+    log.info(`${LOG_PREFIX} Full research pipeline complete`);
     return { brief, variants };
   }
 

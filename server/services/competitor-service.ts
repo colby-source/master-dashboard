@@ -1,5 +1,7 @@
 import axios from 'axios';
 import crypto from 'crypto';
+import { createLogger } from '../utils/logger';
+const log = createLogger('competitor-service');
 
 export interface CompetitorSnapshot {
   url: string;
@@ -40,7 +42,7 @@ class CompetitorService {
         fetchedAt: new Date().toISOString(),
       };
     } catch (err: any) {
-      console.error(`[Competitor] Failed to fetch ${url}:`, err.message);
+      log.error(`[Competitor] Failed to fetch ${url}:`, err.message);
       return null;
     }
   }

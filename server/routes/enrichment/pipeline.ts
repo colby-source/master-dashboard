@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { queryAll, queryOne, runSql, saveDb } from '../../db';
 import { enrichmentService } from '../../services/enrichment-service';
 import { getCompanyId } from './helpers';
+import { createLogger } from '../../utils/logger';
+const log = createLogger('pipeline');
 
 const router = Router();
 
@@ -118,14 +120,14 @@ router.post('/leads/bulk-rescore', async (req, res) => {
       // Small delay to avoid rate limiting
       if (i > 0 && i % batch_size === 0) {
         saveDb();
-        console.log(`[Bulk Rescore] Progress: ${scored} scored, ${failed} failed, ${leads.length - i - 1} remaining`);
+        log.info(`[Bulk Rescore] Progress: ${scored} scored, ${failed} failed, ${leads.length - i - 1} remaining`);
         await new Promise(r => setTimeout(r, delay_ms));
       }
     }
     saveDb();
-    console.log(`[Bulk Rescore] Complete: ${scored} scored, ${failed} failed out of ${leads.length}`);
+    log.info(`[Bulk Rescore] Complete: ${scored} scored, ${failed} failed out of ${leads.length}`);
   } catch (err: any) {
-    console.error('[Bulk Rescore] Error:', err.message);
+    log.error('[Bulk Rescore] Error:', err.message);
   }
 });
 
@@ -200,8 +202,8 @@ router.post('/migrate-campaign', async (req, res) => {
     const { migrateCampaignWithPersonalization } = await import('../../services/enrichment/pipeline');
     // Run async — don't block the HTTP response (this takes a long time for 2000+ leads)
     migrateCampaignWithPersonalization(fromCampaignId, toCampaignId, companyId, { batchSize, delayMs })
-      .then(result => console.log('[Migration] Finished:', result))
-      .catch(err => console.error('[Migration] Fatal error:', err.message));
+      .then(result => log.info('[Migration] Finished:', result))
+      .catch(err => log.error('[Migration] Fatal error:', err.message));
     res.json({ status: 'started', message: 'Migration running in background. Watch WebSocket for progress.' });
   } catch (err: any) { res.status(500).json({ error: err.message }); }
 });

@@ -2,6 +2,8 @@ import { GoogleGenAI } from '@google/genai';
 import fs from 'fs';
 import path from 'path';
 import { config } from '../config';
+import { createLogger } from '../utils/logger';
+const log = createLogger('gemini-image-service');
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -179,7 +181,7 @@ The image should convey trust, stability, and premium investment opportunity in 
           });
           results.push(result);
         } catch (err: any) {
-          console.error(`[GeminiImage] Failed to generate variant: ${err.message}`);
+          log.error(`[GeminiImage] Failed to generate variant: ${err.message}`);
         }
       }
     }

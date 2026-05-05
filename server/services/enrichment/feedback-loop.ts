@@ -3,6 +3,10 @@ import { claudeService } from '../claude-service';
 import { getCompanyConfig, logEvent } from './helpers';
 import { captureCampaignSnapshot, analyzePersonalizationPerformance } from './campaign-tracker';
 import { getWinningVariant, getTestResults } from './ab-testing';
+import { autoOptimizeSequence } from './sequence-optimizer';
+import { promoteWinningStrategies, autoAddObjectionHandlers } from './playbook-evolver';
+import { createLogger } from '../../utils/logger';
+const log = createLogger('feedback-loop');
 
 /**
  * Self-optimization cycle — runs periodically (e.g., every 4 hours).
@@ -56,7 +60,7 @@ export async function runOptimizationCycle(companyId: number): Promise<{
           value: winner.value,
         });
         results.abTestsCompleted++;
-        console.log(`[FeedbackLoop] A/B test "${test.test_name}" winner: ${winner.variant_name} (${winner.metric}: ${winner.value}%)`);
+        log.info(`[FeedbackLoop] A/B test "${test.test_name}" winner: ${winner.variant_name} (${winner.metric}: ${winner.value}%)`);
       }
     }
 
@@ -83,7 +87,7 @@ export async function runOptimizationCycle(companyId: number): Promise<{
         });
 
         results.insightsGenerated++;
-        console.log(`[FeedbackLoop] Generated optimization insights: ${perfAnalysis.recommendations.length} recommendations`);
+        log.info(`[FeedbackLoop] Generated optimization insights: ${perfAnalysis.recommendations.length} recommendations`);
       }
     }
 
@@ -93,9 +97,61 @@ export async function runOptimizationCycle(companyId: number): Promise<{
     // 5. Analyze reply strategy performance (which Claude reply strategies convert to meetings)
     await analyzeReplyStrategies(companyId);
 
+    // 6. Self-learning: auto-optimize sequence A/B variants
+    //    Loop through active campaigns for this company and disable losing variants
+    const activeCampaignIds = queryAll(
+      `SELECT DISTINCT instantly_campaign_id
+       FROM enrichment_leads
+       WHERE company_id = ? AND instantly_campaign_id IS NOT NULL AND instantly_push_status = 'pushed'`,
+      [companyId],
+    );
+
+    for (const row of activeCampaignIds) {
+      if (row.instantly_campaign_id) {
+        try {
+          const seqResult = await autoOptimizeSequence(row.instantly_campaign_id, companyId);
+          if (seqResult.variantsDisabled > 0) {
+            log.info(
+              `[FeedbackLoop] Sequence optimizer: ${seqResult.variantsDisabled} variants disabled ` +
+              `for campaign ${row.instantly_campaign_id}`,
+            );
+          }
+        } catch (seqErr: any) {
+          log.error(
+            `[FeedbackLoop] Sequence optimizer error for ${row.instantly_campaign_id}:`,
+            seqErr.message,
+          );
+        }
+      }
+    }
+
+    // 7. Self-learning: promote winning reply strategies into playbook
+    try {
+      const promoResult = await promoteWinningStrategies(companyId);
+      if (promoResult.strategiesPromoted > 0) {
+        log.info(
+          `[FeedbackLoop] Playbook evolver: promoted ${promoResult.strategiesPromoted} winning strategies`,
+        );
+      }
+    } catch (promoErr: any) {
+      log.error('[FeedbackLoop] Playbook evolver (promote) error:', promoErr.message);
+    }
+
+    // 8. Self-learning: auto-detect and add new objection handlers
+    try {
+      const objResult = await autoAddObjectionHandlers(companyId);
+      if (objResult.handlersAdded > 0) {
+        log.info(
+          `[FeedbackLoop] Playbook evolver: added ${objResult.handlersAdded} new objection handlers`,
+        );
+      }
+    } catch (objErr: any) {
+      log.error('[FeedbackLoop] Playbook evolver (objections) error:', objErr.message);
+    }
+
     saveDb();
 
-    console.log(
+    log.info(
       `[FeedbackLoop] Optimization cycle complete: ` +
       `${results.snapshotsCaptured} snapshots, ${results.abTestsCompleted} A/B winners, ` +
       `${results.insightsGenerated} insights`
@@ -103,7 +159,7 @@ export async function runOptimizationCycle(companyId: number): Promise<{
 
     return results;
   } catch (err: any) {
-    console.error(`[FeedbackLoop] Optimization cycle error:`, err.message);
+    log.error(`[FeedbackLoop] Optimization cycle error:`, err.message);
     return results;
   }
 }
@@ -157,7 +213,7 @@ Write the strategy brief as bullet points. Be specific and actionable. Focus on 
     const text = response.content[0].type === 'text' ? response.content[0].text : '';
     return text.trim();
   } catch (err: any) {
-    console.error('[FeedbackLoop] Strategy brief generation error:', err.message);
+    log.error('[FeedbackLoop] Strategy brief generation error:', err.message);
     return null;
   }
 }
@@ -260,9 +316,9 @@ async function analyzeReplyStrategies(companyId: number): Promise<void> {
       sampleSize: strategyOutcomes.length,
     });
 
-    console.log(`[FeedbackLoop] Reply strategy analysis: ${Object.keys(strategyStats).length} strategies from ${strategyOutcomes.length} replies`);
+    log.info(`[FeedbackLoop] Reply strategy analysis: ${Object.keys(strategyStats).length} strategies from ${strategyOutcomes.length} replies`);
   } catch (err: any) {
-    console.error('[FeedbackLoop] Reply strategy analysis error:', err.message);
+    log.error('[FeedbackLoop] Reply strategy analysis error:', err.message);
   }
 }
 

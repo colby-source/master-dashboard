@@ -13,6 +13,10 @@ import { createAlert } from '../alert-service';
 import { BMN_COMPANY_ID } from '../bmn/config';
 import { enrichLead, deepEnrichWithPdl } from './lead-enrichment';
 import { pushToGhl, approveForColdEmail } from './lead-approval';
+import { classifySegment, segmentPdlGate, segmentAllowsAutoApproval } from './segment-router';
+import { generatePersonalizationHook } from './personalization-hook';
+import { createLogger } from '../../utils/logger';
+const log = createLogger('lead-processing');
 
 /** Valid funnel stages in order of progression. */
 export const FUNNEL_STAGES = [
@@ -31,7 +35,7 @@ export async function processLead(leadId: number): Promise<boolean> {
   // BMN NEVER runs through the enrichment pipeline
   const checkLead = queryOne('SELECT company_id FROM enrichment_leads WHERE id = ?', [leadId]);
   if (checkLead?.company_id === BMN_COMPANY_ID) {
-    console.log(`[Enrichment] Skipping processLead for BMN lead ${leadId}`);
+    log.info(`[Enrichment] Skipping processLead for BMN lead ${leadId}`);
     return false;
   }
 
@@ -41,12 +45,41 @@ export async function processLead(leadId: number): Promise<boolean> {
   const scored = await scoreLead(leadId);
   if (!scored) return false;
 
-  // Gated deep-enrich: only spend PDL credits on high-value leads (score >= 80)
-  const scoredLead = queryOne('SELECT score, company_id FROM enrichment_leads WHERE id = ?', [leadId]);
-  if (scoredLead && scoredLead.score >= 80 && pdlClient.available) {
-    await deepEnrichWithPdl(leadId);
-    // Re-score with deeper data for more accurate classification
-    await scoreLead(leadId);
+  // Gated deep-enrich: PDL threshold is now segment-aware.
+  //   FAMILY_OFFICE: 60, HNW_INDIVIDUAL: 65, OPERATOR_ADJACENT: 75, STANDARD_B2B: 80, GATEKEEPER: never.
+  // Shifts spend toward segments where PDL data actually converts.
+  const scoredLead = queryOne('SELECT score, company_id, segment, email FROM enrichment_leads WHERE id = ?', [leadId]) as { score: number; company_id: number; segment: string | null; email: string | null } | null;
+  if (scoredLead && pdlClient.available) {
+    const segment = scoredLead.segment ?? classifySegment({ company_id: scoredLead.company_id, email: scoredLead.email });
+    const pdlGate = segmentPdlGate(segment as any);
+    if (pdlGate !== null && scoredLead.score >= pdlGate) {
+      log.info(`[Enrichment] PDL gate passed for lead ${leadId} (score ${scoredLead.score} >= ${pdlGate} for ${segment})`);
+      await deepEnrichWithPdl(leadId);
+      // Re-score with deeper data for more accurate classification
+      await scoreLead(leadId);
+    }
+  }
+
+  // ── Generate personalization hook (ready-to-send subject + opener) ──
+  // Uses Claude Haiku (~$0.001) against the full enrichment blob. Highest-ROI output for FO/HNW.
+  if (scoredLead && scoredLead.score >= 50) {
+    try {
+      const freshLead = queryOne('SELECT * FROM enrichment_leads WHERE id = ?', [leadId]) as EnrichmentLead | null;
+      const enrichmentData = freshLead?.enrichment_data ? JSON.parse(freshLead.enrichment_data) : {};
+      const playbook = queryOne('SELECT company_description, value_propositions FROM company_playbooks WHERE company_id = ?', [scoredLead.company_id]) as { company_description?: string; value_propositions?: string } | null;
+      const senderContext = playbook
+        ? [playbook.company_description, playbook.value_propositions].filter(Boolean).join(' — ')
+        : undefined;
+      await generatePersonalizationHook({
+        lead_id: leadId,
+        segment: (scoredLead.segment ?? 'STANDARD_B2B') as any,
+        enrichment_data: enrichmentData,
+        company_id: scoredLead.company_id,
+        sender_context: senderContext,
+      });
+    } catch (err: any) {
+      log.warn(`[Enrichment] Personalization hook generation failed for lead ${leadId}: ${err.message}`);
+    }
   }
 
   // Auto-push to GHL if enabled
@@ -56,11 +89,20 @@ export async function processLead(leadId: number): Promise<boolean> {
       await pushToGhl(leadId);
     }
 
-    // Auto-approve for cold email if lead qualifies
+    // Auto-approve for cold email if lead qualifies.
+    // Gated by segment: FAMILY_OFFICE and HNW_INDIVIDUAL NEVER auto-approve (manual review only).
     if (companyConfig?.default_campaign_id) {
       const threshold = companyConfig.auto_approve_threshold || 70;
       const freshLead = queryOne('SELECT * FROM enrichment_leads WHERE id = ?', [leadId]) as EnrichmentLead | null;
-      if (freshLead && freshLead.score !== null && freshLead.score >= threshold
+      const freshSegment = (freshLead as any)?.segment ?? 'STANDARD_B2B';
+      const segmentOK = segmentAllowsAutoApproval(freshSegment);
+      if (!segmentOK && freshLead) {
+        logEvent(leadId, scoredLead.company_id, 'auto_approve_skipped_by_segment', {
+          segment: freshSegment,
+          score: freshLead.score,
+        });
+      }
+      if (segmentOK && freshLead && freshLead.score !== null && freshLead.score >= threshold
         && freshLead.instantly_push_status === 'awaiting_approval'
         && !freshLead.is_known_contact) {
         // Verify email is not invalid
@@ -117,9 +159,9 @@ export async function processLead(leadId: number): Promise<boolean> {
             linkedin_outreach_status: 'queued',
           });
 
-          console.log(`[Enrichment] Lead ${leadId} (${liLead.first_name} ${liLead.last_name}) queued for LinkedIn outreach — score ${liLead.score}`);
+          log.info(`[Enrichment] Lead ${leadId} (${liLead.first_name} ${liLead.last_name}) queued for LinkedIn outreach — score ${liLead.score}`);
         } catch (err: any) {
-          console.error(`[Enrichment] LinkedIn message generation failed for lead ${leadId}:`, err.message);
+          log.error(`[Enrichment] LinkedIn message generation failed for lead ${leadId}:`, err.message);
         }
       }
     }
@@ -158,7 +200,7 @@ export async function bulkProcessImport(
           }
         }
       } catch (err: any) {
-        console.error(`[BulkImport] Failed to process lead ${leadId}:`, err.message);
+        log.error(`[BulkImport] Failed to process lead ${leadId}:`, err.message);
       }
 
       processedCount++;
@@ -222,7 +264,7 @@ export function advanceLeadStage(leadId: number, newStage: string): boolean {
 
   // Sync GHL opportunity stage (async, non-blocking)
   syncOpportunityStage(leadId, newStage).catch(err => {
-    console.error(`[Pipeline] Failed to sync opportunity stage for lead ${leadId}:`, err.message);
+    log.error(`[Pipeline] Failed to sync opportunity stage for lead ${leadId}:`, err.message);
   });
 
   return true;
@@ -278,7 +320,7 @@ export async function fastTrackEventAttendees(
       logEvent(leadId, companyId, 'fast_track_complete', { event: eventName });
       processed++;
     } catch (err: any) {
-      console.error(`[FastTrack] Failed lead ${leadId}:`, err.message);
+      log.error(`[FastTrack] Failed lead ${leadId}:`, err.message);
       failed++;
     }
   }
@@ -328,7 +370,7 @@ export async function migrateCampaignWithPersonalization(
   let failed = 0;
   let skipped = 0;
 
-  console.log(`[Migration] Starting campaign migration: ${total} leads from ${fromCampaignId} → ${toCampaignId}`);
+  log.info(`[Migration] Starting campaign migration: ${total} leads from ${fromCampaignId} → ${toCampaignId}`);
   wsServer.broadcast({ type: 'migration_started', fromCampaignId, toCampaignId, total });
 
   for (let i = 0; i < leads.length; i += batchSize) {
@@ -349,12 +391,12 @@ export async function migrateCampaignWithPersonalization(
           try {
             emailSequence = await generateEmailSequence(lead.id, companyId);
           } catch (err: any) {
-            console.warn(`[Migration] Email generation failed for lead ${lead.id}: ${err.message}`);
+            log.warn(`[Migration] Email generation failed for lead ${lead.id}: ${err.message}`);
           }
         }
 
         if (!emailSequence || emailSequence.steps.length < 3) {
-          console.warn(`[Migration] Skipping lead ${lead.id} — no personalized sequence generated`);
+          log.warn(`[Migration] Skipping lead ${lead.id} — no personalized sequence generated`);
           skipped++;
           return;
         }
@@ -399,7 +441,7 @@ export async function migrateCampaignWithPersonalization(
           failed++;
         }
       } catch (err: any) {
-        console.error(`[Migration] Lead ${lead.id} error:`, err.message);
+        log.error(`[Migration] Lead ${lead.id} error:`, err.message);
         failed++;
       }
     });
@@ -409,7 +451,7 @@ export async function migrateCampaignWithPersonalization(
 
     // Progress update
     const progress = Math.min(i + batchSize, total);
-    console.log(`[Migration] Progress: ${progress}/${total} (migrated=${migrated}, failed=${failed}, skipped=${skipped})`);
+    log.info(`[Migration] Progress: ${progress}/${total} (migrated=${migrated}, failed=${failed}, skipped=${skipped})`);
     wsServer.broadcast({
       type: 'migration_progress',
       progress,
@@ -425,7 +467,7 @@ export async function migrateCampaignWithPersonalization(
     }
   }
 
-  console.log(`[Migration] Complete: ${migrated} migrated, ${failed} failed, ${skipped} skipped out of ${total}`);
+  log.info(`[Migration] Complete: ${migrated} migrated, ${failed} failed, ${skipped} skipped out of ${total}`);
   wsServer.broadcast({ type: 'migration_complete', migrated, failed, skipped, total });
 
   return { migrated, failed, skipped, total };

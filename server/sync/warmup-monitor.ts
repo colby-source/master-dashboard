@@ -2,6 +2,8 @@ import { instantlyService } from '../services/instantly-service';
 import { createAlert } from '../services/alert-service';
 import { wsServer } from '../websocket/ws-server';
 import { queryOne, runSql, saveDb } from '../db';
+import { createLogger } from '../utils/logger';
+const log = createLogger('warmup-monitor');
 
 const WARMUP_READY_DAYS = 14;
 const MIN_WARMUP_SCORE = 80;
@@ -16,14 +18,14 @@ class WarmupMonitor {
     if (now - this.lastCheck < CHECK_INTERVAL_MS) return;
     this.lastCheck = now;
 
-    console.log('[WarmupMonitor] Checking account warmup readiness...');
+    log.info('[WarmupMonitor] Checking account warmup readiness...');
 
     try {
       const result = await instantlyService.listAccounts({ limit: 100 });
       const accounts = result?.items ?? result ?? [];
 
       if (!accounts.length) {
-        console.log('[WarmupMonitor] No accounts found');
+        log.info('[WarmupMonitor] No accounts found');
         return;
       }
 
@@ -111,9 +113,9 @@ class WarmupMonitor {
         }
       }
 
-      console.log(`[WarmupMonitor] ${accounts.length} total, ${warming.length} warming, ${ready.length} ready`);
+      log.info(`[WarmupMonitor] ${accounts.length} total, ${warming.length} warming, ${ready.length} ready`);
     } catch (err: any) {
-      console.error('[WarmupMonitor] Error:', err.message);
+      log.error('[WarmupMonitor] Error:', err.message);
     }
   }
 

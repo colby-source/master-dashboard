@@ -1,4 +1,6 @@
 import { spawn } from 'child_process';
+import { createLogger } from './utils/logger';
+const log = createLogger('tunnel');
 
 // GPC-ONLY: This tunnel serves Granite Park Capital's yacht event check-in page.
 // If BMN needs a tunnel, add a separate tunnel config keyed by company_id.
@@ -13,7 +15,7 @@ export function getTunnelUrl(): string {
 
 export async function startTunnel(_port: number): Promise<string> {
   return new Promise((resolve, reject) => {
-    console.log(`[Tunnel] Starting named tunnel "${TUNNEL_NAME}" → ${TUNNEL_URL}`);
+    log.info(`[Tunnel] Starting named tunnel "${TUNNEL_NAME}" → ${TUNNEL_URL}`);
 
     const proc = spawn('npx', ['cloudflared', 'tunnel', 'run', TUNNEL_NAME], {
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -29,13 +31,13 @@ export async function startTunnel(_port: number): Promise<string> {
       // Named tunnel logs "Registered tunnel connection" when ready
       if (text.includes('Registered tunnel connection') && !resolved) {
         resolved = true;
-        console.log(`[Tunnel] Live at: ${TUNNEL_URL}`);
-        console.log(`[Tunnel] Yacht check-in: ${TUNNEL_URL}/yacht-checkin/yacht-2026-04-08`);
+        log.info(`[Tunnel] Live at: ${TUNNEL_URL}`);
+        log.info(`[Tunnel] Yacht check-in: ${TUNNEL_URL}/yacht-checkin/yacht-2026-04-08`);
         resolve(TUNNEL_URL);
       }
       // Log errors
       if (text.includes('ERR')) {
-        console.error(`[Tunnel] ${text.trim()}`);
+        log.error(`[Tunnel] ${text.trim()}`);
       }
     };
 
@@ -43,15 +45,15 @@ export async function startTunnel(_port: number): Promise<string> {
     proc.stderr?.on('data', handleOutput);
 
     proc.on('error', (err) => {
-      console.error('[Tunnel] Process error:', err.message);
+      log.error('[Tunnel] Process error:', err.message);
       if (!resolved) reject(err);
     });
 
     proc.on('exit', (code) => {
-      console.log(`[Tunnel] Process exited with code ${code}`);
+      log.info(`[Tunnel] Process exited with code ${code}`);
       tunnelProcess = null;
       // Auto-restart after 5 seconds
-      console.log('[Tunnel] Restarting in 5 seconds...');
+      log.info('[Tunnel] Restarting in 5 seconds...');
       setTimeout(() => startTunnel(_port).catch(() => {}), 5000);
     });
 
@@ -60,7 +62,7 @@ export async function startTunnel(_port: number): Promise<string> {
       if (!resolved) {
         resolved = true;
         // Resolve anyway — the tunnel might be working even without the log line
-        console.log(`[Tunnel] Assuming connected at ${TUNNEL_URL}`);
+        log.info(`[Tunnel] Assuming connected at ${TUNNEL_URL}`);
         resolve(TUNNEL_URL);
       }
     }, 30000);
@@ -70,7 +72,7 @@ export async function startTunnel(_port: number): Promise<string> {
 // Clean shutdown
 process.on('SIGINT', () => {
   if (tunnelProcess) {
-    console.log('[Tunnel] Shutting down...');
+    log.info('[Tunnel] Shutting down...');
     tunnelProcess.kill();
   }
 });

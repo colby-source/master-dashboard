@@ -3,6 +3,8 @@ import { queryOne, queryAll } from '../../db';
 import { CompanyPlaybook } from './types';
 import { getCompanyConfig, logEvent } from './helpers';
 import { getLatestInsights } from './feedback-loop';
+import { createLogger } from '../../utils/logger';
+const log = createLogger('email-generator');
 
 export interface GeneratedEmailSequence {
   steps: GeneratedEmailStep[];
@@ -215,7 +217,7 @@ export async function generateEmailSequence(
   ) as CompanyPlaybook | null;
 
   if (!playbook) {
-    console.error(`[EmailGen] No playbook found for company ${companyId}`);
+    log.error(`[EmailGen] No playbook found for company ${companyId}`);
     return null;
   }
 
@@ -353,7 +355,7 @@ Respond in this exact JSON format (raw JSON only, no code fences):
     // Validate — must have at least 3 steps with non-empty bodies
     const validSteps = sequence.steps.filter(s => s.body.length > 20 && s.subject.length > 3);
     if (validSteps.length < 3) {
-      console.error(`[EmailGen] Only ${validSteps.length} valid steps generated for lead ${leadId}`);
+      log.error(`[EmailGen] Only ${validSteps.length} valid steps generated for lead ${leadId}`);
       logEvent(leadId, companyId, 'email_gen_low_quality', {
         validSteps: validSteps.length,
         strategy: sequence.strategy,
@@ -367,13 +369,13 @@ Respond in this exact JSON format (raw JSON only, no code fences):
       angles: sequence.steps.map(s => s.angle),
     });
 
-    console.log(
+    log.info(
       `[EmailGen] Generated ${sequence.steps.length}-step sequence for lead ${leadId}: ${sequence.strategy}`
     );
 
     return sequence;
   } catch (err: any) {
-    console.error(`[EmailGen] Error generating sequence for lead ${leadId}:`, err.message);
+    log.error(`[EmailGen] Error generating sequence for lead ${leadId}:`, err.message);
     logEvent(leadId, companyId, 'error', { error: err.message, step: 'email_generation' });
     return null;
   }

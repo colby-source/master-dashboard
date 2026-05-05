@@ -1,4 +1,6 @@
 // ── Import all modules ──────────────────────────────────────
+import { createLogger } from '../../utils/logger';
+const log = createLogger('enrichment');
 
 import { scoreLead, getStats, getAutoReplyStats } from './scoring';
 import { getCompanyConfig, updateLead, logEvent } from './helpers';
@@ -23,6 +25,8 @@ import {
 import { generateEmailSequence } from './email-generator';
 import { captureCampaignSnapshot, analyzePersonalizationPerformance, getCampaignTrend } from './campaign-tracker';
 import { runOptimizationCycle, getLatestInsights, getReplyStrategyInsights } from './feedback-loop';
+import { autoOptimizeSequence } from './sequence-optimizer';
+import { promoteWinningStrategies, autoAddObjectionHandlers } from './playbook-evolver';
 import {
   enrichLead,
   pushToGhl,
@@ -49,6 +53,105 @@ export type {
   ReplyThread,
   HandleReplyResult,
 } from './types';
+
+export type {
+  Segment,
+  Tier,
+  EmailState,
+  EmailChannel,
+  MxProvider,
+  DomainIntel,
+  FOSignals,
+  TierPResult,
+  VendorCall,
+  Tier0Result,
+  PreflightResult,
+  CalibrationRow,
+  EstimateInput,
+  EstimateOutput,
+} from './types-enrichment';
+
+// ── Enrichment v2 modules ───────────────────────────────────
+export {
+  classifySegment,
+  isFreemail,
+  isGatekeeperTitle,
+  hasFirmNameSignal,
+  hasFOPrincipalTitle,
+  isOperatorTitle,
+  segmentAllowsAutoApproval,
+  segmentPdlGate,
+  segmentStaleDays,
+} from './segment-router';
+
+export {
+  runTier0Gates,
+  isValidEmailSyntax,
+  isDisposable,
+  isRoleEmail,
+  isPlaceholder,
+  inGlobalSuppression,
+  inHnwSuppression,
+  isDuplicateInFlight,
+  addToGlobalSuppression,
+} from './tier-0-gates';
+
+export {
+  runTier05DomainIntel,
+  firmNameSignalMatch,
+} from './tier-05-domain-intel';
+
+export {
+  gatherDnsIntel,
+  getMxProvider,
+  hasDmarcRecord,
+  hasSpfRecord,
+  isOnSpamhausDbl,
+  hasMx,
+  whoisAgeDays,
+} from './dns-intel';
+
+export {
+  computeScoreHint,
+  minScoreHintForTier2,
+} from './score-hint';
+
+export {
+  preflight,
+  formatPreflight,
+} from './preflight';
+
+export {
+  estimateBatchCost,
+  formatEstimate,
+} from './cost-estimator';
+
+export {
+  generatePersonalizationHook,
+  recordPatternWin,
+} from './personalization-hook';
+
+export {
+  onReplyClassified,
+  segmentReplyPerformance,
+  getLookalikeSeeds,
+  weeklyLearningDigest,
+} from './reply-intelligence';
+
+export {
+  cacheGet,
+  cacheSet,
+  cacheBust,
+  DEFAULT_TTL_DAYS,
+} from './cache-layer';
+
+export {
+  logCostEvent,
+  checkCaps,
+  withCostLedger,
+  todayCostSummary,
+  COST_CAPS,
+} from './cost-ledger';
 
 // ── Re-export all functions ─────────────────────────────────
 
@@ -99,6 +202,10 @@ export {
   getCampaignTrend,
   runOptimizationCycle,
   getLatestInsights,
+  // self-learning
+  autoOptimizeSequence,
+  promoteWinningStrategies,
+  autoAddObjectionHandlers,
 };
 
 // ── Compose class for backward compatibility ────────────────
@@ -142,6 +249,10 @@ class EnrichmentService {
   getCampaignTrend = getCampaignTrend;
   runOptimizationCycle = runOptimizationCycle;
   getLatestInsights = getLatestInsights;
+  // self-learning
+  autoOptimizeSequence = autoOptimizeSequence;
+  promoteWinningStrategies = promoteWinningStrategies;
+  autoAddObjectionHandlers = autoAddObjectionHandlers;
 
   async handleReply(params: {
     email: string;
@@ -163,14 +274,14 @@ export const enrichmentService = new EnrichmentService();
 // Process scheduled replies every 30 seconds
 setInterval(() => {
   enrichmentService.processScheduledReplies().catch((err: any) => {
-    console.error('[AutoReply] processScheduledReplies error:', err.message);
+    log.error('[AutoReply] processScheduledReplies error:', err.message);
   });
 }, 30000);
 
 // Process warm nurture for stalled positive threads every 30 minutes
 setInterval(() => {
   enrichmentService.processWarmNurture().catch((err: any) => {
-    console.error('[WarmNurture] processWarmNurture error:', err.message);
+    log.error('[WarmNurture] processWarmNurture error:', err.message);
   });
 }, 30 * 60 * 1000);
 
@@ -178,13 +289,13 @@ setInterval(() => {
 import { pollInstantlyReplies } from './reply-poller';
 setInterval(() => {
   pollInstantlyReplies().catch((err: any) => {
-    console.error('[ReplyPoller] pollInstantlyReplies error:', err.message);
+    log.error('[ReplyPoller] pollInstantlyReplies error:', err.message);
   });
 }, 2 * 60 * 1000);
 // Run first poll 10 seconds after startup
 setTimeout(() => {
   pollInstantlyReplies().catch((err: any) => {
-    console.error('[ReplyPoller] initial poll error:', err.message);
+    log.error('[ReplyPoller] initial poll error:', err.message);
   });
 }, 10000);
 
@@ -192,7 +303,7 @@ setTimeout(() => {
 import { processMeetingReminders } from '../meeting-scheduler';
 setInterval(() => {
   processMeetingReminders().catch((err: any) => {
-    console.error('[MeetingReminder] processMeetingReminders error:', err.message);
+    log.error('[MeetingReminder] processMeetingReminders error:', err.message);
   });
 }, 5 * 60 * 1000);
 
@@ -200,7 +311,7 @@ setInterval(() => {
 import { retryFailedInstantlyPushes } from './pipeline';
 setInterval(() => {
   retryFailedInstantlyPushes().catch((err: any) => {
-    console.error('[Enrichment] retryFailedInstantlyPushes error:', err.message);
+    log.error('[Enrichment] retryFailedInstantlyPushes error:', err.message);
   });
 }, 15 * 60 * 1000);
 
@@ -208,7 +319,7 @@ setInterval(() => {
 import { syncGhlOpportunitiesToDb } from './opportunity-pipeline';
 setInterval(() => {
   syncGhlOpportunitiesToDb().catch((err: any) => {
-    console.error('[GhlSync] syncGhlOpportunitiesToDb error:', err.message);
+    log.error('[GhlSync] syncGhlOpportunitiesToDb error:', err.message);
   });
 }, 15 * 60 * 1000);
 
@@ -225,13 +336,13 @@ import { migrateBmnFollowup, runFollowupCycle } from '../bmn/cadence';
 migrateBmnFollowup();
 setInterval(() => {
   runFollowupCycle().catch((err: any) => {
-    console.error('[BmnFollowup] runFollowupCycle error:', err.message);
+    log.error('[BmnFollowup] runFollowupCycle error:', err.message);
   });
 }, 30 * 60 * 1000); // every 30 minutes
 // Initial run 15 seconds after startup
 setTimeout(() => {
   runFollowupCycle().catch((err: any) => {
-    console.error('[BmnFollowup] initial cycle error:', err.message);
+    log.error('[BmnFollowup] initial cycle error:', err.message);
   });
 }, 15000);
 
@@ -242,28 +353,28 @@ import { schedule as cronSchedule } from 'node-cron';
 if (appConfig.linkedinAutoSendEnabled) {
   cronSchedule('0 9 * * *', () => {
     linkedInService.runDailyOutreach().catch((err: any) => {
-      console.error('[LinkedInOutreach] Daily outreach error:', err.message);
+      log.error('[LinkedInOutreach] Daily outreach error:', err.message);
     });
   }, { timezone: 'America/New_York' });
-  console.log('[LinkedInOutreach] Daily outreach scheduled — 9:00 AM ET');
+  log.info('[LinkedInOutreach] Daily outreach scheduled — 9:00 AM ET');
 
   // Check for accepted connections every 4 hours (8 AM, 12 PM, 4 PM, 8 PM ET)
   cronSchedule('0 8,12,16,20 * * *', () => {
     linkedInService.checkAcceptances().catch((err: any) => {
-      console.error('[LinkedInSequence] Acceptance check error:', err.message);
+      log.error('[LinkedInSequence] Acceptance check error:', err.message);
     });
   }, { timezone: 'America/New_York' });
-  console.log('[LinkedInSequence] Acceptance checker scheduled — every 4h ET');
+  log.info('[LinkedInSequence] Acceptance checker scheduled — every 4h ET');
 
   // Process DM sequence every 2 hours (9 AM, 11 AM, 1 PM, 3 PM, 5 PM ET)
   cronSchedule('0 9,11,13,15,17 * * *', () => {
     linkedInService.processSequence().catch((err: any) => {
-      console.error('[LinkedInSequence] Sequence processing error:', err.message);
+      log.error('[LinkedInSequence] Sequence processing error:', err.message);
     });
   }, { timezone: 'America/New_York' });
-  console.log('[LinkedInSequence] DM sequence processor scheduled — every 2h ET (business hours)');
+  log.info('[LinkedInSequence] DM sequence processor scheduled — every 2h ET (business hours)');
 } else {
-  console.log('[LinkedInOutreach] Auto-send disabled (set LINKEDIN_AUTO_SEND_ENABLED=true to enable)');
+  log.info('[LinkedInOutreach] Auto-send disabled (set LINKEDIN_AUTO_SEND_ENABLED=true to enable)');
 }
 
 // ── Campaign Performance Tracking & Self-Optimization ──────
@@ -286,7 +397,7 @@ function getTrackedCampaigns(): Array<{ campaignId: string; companyId: number }>
 setInterval(() => {
   for (const { campaignId, companyId } of getTrackedCampaigns()) {
     captureCampaignSnapshot(campaignId, companyId).catch((err: any) => {
-      console.error('[CampaignTracker] Snapshot error:', err.message);
+      log.error('[CampaignTracker] Snapshot error:', err.message);
     });
   }
 }, 2 * 60 * 60 * 1000);
@@ -295,7 +406,7 @@ setInterval(() => {
 setInterval(() => {
   for (const { companyId } of getTrackedCampaigns()) {
     runOptimizationCycle(companyId).catch((err: any) => {
-      console.error('[FeedbackLoop] Optimization cycle error:', err.message);
+      log.error('[FeedbackLoop] Optimization cycle error:', err.message);
     });
   }
 }, 4 * 60 * 60 * 1000);
@@ -304,10 +415,10 @@ setInterval(() => {
 setTimeout(() => {
   for (const { campaignId, companyId } of getTrackedCampaigns()) {
     captureCampaignSnapshot(campaignId, companyId).catch((err: any) => {
-      console.error('[CampaignTracker] Initial snapshot error:', err.message);
+      log.error('[CampaignTracker] Initial snapshot error:', err.message);
     });
   }
 }, 30000);
 
-console.log('[EmailEngine] Personalization engine active — full Claude-powered email generation enabled');
-console.log('[CampaignTracker] Performance tracking scheduled — snapshots every 2h, optimization every 4h');
+log.info('[EmailEngine] Personalization engine active — full Claude-powered email generation enabled');
+log.info('[CampaignTracker] Performance tracking scheduled — snapshots every 2h, optimization every 4h');

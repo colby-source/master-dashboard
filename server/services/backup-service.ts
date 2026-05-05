@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { config } from '../config';
+import { createLogger } from '../utils/logger';
+const log = createLogger('backup-service');
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -90,7 +92,7 @@ export async function runBackup(): Promise<BackupResult> {
   // Validate source database exists
   if (!fs.existsSync(dbPath)) {
     const error = `Database file not found at ${dbPath}`;
-    console.error(`[Backup] ${error}`);
+    log.error(`[Backup] ${error}`);
     return { success: false, localPath: null, onedrivePath: null, cleanedCount: 0, error };
   }
 
@@ -104,17 +106,17 @@ export async function runBackup(): Promise<BackupResult> {
     const localDailyPath = path.join(localDailyDir, backupFilename);
     copyFileSafe(dbPath, localDailyPath);
     localPath = localDailyPath;
-    console.log(`[Backup] Local daily backup saved: ${localDailyPath}`);
+    log.info(`[Backup] Local daily backup saved: ${localDailyPath}`);
 
     if (sunday) {
       const localWeeklyDir = path.join(LOCAL_BACKUP_BASE, 'weekly');
       const localWeeklyPath = path.join(localWeeklyDir, backupFilename);
       copyFileSafe(dbPath, localWeeklyPath);
-      console.log(`[Backup] Local weekly backup saved: ${localWeeklyPath}`);
+      log.info(`[Backup] Local weekly backup saved: ${localWeeklyPath}`);
     }
   } catch (err: any) {
     const error = `Local backup failed: ${err.message}`;
-    console.error(`[Backup] ${error}`);
+    log.error(`[Backup] ${error}`);
     return { success: false, localPath: null, onedrivePath: null, cleanedCount: 0, error };
   }
 
@@ -124,16 +126,16 @@ export async function runBackup(): Promise<BackupResult> {
     const onedriveDailyPath = path.join(onedriveDailyDir, backupFilename);
     copyFileSafe(dbPath, onedriveDailyPath);
     onedrivePath = onedriveDailyPath;
-    console.log(`[Backup] OneDrive daily backup saved: ${onedriveDailyPath}`);
+    log.info(`[Backup] OneDrive daily backup saved: ${onedriveDailyPath}`);
 
     if (sunday) {
       const onedriveWeeklyDir = path.join(ONEDRIVE_BACKUP_BASE, 'weekly');
       const onedriveWeeklyPath = path.join(onedriveWeeklyDir, backupFilename);
       copyFileSafe(dbPath, onedriveWeeklyPath);
-      console.log(`[Backup] OneDrive weekly backup saved: ${onedriveWeeklyPath}`);
+      log.info(`[Backup] OneDrive weekly backup saved: ${onedriveWeeklyPath}`);
     }
   } catch (err: any) {
-    console.warn(`[Backup] OneDrive backup skipped — ${err.message}`);
+    log.warn(`[Backup] OneDrive backup skipped — ${err.message}`);
     // OneDrive failure is non-fatal; continue with local-only
   }
 
@@ -142,10 +144,10 @@ export async function runBackup(): Promise<BackupResult> {
   try {
     cleanedCount = cleanOldBackups();
   } catch (err: any) {
-    console.warn(`[Backup] Cleanup encountered an error: ${err.message}`);
+    log.warn(`[Backup] Cleanup encountered an error: ${err.message}`);
   }
 
-  console.log(`[Backup] Complete — local: ${localPath}, onedrive: ${onedrivePath ?? 'unavailable'}, cleaned: ${cleanedCount}`);
+  log.info(`[Backup] Complete — local: ${localPath}, onedrive: ${onedrivePath ?? 'unavailable'}, cleaned: ${cleanedCount}`);
 
   return { success: true, localPath, onedrivePath, cleanedCount };
 }
@@ -193,15 +195,15 @@ function cleanDirectory(dirPath: string, keep: number, label: string): number {
       try {
         fs.unlinkSync(entry.fullPath);
         cleaned++;
-        console.log(`[Backup] Removed old ${label} backup: ${entry.filename}`);
+        log.info(`[Backup] Removed old ${label} backup: ${entry.filename}`);
       } catch (err: any) {
-        console.warn(`[Backup] Failed to remove ${entry.fullPath}: ${err.message}`);
+        log.warn(`[Backup] Failed to remove ${entry.fullPath}: ${err.message}`);
       }
     }
   } catch (err: any) {
     // Directory may not exist (e.g., OneDrive offline) — not an error
     if (err.code !== 'ENOENT') {
-      console.warn(`[Backup] Could not clean ${label} directory ${dirPath}: ${err.message}`);
+      log.warn(`[Backup] Could not clean ${label} directory ${dirPath}: ${err.message}`);
     }
   }
 

@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { queryAll, queryOne, runSql, saveDb } from '../db';
+import { createLogger } from '../utils/logger';
+const log = createLogger('companies');
 
 const router = Router();
 
@@ -8,7 +10,7 @@ router.get('/', (req, res) => {
     const companies = queryAll('SELECT * FROM companies ORDER BY id');
     res.json(companies);
   } catch (err: any) {
-    console.error('[Routes:Companies] GET / error:', err.message);
+    log.error('[Routes:Companies] GET / error:', err.message);
     res.status(500).json({ error: 'Failed to fetch companies' });
   }
 });
@@ -23,7 +25,7 @@ router.post('/', (req, res) => {
     );
     res.json({ success: true });
   } catch (err: any) {
-    console.error('[Routes:Companies] POST / error:', err.message);
+    log.error('[Routes:Companies] POST / error:', err.message);
     res.status(500).json({ error: 'Failed to create company' });
   }
 });
@@ -54,7 +56,7 @@ router.put('/:id', (req, res) => {
     const updated = queryOne('SELECT * FROM companies WHERE id = ?', [id]);
     res.json(updated);
   } catch (err: any) {
-    console.error('[Routes:Companies] PUT /:id error:', err.message);
+    log.error('[Routes:Companies] PUT /:id error:', err.message);
     res.status(500).json({ error: 'Failed to update company' });
   }
 });

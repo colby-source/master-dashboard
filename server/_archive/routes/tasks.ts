@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { queryAll, queryOne, runSql } from '../db';
 import { saveDb } from '../db';
+import { createLogger } from '../utils/logger';
+const log = createLogger('tasks');
 
 const router = Router();
 
@@ -17,7 +19,7 @@ router.get('/', (req, res) => {
     sql += ' ORDER BY t.sort_order, t.created_at DESC';
     res.json(queryAll(sql, params));
   } catch (err: any) {
-    console.error('[Routes:Tasks] GET / error:', err.message);
+    log.error('[Routes:Tasks] GET / error:', err.message);
     res.status(500).json({ error: 'Failed to fetch tasks' });
   }
 });
@@ -34,7 +36,7 @@ router.post('/', (req, res) => {
     runSql(`INSERT INTO events (entity_type, action, source, actor) VALUES ('task', 'created', 'user', 'dashboard')`, []);
     res.json({ success: true });
   } catch (err: any) {
-    console.error('[Routes:Tasks] POST / error:', err.message);
+    log.error('[Routes:Tasks] POST / error:', err.message);
     res.status(500).json({ error: 'Failed to create task' });
   }
 });
@@ -54,7 +56,7 @@ router.put('/:id', (req, res) => {
     saveDb();
     res.json({ success: true });
   } catch (err: any) {
-    console.error('[Routes:Tasks] PUT /:id error:', err.message);
+    log.error('[Routes:Tasks] PUT /:id error:', err.message);
     res.status(500).json({ error: 'Failed to update task' });
   }
 });
@@ -65,7 +67,7 @@ router.delete('/:id', (req, res) => {
     saveDb();
     res.json({ success: true });
   } catch (err: any) {
-    console.error('[Routes:Tasks] DELETE /:id error:', err.message);
+    log.error('[Routes:Tasks] DELETE /:id error:', err.message);
     res.status(500).json({ error: 'Failed to delete task' });
   }
 });

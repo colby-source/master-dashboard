@@ -2,6 +2,8 @@ import axios, { AxiosInstance } from 'axios';
 import { config } from '../config';
 import { queryOne, runSql } from '../db';
 import { trackApiCall } from './spend-tracker';
+import { createLogger } from '../utils/logger';
+const log = createLogger('hunter-client');
 
 export interface HunterVerifyResult {
   email: string;
@@ -78,7 +80,7 @@ class HunterClient {
       trackApiCall('hunter', 'verify_email', 1);
       return result;
     } catch (err: any) {
-      console.error('[Hunter] verifyEmail error:', err.message);
+      log.error('[Hunter] verifyEmail error:', err.message);
       return null;
     }
   }
@@ -117,7 +119,7 @@ class HunterClient {
       }
       return result.email ? result : null;
     } catch (err: any) {
-      console.error('[Hunter] findEmail error:', err.message);
+      log.error('[Hunter] findEmail error:', err.message);
       return null;
     }
   }
@@ -131,7 +133,7 @@ class HunterClient {
       });
       return data.data?.emails || [];
     } catch (err: any) {
-      console.error('[Hunter] domainSearch error:', err.message);
+      log.error('[Hunter] domainSearch error:', err.message);
       return [];
     }
   }
@@ -158,7 +160,7 @@ class HunterClient {
         [key, provider, JSON.stringify(data), expiresAt.toISOString()]
       );
     } catch (err: any) {
-      console.error('[Hunter] Cache write error:', err.message);
+      log.error('[Hunter] Cache write error:', err.message);
     }
   }
 }

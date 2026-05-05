@@ -2,8 +2,22 @@ import { Router } from 'express';
 import crypto from 'crypto';
 import { queryOne, runSql, saveDb } from '../db';
 import { enrichmentService } from '../services/enrichment-service';
+import { handleGpf2Reply } from '../services/gpc/gpf2-reply-handler';
+
+const GPF2_PRIMARY_CAMPAIGN_ID = '2e3af84a-8f6f-4446-981c-f10bb2348216';
+const GPF2_PRIMARY_V3_CAMPAIGN_ID = 'fd7c2f28-4634-4911-af6a-cfb4ed600a8e';
+const GPF2_SECONDARY_CAMPAIGN_ID = '1a40c7eb-a835-46ef-b33f-90af78eeefef';
+const GPF2_TERTIARY_CAMPAIGN_ID = 'da8e92cf-f67b-48fd-8786-a770704cebec';
+const GPF2_CAMPAIGN_IDS = new Set([
+  GPF2_PRIMARY_CAMPAIGN_ID,
+  GPF2_PRIMARY_V3_CAMPAIGN_ID,
+  GPF2_SECONDARY_CAMPAIGN_ID,
+  GPF2_TERTIARY_CAMPAIGN_ID,
+]);
 import { wsServer } from '../websocket/ws-server';
 import { config } from '../config';
+import { createLogger } from '../utils/logger';
+const log = createLogger('enrichment-webhooks');
 
 const router = Router();
 
@@ -68,13 +82,13 @@ router.post('/webhook/ghl', async (req, res) => {
     const cfg = enrichmentService.getCompanyConfig(companyId);
     if (cfg?.auto_enrich && cfg?.enabled) {
       enrichmentService.processLead(leadId).catch(err => {
-        console.error(`[Webhook:GHL] processLead(${leadId}) error:`, err.message);
+        log.error(`[Webhook:GHL] processLead(${leadId}) error:`, err.message);
       });
     }
 
     res.json({ received: true, lead_id: leadId });
   } catch (err: any) {
-    console.error('[Webhook:GHL] Error:', err.message);
+    log.error('[Webhook:GHL] Error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -117,13 +131,13 @@ router.post('/webhook/meta-ad', async (req, res) => {
     const cfg = enrichmentService.getCompanyConfig(companyId);
     if (cfg?.auto_enrich && cfg?.enabled) {
       enrichmentService.processLead(leadId).catch(err => {
-        console.error(`[Webhook:Meta] processLead(${leadId}) error:`, err.message);
+        log.error(`[Webhook:Meta] processLead(${leadId}) error:`, err.message);
       });
     }
 
     res.json({ received: true, lead_id: leadId });
   } catch (err: any) {
-    console.error('[Webhook:Meta] Error:', err.message);
+    log.error('[Webhook:Meta] Error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -175,13 +189,13 @@ router.post('/webhook/rb2b', async (req, res) => {
     const cfg = enrichmentService.getCompanyConfig(companyId);
     if (cfg?.auto_enrich && cfg?.enabled) {
       enrichmentService.processLead(leadId).catch(err => {
-        console.error(`[Webhook:RB2B] processLead(${leadId}) error:`, err.message);
+        log.error(`[Webhook:RB2B] processLead(${leadId}) error:`, err.message);
       });
     }
 
     res.json({ received: true, lead_id: leadId });
   } catch (err: any) {
-    console.error('[Webhook:RB2B] Error:', err.message);
+    log.error('[Webhook:RB2B] Error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -216,6 +230,14 @@ router.post('/webhook/instantly', async (req, res) => {
         return res.json({ received: true, action: 'skipped', reason: 'empty_reply' });
       }
 
+      // GPF-II replies → Claude Haiku classifier + Telegram approval queue.
+      // Completely separate flow from BMN/default enrichment reply handling.
+      if (campaignId && GPF2_CAMPAIGN_IDS.has(campaignId)) {
+        const gpf2Result = await handleGpf2Reply(payload);
+        log.info(`[Webhook:Instantly] GPF-II reply from ${email} campaign=${campaignId.slice(0, 8)}: ${JSON.stringify(gpf2Result)}`);
+        return res.json({ received: true, action: 'gpf2', ...gpf2Result });
+      }
+
       // Fast-path: If Instantly already handled negative dispositions natively,
       // log it and skip Claude entirely — Instantly responds sub-5-min
       const instantlyHandledSentiments = ['ooo', 'unsubscribe', 'bounce', 'not_interested'];
@@ -232,7 +254,7 @@ router.post('/webhook/instantly', async (req, res) => {
             handledBy: 'instantly_ai_agent',
           });
         }
-        console.log(`[Webhook:Instantly] Fast-path: ${email} handled by Instantly (${instantlySentiment})`);
+        log.info(`[Webhook:Instantly] Fast-path: ${email} handled by Instantly (${instantlySentiment})`);
         return res.json({ received: true, action: 'instantly_handled', sentiment: instantlySentiment });
       }
 
@@ -249,7 +271,7 @@ router.post('/webhook/instantly', async (req, res) => {
         preClassifiedSentiment: instantlySentiment || undefined,
       });
 
-      console.log(`[Webhook:Instantly] Reply from ${email}: action=${result.action}${result.reason ? ` reason=${result.reason}` : ''}${instantlySentiment ? ` (pre-classified: ${instantlySentiment})` : ''}`);
+      log.info(`[Webhook:Instantly] Reply from ${email}: action=${result.action}${result.reason ? ` reason=${result.reason}` : ''}${instantlySentiment ? ` (pre-classified: ${instantlySentiment})` : ''}`);
 
       return res.json({ received: true, ...result });
     }
@@ -266,7 +288,7 @@ router.post('/webhook/instantly', async (req, res) => {
 
     res.json({ received: true });
   } catch (err: any) {
-    console.error('[Webhook:Instantly] Error:', err.message);
+    log.error('[Webhook:Instantly] Error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -342,17 +364,17 @@ router.post('/webhook/meeting-transcript', async (req, res) => {
     try {
       const { processMeetingTranscript } = await import('../services/enrichment/meeting-processor');
       processMeetingTranscript(transcriptId).catch(err => {
-        console.error(`[Webhook:MeetingTranscript] process error:`, err.message);
+        log.error(`[Webhook:MeetingTranscript] process error:`, err.message);
       });
     } catch {
-      console.log(`[Webhook:MeetingTranscript] meeting-processor not yet available, stored transcript ${transcriptId}`);
+      log.info(`[Webhook:MeetingTranscript] meeting-processor not yet available, stored transcript ${transcriptId}`);
     }
 
     wsServer.broadcast({ type: 'meeting_transcript_received', data: { transcript_id: transcriptId, lead_email, meeting_date } });
 
     res.json({ received: true, transcript_id: transcriptId, lead_id: leadId });
   } catch (err: any) {
-    console.error('[Webhook:MeetingTranscript] Error:', err.message);
+    log.error('[Webhook:MeetingTranscript] Error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -379,7 +401,7 @@ router.post('/webhook/n8n', async (req, res) => {
     wsServer.broadcast({ type: 'enrichment_n8n_callback', data: req.body });
     res.json({ received: true });
   } catch (err: any) {
-    console.error('[Webhook:N8N] Error:', err.message);
+    log.error('[Webhook:N8N] Error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -398,7 +420,7 @@ function resolveCompanyId(locationId: string | undefined, payload: any): number 
   }
 
   // Do NOT default to company 1 — that would silently route BMN leads to GPC
-  console.warn(`[Webhook] Could not resolve company from locationId="${locationId}" — rejecting lead`);
+  log.warn(`[Webhook] Could not resolve company from locationId="${locationId}" — rejecting lead`);
   return null;
 }
 
@@ -480,7 +502,7 @@ function ensureLeadExistsForWebhook(email: string, campaignId: string | undefine
   const companyId = pipeline?.company_id || cfgRow?.company_id;
 
   if (!companyId) {
-    console.log(`[Webhook:Instantly] Unknown campaign ${campaignId} for ${email} — cannot auto-create lead`);
+    log.info(`[Webhook:Instantly] Unknown campaign ${campaignId} for ${email} — cannot auto-create lead`);
     return;
   }
 
@@ -494,7 +516,7 @@ function ensureLeadExistsForWebhook(email: string, campaignId: string | undefine
   );
   saveDb();
 
-  console.log(`[Webhook:Instantly] Auto-created lead for ${email} (company ${companyId}, campaign ${campaignId})`);
+  log.info(`[Webhook:Instantly] Auto-created lead for ${email} (company ${companyId}, campaign ${campaignId})`);
 }
 
 function logWebhookEvent(leadId: number | null, companyId: number, eventType: string, eventData: any): void {

@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { queryAll, queryOne, runSql, saveDb } from '../../db';
 import { enrichmentService } from '../../services/enrichment-service';
 import { getCompanyId } from './helpers';
+import { createLogger } from '../../utils/logger';
+const log = createLogger('analytics');
 
 const router = Router();
 
@@ -83,7 +85,7 @@ router.post('/import-from-ghl', async (req, res) => {
       setImmediate(async () => {
         for (const id of ids) {
           try { await enrichmentService.processLead(id); } catch (e) {
-            console.error(`[Import:GHL] Failed to process lead ${id}:`, e);
+            log.error(`[Import:GHL] Failed to process lead ${id}:`, e);
           }
         }
       });
@@ -96,7 +98,7 @@ router.post('/import-from-ghl', async (req, res) => {
       message: `Imported ${imported} contacts${auto_process ? ' (auto-processing started)' : ''}`,
     });
   } catch (err: any) {
-    console.error('[Routes:Enrichment] POST /import-from-ghl error:', err.message);
+    log.error('[Routes:Enrichment] POST /import-from-ghl error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -182,7 +184,7 @@ router.get('/ab-tests', (req, res) => {
 
 router.get('/ab-tests/:id', (req, res) => {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     const { getTestResults } = require('../../services/enrichment/ab-testing');
     const results = getTestResults(parseInt(req.params.id));
     if (!results) return res.status(404).json({ error: 'Test not found' });
@@ -242,7 +244,7 @@ router.put('/ab-tests/:id/status', (req, res) => {
 
 router.get('/ab-tests/:id/winner', (req, res) => {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     const { getWinningVariant } = require('../../services/enrichment/ab-testing');
     const winner = getWinningVariant(parseInt(req.params.id));
     res.json({ winner });
@@ -322,7 +324,7 @@ router.post('/meeting-transcripts/:id/reprocess', async (req, res) => {
   try {
     const { processMeetingTranscript } = await import('../../services/enrichment/meeting-processor');
     processMeetingTranscript(parseInt(req.params.id)).catch(err => {
-      console.error(`[API] reprocess meeting error:`, err.message);
+      log.error(`[API] reprocess meeting error:`, err.message);
     });
     res.json({ queued: true });
   } catch (err: any) {
@@ -345,7 +347,7 @@ router.get('/campaign-analytics/:campaignId', async (req, res) => {
 router.get('/campaign-trend/:campaignId', (req, res) => {
   try {
     const days = parseInt(req.query.days as string) || 14;
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     const { getCampaignTrend } = require('../../services/enrichment/campaign-tracker');
     const trend = getCampaignTrend(req.params.campaignId, days);
     res.json({ campaignId: req.params.campaignId, days, snapshots: trend });
@@ -370,7 +372,7 @@ router.post('/optimization-cycle/:companyId', async (req, res) => {
 
 router.get('/optimization-insights/:companyId', (req, res) => {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     const { getLatestInsights } = require('../../services/enrichment/feedback-loop');
     const insights = getLatestInsights(parseInt(req.params.companyId));
     res.json(insights || { strategyBrief: null, recommendations: [], analyzedAt: null });

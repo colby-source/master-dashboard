@@ -1,17 +1,21 @@
+import { useMemo } from "react"
 import { useParams, Link, useNavigate } from "react-router-dom"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { api } from "@/lib/api"
+import { request, qs } from "@/lib/api/client"
 import { format } from "date-fns"
 import {
   ArrowLeft,
   Mail,
-  Users,
-  Calendar,
-  Pause,
-  Play,
   Eye,
   Reply,
   AlertTriangle,
+  CheckCircle2,
+  Send,
+  CalendarCheck,
+  Sparkles,
+  Check,
+  X,
+  Play,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,16 +27,83 @@ import {
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Badge } from "@/components/ui/badge"
-import { SequenceStepper } from "@/components/shared/SequenceStepper"
-import { cn } from "@/lib/utils"
+import { cn, formatNumber, timeAgo } from "@/lib/utils"
 import { toast } from "sonner"
 
-const statusColors: Record<string, string> = {
-  active: "bg-green-500/15 text-green-400 border-green-400/20",
-  paused: "bg-yellow-500/15 text-yellow-400 border-yellow-400/20",
-  draft: "bg-gray-500/15 text-gray-400 border-gray-400/20",
-  completed: "bg-blue-500/15 text-blue-400 border-blue-400/20",
+// ── Types matching the new /api/pipeline/campaigns contract ─
+interface StepMetric {
+  step: number
+  sent?: number
+  opens?: number
+  replies?: number
+  open_rate?: number
+  reply_rate?: number
+  conversion?: number
+}
+
+interface CampaignRecord {
+  id: number | string
+  name: string
+  company_id?: number
+  company_name?: string
+  company_color?: string
+  status: string
+  provider?: string
+  leads_count?: number
+  sent?: number
+  delivered?: number
+  opens?: number
+  replies?: number
+  bounces?: number
+  booked?: number
+  open_rate?: number
+  reply_rate?: number
+  bounce_rate?: number
+  booked_rate?: number
+  step_metrics?: StepMetric[]
+  last_sent_at?: string
+  created_at?: string
+}
+
+interface CampaignsResponse {
+  campaigns: CampaignRecord[]
+}
+
+interface Recommendation {
+  id: string | number
+  campaign_id?: string | number
+  status: string
+  kind: string
+  title: string
+  rationale?: string
+  impact_estimate?: string | number | null
+  proposed_change?: Record<string, unknown> | string
+  created_at?: string
+}
+
+interface RecommendationsResponse {
+  recommendations: Recommendation[]
+}
+
+const COMPANY_ACCENTS: Record<string, string> = {
+  gpc: "oklch(0.65 0.2 250)",
+  bmn: "oklch(0.7 0.22 295)",
+}
+
+function companyAccent(name?: string): string {
+  if (!name) return "oklch(0.7 0 0)"
+  const k = name.toLowerCase()
+  if (k.includes("granite") || k.includes("gpc")) return COMPANY_ACCENTS.gpc
+  if (k.includes("bmn") || k.includes("brand")) return COMPANY_ACCENTS.bmn
+  return "oklch(0.7 0 0)"
+}
+
+const statusConfig: Record<string, { dot: string; label: string }> = {
+  active: { dot: "bg-green-500", label: "Active" },
+  paused: { dot: "bg-zinc-500", label: "Paused" },
+  draft: { dot: "bg-zinc-500", label: "Draft" },
+  completed: { dot: "bg-blue-500", label: "Completed" },
+  degraded: { dot: "bg-amber-500", label: "Degraded" },
 }
 
 export default function CampaignDetailPage() {
@@ -40,77 +111,111 @@ export default function CampaignDetailPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["campaign-detail", id],
-    queryFn: () => api.getCampaignDetail(Number(id)),
+  // Pull the campaigns list + find the one we want.  This keeps the page
+  // decoupled from any per-campaign endpoint shape that may differ between
+  // backends.
+  const campaignsQuery = useQuery<CampaignsResponse>({
+    queryKey: ["pipeline", "campaigns", "all"],
+    queryFn: () => request<CampaignsResponse>("/pipeline/campaigns"),
+    retry: 0,
+  })
+
+  const campaign = useMemo(() => {
+    const list = campaignsQuery.data?.campaigns ?? []
+    return list.find((c) => String(c.id) === String(id))
+  }, [campaignsQuery.data, id])
+
+  // Recommendations for this campaign
+  const recsQuery = useQuery<RecommendationsResponse>({
+    queryKey: ["learning", "recommendations", "campaign", id],
+    queryFn: () =>
+      request<RecommendationsResponse>(
+        `/learning/recommendations${qs({ campaign_id: id, status: "pending" })}`
+      ),
     enabled: !!id,
+    retry: 0,
   })
 
-  const pauseMutation = useMutation({
-    mutationFn: () => api.pauseCampaign(Number(id)),
+  const approveMutation = useMutation({
+    mutationFn: (recId: string | number) =>
+      request(`/learning/recommendations/${recId}/approve`, { method: "POST" }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["campaign-detail", id] })
-      queryClient.invalidateQueries({ queryKey: ["campaigns"] })
-      toast.success("Campaign paused")
+      queryClient.invalidateQueries({
+        queryKey: ["learning", "recommendations", "campaign", id],
+      })
+      toast.success("Recommendation approved")
     },
-    onError: () => toast.error("Failed to pause campaign"),
+    onError: () => toast.error("Failed to approve recommendation"),
   })
 
-  const activateMutation = useMutation({
-    mutationFn: () => api.activateCampaign(Number(id)),
+  const rejectMutation = useMutation({
+    mutationFn: (recId: string | number) =>
+      request(`/learning/recommendations/${recId}/reject`, { method: "POST" }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["campaign-detail", id] })
-      queryClient.invalidateQueries({ queryKey: ["campaigns"] })
-      toast.success("Campaign activated")
+      queryClient.invalidateQueries({
+        queryKey: ["learning", "recommendations", "campaign", id],
+      })
+      toast.success("Recommendation rejected")
     },
-    onError: () => toast.error("Failed to activate campaign"),
+    onError: () => toast.error("Failed to reject recommendation"),
   })
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6 p-6">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-20 w-full" />
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          <div className="lg:col-span-3 space-y-4">
-            <Skeleton className="h-48 w-full" />
-            <Skeleton className="h-48 w-full" />
-          </div>
-          <div className="lg:col-span-2 space-y-4">
-            <Skeleton className="h-64 w-full" />
-          </div>
-        </div>
-      </div>
-    )
+  const analyzeMutation = useMutation({
+    mutationFn: () =>
+      request("/learning/analyze", {
+        method: "POST",
+        body: JSON.stringify({ campaign_id: id }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["learning", "recommendations", "campaign", id],
+      })
+      toast.success("Analysis kicked off — recommendations will appear shortly.")
+    },
+    onError: () => toast.error("Failed to start analysis"),
+  })
+
+  if (campaignsQuery.isLoading) {
+    return <DetailSkeleton />
   }
 
-  if (error || !data) {
+  if (campaignsQuery.isError) {
     return (
       <div className="p-6">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/campaigns")}>
-          <ArrowLeft className="size-4 mr-1" /> Back to Campaigns
+        <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+          <ArrowLeft className="size-4 mr-1" /> Back to Pipeline
         </Button>
-        <div className="mt-8 text-center">
-          <Mail className="mx-auto size-12 text-muted-foreground/30 mb-3" />
-          <p className="text-muted-foreground">Campaign not found.</p>
+        <div className="mt-8 rounded-lg border border-border bg-card p-10 text-center">
+          <AlertTriangle className="mx-auto size-6 text-amber-500 mb-2" />
+          <p className="text-sm text-muted-foreground">
+            Endpoint <span className="font-mono">/api/pipeline/campaigns</span> not yet available.
+          </p>
         </div>
       </div>
     )
   }
 
-  const stats = data.stats ?? {}
-  const leads = data.leads ?? []
-  const steps = data.steps_analytics ?? []
-  const detail = data.instantly_detail
+  if (!campaign) {
+    return (
+      <div className="p-6">
+        <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+          <ArrowLeft className="size-4 mr-1" /> Back to Pipeline
+        </Button>
+        <div className="mt-8 rounded-lg border border-border bg-card p-10 text-center">
+          <Mail className="mx-auto size-8 text-muted-foreground/40 mb-2" />
+          <p className="text-sm text-muted-foreground">Campaign not found.</p>
+        </div>
+      </div>
+    )
+  }
 
-  // Compute totals from steps if available
-  const totalSent = steps.reduce((s: number, st: any) => s + (st.sent ?? 0), 0) || stats.sent || 0
-  const totalOpened = steps.reduce((s: number, st: any) => s + (st.opened ?? 0), 0)
-  const totalReplied = steps.reduce((s: number, st: any) => s + (st.replied ?? 0), 0)
-  const totalBounced = steps.reduce((s: number, st: any) => s + (st.bounced ?? 0), 0)
-  const overallOpenRate = stats.open_rate ?? (totalSent ? ((totalOpened / totalSent) * 100).toFixed(1) : "0")
-  const overallReplyRate = stats.reply_rate ?? (totalSent ? ((totalReplied / totalSent) * 100).toFixed(1) : "0")
-  const bounceRate = totalSent ? ((totalBounced / totalSent) * 100).toFixed(1) : "0"
+  const accent = companyAccent(campaign.company_name)
+  const statusCfg = statusConfig[campaign.status] ?? {
+    dot: "bg-zinc-500",
+    label: campaign.status,
+  }
+  const recommendations = recsQuery.data?.recommendations ?? []
+  const steps = campaign.step_metrics ?? []
 
   return (
     <div className="space-y-6 p-6">
@@ -118,7 +223,7 @@ export default function CampaignDetailPage() {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink render={<Link to="/" />}>Dashboard</BreadcrumbLink>
+            <BreadcrumbLink render={<Link to="/" />}>Pipeline</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -126,246 +231,140 @@ export default function CampaignDetailPage() {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>{data.name}</BreadcrumbPage>
+            <BreadcrumbPage>{campaign.name}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
 
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="space-y-1">
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-2 min-w-0">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold">{data.name}</h1>
-            <Badge
-              variant="secondary"
-              className={cn("text-xs", statusColors[data.status] ?? "bg-muted text-muted-foreground")}
-            >
-              {data.status}
-            </Badge>
-          </div>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            {data.company_name && (
-              <span className="flex items-center gap-1.5">
-                <span
-                  className="size-2 rounded-full"
-                  style={{ backgroundColor: data.company_color }}
-                />
-                {data.company_name}
-              </span>
-            )}
-            {data.created_at && (
-              <span className="flex items-center gap-1.5">
-                <Calendar className="size-3.5" />
-                Created {format(new Date(data.created_at), "MMM d, yyyy")}
-              </span>
-            )}
-            <span className="flex items-center gap-1.5">
-              <Users className="size-3.5" />
-              {data.lead_count} contacts
+            <h1 className="text-2xl font-semibold tracking-tight truncate">{campaign.name}</h1>
+            <span className="inline-flex items-center gap-1.5 text-xs">
+              <span className={cn("size-1.5 rounded-full", statusCfg.dot)} />
+              {statusCfg.label}
             </span>
-            {steps.length > 0 && (
-              <span className="flex items-center gap-1.5">
-                <Mail className="size-3.5" />
-                {steps.length} step{steps.length !== 1 ? "s" : ""}
+          </div>
+          <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
+            {campaign.company_name && (
+              <span className="inline-flex items-center gap-1.5">
+                <span className="size-2 rounded-full" style={{ backgroundColor: accent }} />
+                {campaign.company_name}
               </span>
+            )}
+            {campaign.provider && (
+              <span className="capitalize">{campaign.provider}</span>
+            )}
+            {campaign.leads_count != null && (
+              <span>{formatNumber(campaign.leads_count)} leads</span>
+            )}
+            {campaign.last_sent_at && (
+              <span>Last sent {timeAgo(campaign.last_sent_at)}</span>
+            )}
+            {campaign.created_at && (
+              <span>Created {format(new Date(campaign.created_at), "MMM d, yyyy")}</span>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {data.status === "active" && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => pauseMutation.mutate()}
-              disabled={pauseMutation.isPending}
-            >
-              <Pause className="size-4 mr-1" />
-              Pause
-            </Button>
-          )}
-          {data.status === "paused" && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => activateMutation.mutate()}
-              disabled={activateMutation.isPending}
-            >
-              <Play className="size-4 mr-1" />
-              Activate
-            </Button>
-          )}
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5"
+          onClick={() => analyzeMutation.mutate()}
+          disabled={analyzeMutation.isPending}
+        >
+          <Play className="size-3.5" />
+          Run analysis now
+        </Button>
       </div>
 
-      {/* Content 2-column */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Left: Sequence stepper */}
-        <div className="lg:col-span-3 space-y-4">
-          <div className="rounded-lg border border-border bg-card p-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-              Sequence Steps
-            </h3>
-            <SequenceStepper steps={steps} />
-          </div>
+      {/* Top row stats */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <StatCard label="Sent" value={formatNumber(campaign.sent ?? 0)} icon={Send} />
+        <StatCard
+          label="Delivered"
+          value={formatNumber(campaign.delivered ?? 0)}
+          icon={CheckCircle2}
+        />
+        <StatCard
+          label="Opens"
+          value={formatNumber(campaign.opens ?? 0)}
+          sub={campaign.open_rate != null ? `${campaign.open_rate.toFixed(1)}%` : undefined}
+          icon={Eye}
+        />
+        <StatCard
+          label="Replies"
+          value={formatNumber(campaign.replies ?? 0)}
+          sub={campaign.reply_rate != null ? `${campaign.reply_rate.toFixed(1)}%` : undefined}
+          icon={Reply}
+        />
+        <StatCard
+          label="Bounces"
+          value={formatNumber(campaign.bounces ?? 0)}
+          sub={campaign.bounce_rate != null ? `${campaign.bounce_rate.toFixed(1)}%` : undefined}
+          icon={AlertTriangle}
+        />
+        <StatCard
+          label="Booked"
+          value={formatNumber(campaign.booked ?? 0)}
+          sub={campaign.booked_rate != null ? `${campaign.booked_rate.toFixed(1)}%` : undefined}
+          icon={CalendarCheck}
+        />
+      </div>
 
-          {/* Contacts in this campaign */}
-          <div className="rounded-lg border border-border bg-card overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Contacts in Campaign
-              </h3>
-              <span className="text-[10px] text-muted-foreground">
-                {leads.length} contact{leads.length !== 1 ? "s" : ""}
-              </span>
+      {/* Body: steps grid + recommendations */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-4">
+          <SectionHeader title="Step performance" hint={`${steps.length} step${steps.length !== 1 ? "s" : ""}`} />
+          {steps.length === 0 ? (
+            <div className="rounded-lg border border-border bg-card p-10 text-center">
+              <p className="text-sm text-muted-foreground">No step-level metrics yet.</p>
             </div>
-            {leads.length === 0 ? (
-              <div className="p-6 text-center">
-                <Users className="mx-auto size-8 text-muted-foreground/40 mb-2" />
-                <p className="text-sm text-muted-foreground">No contacts linked to this campaign yet.</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-muted-foreground border-b border-border text-[11px]">
-                      <th className="text-left py-2 px-4">Name</th>
-                      <th className="text-left py-2 px-4">Email</th>
-                      <th className="text-left py-2 px-4">Score</th>
-                      <th className="text-left py-2 px-4">Status</th>
-                      <th className="text-left py-2 px-4">Push Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {leads.map((lead: any) => (
-                      <tr
-                        key={lead.id}
-                        className="border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors"
-                        onClick={() => navigate(`/contacts/${lead.id}`)}
-                      >
-                        <td className="py-2 px-4 font-medium">
-                          {lead.first_name} {lead.last_name}
-                        </td>
-                        <td className="py-2 px-4 text-muted-foreground">{lead.email}</td>
-                        <td className="py-2 px-4">
-                          {lead.score != null ? (
-                            <span className={cn(
-                              "text-xs font-medium",
-                              lead.score >= 70 ? "text-green-400" :
-                              lead.score >= 40 ? "text-yellow-400" :
-                              "text-red-400"
-                            )}>
-                              {lead.score} {lead.score_label && `(${lead.score_label})`}
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground text-xs">--</span>
-                          )}
-                        </td>
-                        <td className="py-2 px-4">
-                          <Badge variant="secondary" className="text-[10px]">
-                            {lead.status ?? "new"}
-                          </Badge>
-                        </td>
-                        <td className="py-2 px-4">
-                          <Badge
-                            variant="secondary"
-                            className={cn(
-                              "text-[10px]",
-                              lead.instantly_push_status === "pushed" && "bg-green-500/15 text-green-400",
-                              lead.instantly_push_status === "excluded" && "bg-red-500/15 text-red-400"
-                            )}
-                          >
-                            {lead.instantly_push_status ?? "pending"}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {steps.map((s) => (
+                <StepCard key={s.step} step={s} />
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Right: Analytics */}
-        <div className="lg:col-span-2 space-y-4">
-          {/* Overall metrics */}
-          <div className="rounded-lg border border-border bg-card p-4 space-y-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Campaign Analytics
-            </h3>
-
-            <div className="grid grid-cols-2 gap-3">
-              <MetricCard
-                icon={Mail}
-                label="Total Sent"
-                value={totalSent.toLocaleString()}
-                color="text-blue-400"
-              />
-              <MetricCard
-                icon={Eye}
-                label="Opened"
-                value={totalOpened.toLocaleString()}
-                sub={`${overallOpenRate}%`}
-                color="text-green-400"
-              />
-              <MetricCard
-                icon={Reply}
-                label="Replies"
-                value={totalReplied.toLocaleString()}
-                sub={`${overallReplyRate}%`}
-                color="text-cyan-400"
-              />
-              <MetricCard
-                icon={AlertTriangle}
-                label="Bounced"
-                value={totalBounced.toLocaleString()}
-                sub={`${bounceRate}%`}
-                color="text-red-400"
-              />
-            </div>
-
-            {/* Open/Reply rate bars */}
-            <div className="space-y-2 pt-2 border-t border-border">
-              <RateBar label="Open Rate" rate={Number(overallOpenRate)} color="bg-green-400" />
-              <RateBar label="Reply Rate" rate={Number(overallReplyRate)} color="bg-cyan-400" />
-              <RateBar label="Bounce Rate" rate={Number(bounceRate)} color="bg-red-400" />
-            </div>
-          </div>
-
-          {/* Campaign info */}
-          <div className="rounded-lg border border-border bg-card p-4 space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Campaign Details
-            </h3>
-            <div className="space-y-2 text-sm">
-              <DetailRow label="Platform" value={data.platform ?? "Instantly"} />
-              <DetailRow label="Daily Limit" value={data.daily_limit ? `${data.daily_limit} emails/day` : "--"} />
-              <DetailRow label="Account Count" value={data.account_count ? `${data.account_count} accounts` : "--"} />
-              <DetailRow label="External ID" value={data.external_id ?? "--"} mono />
-              {data.last_synced && (
-                <DetailRow
-                  label="Last Synced"
-                  value={format(new Date(data.last_synced), "MMM d, yyyy h:mm a")}
-                />
-              )}
-              {data.updated_at && (
-                <DetailRow
-                  label="Updated"
-                  value={format(new Date(data.updated_at), "MMM d, yyyy h:mm a")}
-                />
-              )}
-            </div>
-          </div>
-
-          {/* Auto-reply stats placeholder */}
-          {detail?.auto_reply_config && (
-            <div className="rounded-lg border border-border bg-card p-4 space-y-3">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Auto-Reply Config
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Auto-reply is {detail.auto_reply_config.enabled ? "enabled" : "disabled"} for this campaign.
+        {/* Right rail: recommendations */}
+        <div className="space-y-4">
+          <SectionHeader
+            title="Recommendations"
+            hint={`${recommendations.length} pending`}
+          />
+          {recsQuery.isLoading ? (
+            <Skeleton className="h-48 w-full" />
+          ) : recsQuery.isError ? (
+            <div className="rounded-lg border border-border bg-card p-6 text-center">
+              <p className="text-xs text-muted-foreground">
+                Endpoint <span className="font-mono">/api/learning/recommendations</span> not yet available.
               </p>
+            </div>
+          ) : recommendations.length === 0 ? (
+            <div className="rounded-lg border border-border bg-card p-6 text-center">
+              <Sparkles className="mx-auto size-5 text-muted-foreground/40 mb-2" />
+              <p className="text-xs text-muted-foreground">
+                No pending recommendations. Click <span className="font-medium">Run analysis now</span> to generate fresh suggestions.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recommendations.map((r) => (
+                <MiniRecCard
+                  key={r.id}
+                  rec={r}
+                  onApprove={() => approveMutation.mutate(r.id)}
+                  onReject={() => rejectMutation.mutate(r.id)}
+                  isPending={
+                    (approveMutation.isPending && approveMutation.variables === r.id) ||
+                    (rejectMutation.isPending && rejectMutation.variables === r.id)
+                  }
+                />
+              ))}
             </div>
           )}
         </div>
@@ -374,63 +373,166 @@ export default function CampaignDetailPage() {
   )
 }
 
-function MetricCard({
-  icon: Icon,
+// ── Sub components ─────────────────────────────────────────
+function DetailSkeleton() {
+  return (
+    <div className="space-y-6 p-6">
+      <Skeleton className="h-6 w-64" />
+      <Skeleton className="h-12 w-full" />
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-20 w-full" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Skeleton className="lg:col-span-2 h-64 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    </div>
+  )
+}
+
+function SectionHeader({ title, hint }: { title: string; hint?: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {title}
+      </h2>
+      {hint && <span className="text-[10px] text-muted-foreground">{hint}</span>}
+    </div>
+  )
+}
+
+function StatCard({
   label,
   value,
   sub,
-  color,
+  icon: Icon,
 }: {
-  icon: React.ComponentType<any>
   label: string
   value: string
   sub?: string
-  color: string
+  icon: React.ComponentType<{ className?: string }>
 }) {
   return (
-    <div className="rounded-lg bg-muted/30 p-3 space-y-1">
-      <div className="flex items-center gap-1.5">
-        <Icon className={cn("size-3.5", color)} />
-        <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</span>
+    <div className="rounded-lg border border-border bg-card p-4">
+      <div className="flex items-center justify-between">
+        <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
+          {label}
+        </span>
+        <Icon className="size-3.5 text-muted-foreground" />
       </div>
-      <div className="flex items-baseline gap-1.5">
-        <span className="text-lg font-bold">{value}</span>
-        {sub && <span className="text-xs text-muted-foreground">{sub}</span>}
+      <div className="mt-1 flex items-baseline gap-1.5">
+        <span className="text-2xl font-semibold tracking-tight tabular-nums">
+          {value}
+        </span>
+        {sub && <span className="text-xs text-muted-foreground tabular-nums">{sub}</span>}
       </div>
     </div>
   )
 }
 
-function RateBar({ label, rate, color }: { label: string; rate: number; color: string }) {
+function StepCard({ step }: { step: StepMetric }) {
+  const sent = step.sent ?? 0
+  const opens = step.opens ?? 0
+  const replies = step.replies ?? 0
+  const openRate = step.open_rate ?? (sent ? (opens / sent) * 100 : 0)
+  const replyRate = step.reply_rate ?? (sent ? (replies / sent) * 100 : 0)
+  const conv = step.conversion ?? replyRate
+
   return (
-    <div>
-      <div className="flex items-center justify-between text-xs mb-1">
-        <span className="text-muted-foreground">{label}</span>
-        <span className="font-medium">{rate.toFixed(1)}%</span>
+    <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
+          Step {step.step}
+        </span>
+        <span className="text-[11px] text-muted-foreground tabular-nums">
+          {conv.toFixed(1)}% conv
+        </span>
       </div>
-      <div className="h-2 rounded-full bg-muted overflow-hidden">
+      <div className="grid grid-cols-3 gap-2">
+        <Mini label="Sent" value={formatNumber(sent)} />
+        <Mini label="Opens" value={formatNumber(opens)} sub={`${openRate.toFixed(0)}%`} />
+        <Mini label="Replies" value={formatNumber(replies)} sub={`${replyRate.toFixed(1)}%`} />
+      </div>
+      {/* Subtle conversion bar */}
+      <div className="h-1 rounded-full bg-muted overflow-hidden">
         <div
-          className={cn("h-full rounded-full transition-all", color)}
-          style={{ width: `${Math.min(rate, 100)}%` }}
+          className="h-full bg-foreground/40"
+          style={{ width: `${Math.min(conv, 100)}%` }}
         />
       </div>
     </div>
   )
 }
 
-function DetailRow({
-  label,
-  value,
-  mono,
+function Mini({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <div>
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="text-sm font-medium tabular-nums mt-0.5">{value}</div>
+      {sub && <div className="text-[10px] text-muted-foreground tabular-nums">{sub}</div>}
+    </div>
+  )
+}
+
+function MiniRecCard({
+  rec,
+  onApprove,
+  onReject,
+  isPending,
 }: {
-  label: string
-  value: string
-  mono?: boolean
+  rec: Recommendation
+  onApprove: () => void
+  onReject: () => void
+  isPending: boolean
 }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-muted-foreground">{label}</span>
-      <span className={cn("font-medium", mono && "font-mono text-xs")}>{value}</span>
+    <div className="rounded-lg border border-border bg-card p-3 space-y-2">
+      <div className="flex items-center gap-1.5">
+        <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+          <Sparkles className="size-3" />
+          {rec.kind}
+        </span>
+        {rec.created_at && (
+          <span className="text-[10px] text-muted-foreground">
+            {timeAgo(rec.created_at)}
+          </span>
+        )}
+      </div>
+      <h3 className="text-sm font-medium leading-snug">{rec.title}</h3>
+      {rec.rationale && (
+        <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-3">
+          {rec.rationale}
+        </p>
+      )}
+      {rec.impact_estimate != null && (
+        <div className="text-[11px]">
+          <span className="text-muted-foreground">Estimated impact: </span>
+          <span className="font-medium">{String(rec.impact_estimate)}</span>
+        </div>
+      )}
+      <div className="flex items-center gap-2 pt-1">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onReject}
+          disabled={isPending}
+          className="gap-1 flex-1"
+        >
+          <X className="size-3" />
+          Reject
+        </Button>
+        <Button
+          size="sm"
+          onClick={onApprove}
+          disabled={isPending}
+          className="gap-1 flex-1"
+        >
+          <Check className="size-3" />
+          Approve
+        </Button>
+      </div>
     </div>
   )
 }

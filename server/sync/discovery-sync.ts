@@ -1,5 +1,7 @@
 import { queryAll, queryOne, runSql } from '../db';
 import { saveDb } from '../db';
+import { createLogger } from '../utils/logger';
+const log = createLogger('discovery-sync');
 
 interface DiscoveryCandidate {
   title: string;
@@ -10,7 +12,7 @@ interface DiscoveryCandidate {
 
 class DiscoverySync {
   async sync() {
-    console.log('[Sync:Discoveries] Analyzing data...');
+    log.info('[Sync:Discoveries] Analyzing data...');
     const discoveries: DiscoveryCandidate[] = [];
 
     discoveries.push(...this.analyzeCampaigns());
@@ -38,7 +40,7 @@ class DiscoverySync {
     runSql(`DELETE FROM ai_discoveries WHERE saved = 0 AND discovered_at < datetime('now', '-7 days')`);
 
     if (inserted > 0) saveDb();
-    console.log(`[Sync:Discoveries] Generated ${inserted} new insights`);
+    log.info(`[Sync:Discoveries] Generated ${inserted} new insights`);
   }
 
   private analyzeCampaigns(): DiscoveryCandidate[] {
@@ -87,7 +89,7 @@ class DiscoverySync {
             topReply = { ...c, stats };
           }
         }
-      } catch { /* expected */ }
+      } catch (_e) { /* malformed campaign stats JSON */ }
     }
 
     // Global email stats
@@ -129,7 +131,7 @@ class DiscoverySync {
           });
           break; // Only show the worst one
         }
-      } catch { /* expected */ }
+      } catch (_e) { /* malformed stats JSON for open rate check */ }
     }
 
     // High bounce rate campaigns
@@ -148,7 +150,7 @@ class DiscoverySync {
             break;
           }
         }
-      } catch { /* expected */ }
+      } catch (_e) { /* malformed stats JSON for bounce rate check */ }
     }
 
     return results;

@@ -121,7 +121,8 @@ def stage_1_create_location(env, dry):
 # ---------- Stage 3: prereqs (custom fields/tags/pipeline/custom values) ----------
 
 CUSTOM_FIELDS = [
-    {"name": "Hero X Customer", "fieldKey": "hero_x_customer", "dataType": "CHECKBOX"},
+    # CHECKBOX requires GHL options array; these are webhook-set flags so TEXT ("yes"/"no") is simpler.
+    {"name": "Hero X Customer", "fieldKey": "hero_x_customer", "dataType": "TEXT"},
     {"name": "Last Order Date", "fieldKey": "last_order_date", "dataType": "DATE"},
     {"name": "Last Order Value", "fieldKey": "last_order_value", "dataType": "MONETORY"},
     {"name": "Lifetime Value", "fieldKey": "ltv", "dataType": "MONETORY"},
@@ -129,7 +130,7 @@ CUSTOM_FIELDS = [
     {"name": "Restock SKU", "fieldKey": "restock_sku", "dataType": "TEXT"},
     {"name": "Subscription Renews At", "fieldKey": "subscription_renews_at", "dataType": "DATE"},
     {"name": "Subscription Status", "fieldKey": "subscription_status", "dataType": "TEXT"},
-    {"name": "Reorder Cookie Sent", "fieldKey": "reorder_cookie_sent", "dataType": "CHECKBOX"},
+    {"name": "Reorder Cookie Sent", "fieldKey": "reorder_cookie_sent", "dataType": "TEXT"},
     {"name": "Order Count", "fieldKey": "order_count", "dataType": "NUMERICAL"},
     {"name": "First Order Date", "fieldKey": "first_order_date", "dataType": "DATE"},
     {"name": "BMN Cross-Brand Contact ID", "fieldKey": "bmn_contact_id", "dataType": "TEXT"},
@@ -167,9 +168,10 @@ def stage_3_provision(loc_id, token, dry):
         print(f"    - {len(CUSTOM_VALUES)} custom values")
         return
     sleep = 0.25
-    # custom fields
+    # custom fields -- v2 endpoint reads locationId from the URL path; it is NOT
+    # accepted in the body and will 422 if included.
     for f in CUSTOM_FIELDS:
-        body = {**f, "locationId": loc_id, "model": "contact"}
+        body = {**f, "model": "contact"}
         r = requests.post(f"{GHL_BASE}/locations/{loc_id}/customFields",
                           headers=headers_v2(token), json=body, timeout=30)
         ok = 200 <= r.status_code < 300
@@ -191,12 +193,13 @@ def stage_3_provision(loc_id, token, dry):
     ok = 200 <= r.status_code < 300
     print(f"  {'+' if ok else '!'} pipeline: {r.status_code}")
     if not ok: print(f"      err: {r.text[:200]}")
-    # custom values
+    # custom values -- same v2 contract: locationId in URL only, never in body.
     for n, v in CUSTOM_VALUES:
         r = requests.post(f"{GHL_BASE}/locations/{loc_id}/customValues",
-                          headers=headers_v2(token), json={"name": n, "value": v, "locationId": loc_id}, timeout=30)
+                          headers=headers_v2(token), json={"name": n, "value": v}, timeout=30)
         ok = 200 <= r.status_code < 300
         print(f"  {'+' if ok else '!'} cv {n}: {r.status_code}")
+        if not ok: print(f"      err: {r.text[:200]}")
         time.sleep(sleep)
 
 
@@ -264,6 +267,7 @@ def stage_5_coupons(dry):
         ("BAC50OFF", "percent", "50", 1, "0", 1),  # 50% off, single use, very short window -- used in FK3 upsell
         ("REORDER10", "percent", "10", 1, "50", 90),
         ("STACK15", "percent", "15", 0, "0", 0),  # Bundle pricing already applies; this is for manual override
+        ("LABLIST25", "fixed_cart", "25", 1, "75", 60),  # Lab-list email-capture welcome credit
     ]
     if dry:
         print(f"  [dry-run] would create {len(coupons)} coupons via wp wc shop_coupon create")

@@ -2,10 +2,12 @@ import { queryAll, saveDb } from '../db';
 import { enrichmentService } from '../services/enrichment-service';
 import { createAlert } from '../services/alert-service';
 import { wsServer } from '../websocket/ws-server';
+import { createLogger } from '../utils/logger';
+const log = createLogger('enrichment-sync');
 
 class EnrichmentSync {
   async sync() {
-    console.log('[Sync:Enrichment] Starting...');
+    log.info('[Sync:Enrichment] Starting...');
 
     let processed = 0;
     let scored = 0;
@@ -22,7 +24,7 @@ class EnrichmentSync {
         const ok = await enrichmentService.processLead(lead.id);
         if (ok) processed++;
       } catch (err: any) {
-        console.error(`[Sync:Enrichment] processLead(${lead.id}) error:`, err.message);
+        log.error(`[Sync:Enrichment] processLead(${lead.id}) error:`, err.message);
       }
     }
 
@@ -36,7 +38,7 @@ class EnrichmentSync {
         const ok = await enrichmentService.scoreLead(lead.id);
         if (ok) scored++;
       } catch (err: any) {
-        console.error(`[Sync:Enrichment] scoreLead(${lead.id}) error:`, err.message);
+        log.error(`[Sync:Enrichment] scoreLead(${lead.id}) error:`, err.message);
       }
     }
 
@@ -54,7 +56,7 @@ class EnrichmentSync {
         const ok = await enrichmentService.pushToGhl(lead.id);
         if (ok) pushed++;
       } catch (err: any) {
-        console.error(`[Sync:Enrichment] pushToGhl(${lead.id}) error:`, err.message);
+        log.error(`[Sync:Enrichment] pushToGhl(${lead.id}) error:`, err.message);
       }
     }
 
@@ -68,7 +70,7 @@ class EnrichmentSync {
         const ok = await enrichmentService.processLead(lead.id);
         if (ok) retried++;
       } catch (err: any) {
-        console.error(`[Sync:Enrichment] retry(${lead.id}) error:`, err.message);
+        log.error(`[Sync:Enrichment] retry(${lead.id}) error:`, err.message);
       }
     }
 
@@ -90,7 +92,7 @@ class EnrichmentSync {
       retried,
     });
 
-    console.log(`[Sync:Enrichment] Done — processed:${processed} scored:${scored} pushed:${pushed} retried:${retried}`);
+    log.info(`[Sync:Enrichment] Done — processed:${processed} scored:${scored} pushed:${pushed} retried:${retried}`);
   }
 }
 

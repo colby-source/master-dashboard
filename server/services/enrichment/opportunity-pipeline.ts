@@ -5,6 +5,8 @@ import { getCompanyConfig, logEvent } from './helpers';
 import { GPC_COMPANY_ID, GPC_MONETARY_VALUE } from '../gpc/config';
 import { BMN_COMPANY_ID } from '../bmn/config';
 import { wsServer } from '../../websocket/ws-server';
+import { createLogger } from '../../utils/logger';
+const log = createLogger('opportunity-pipeline');
 
 // ── Pipeline Resolution ────────────────────────────────────────
 // Routes leads to the correct GHL pipeline based on company + campaign.
@@ -171,7 +173,7 @@ export async function setupColdEmailPipeline(
     stages: fullStageMap,
   });
 
-  console.log(`[Pipeline] Configured "${GPC_PIPELINE_NAME}" for company ${companyId}: ${pipeline.id}`);
+  log.info(`[Pipeline] Configured "${GPC_PIPELINE_NAME}" for company ${companyId}: ${pipeline.id}`);
   return { pipelineId: pipeline.id, stages: fullStageMap };
 }
 
@@ -202,7 +204,7 @@ export async function createOpportunity(
 
   const pipelineCfg = resolvePipeline(lead.company_id, effectiveCampaignId);
   if (!pipelineCfg) {
-    console.warn(`[Pipeline] No pipeline configured for company ${lead.company_id} campaign ${effectiveCampaignId} — skipping`);
+    log.warn(`[Pipeline] No pipeline configured for company ${lead.company_id} campaign ${effectiveCampaignId} — skipping`);
     return null;
   }
 
@@ -226,10 +228,10 @@ export async function createOpportunity(
         sentiment,
         reason: 'existing_opportunity_moved',
       });
-      console.log(`[Pipeline] Moved existing opportunity ${lead.ghl_opportunity_id} → ${initialStageKey} for lead ${leadId}`);
+      log.info(`[Pipeline] Moved existing opportunity ${lead.ghl_opportunity_id} → ${initialStageKey} for lead ${leadId}`);
       return lead.ghl_opportunity_id;
     } catch (err: any) {
-      console.warn(`[Pipeline] Failed to update existing opp ${lead.ghl_opportunity_id}, creating new: ${err.message}`);
+      log.warn(`[Pipeline] Failed to update existing opp ${lead.ghl_opportunity_id}, creating new: ${err.message}`);
     }
   }
 
@@ -251,7 +253,7 @@ export async function createOpportunity(
   });
 
   if (!opportunity?.id) {
-    console.error(`[Pipeline] Failed to create opportunity for lead ${leadId}`);
+    log.error(`[Pipeline] Failed to create opportunity for lead ${leadId}`);
     return null;
   }
 
@@ -278,7 +280,7 @@ export async function createOpportunity(
     pipelineName: pipelineCfg.pipelineName,
   });
 
-  console.log(`[Pipeline] Created opportunity ${opportunity.id} for lead ${leadId} (${name}) in "${pipelineCfg.pipelineName}"`);
+  log.info(`[Pipeline] Created opportunity ${opportunity.id} for lead ${leadId} (${name}) in "${pipelineCfg.pipelineName}"`);
   return opportunity.id;
 }
 
@@ -348,7 +350,7 @@ export async function syncOpportunityStage(leadId: number, newFunnelStage: strin
     pipelineName: pipelineCfg.pipelineName,
   });
 
-  console.log(`[Pipeline] Updated opportunity ${lead.ghl_opportunity_id} → ${matchedKey} (lead stage: ${newFunnelStage})`);
+  log.info(`[Pipeline] Updated opportunity ${lead.ghl_opportunity_id} → ${matchedKey} (lead stage: ${newFunnelStage})`);
 }
 
 // ── Lose Opportunity ──────────────────────────────────────────
@@ -373,7 +375,7 @@ export async function loseOpportunity(leadId: number, reason: string): Promise<v
   // Find lost/rejected stage
   const lostStageId = pipelineCfg.stages.lost || pipelineCfg.stages.rejected;
   if (!lostStageId) {
-    console.warn(`[Pipeline] No lost/rejected stage found in "${pipelineCfg.pipelineName}"`);
+    log.warn(`[Pipeline] No lost/rejected stage found in "${pipelineCfg.pipelineName}"`);
     return;
   }
 
@@ -388,7 +390,7 @@ export async function loseOpportunity(leadId: number, reason: string): Promise<v
     pipelineName: pipelineCfg.pipelineName,
   });
 
-  console.log(`[Pipeline] Marked opportunity ${lead.ghl_opportunity_id} as lost: ${reason}`);
+  log.info(`[Pipeline] Marked opportunity ${lead.ghl_opportunity_id} as lost: ${reason}`);
 }
 
 // ── GHL → DB Sync Loop ────────────────────────────────────────
@@ -480,7 +482,7 @@ export async function syncGhlOpportunitiesToDb(): Promise<{ synced: number; erro
             opportunityId: lead.ghl_opportunity_id,
           });
           synced++;
-          console.log(`[GhlSync] Lead ${lead.id}: ${lead.status} → ${newStatus} (GHL stage: ${stageName})`);
+          log.info(`[GhlSync] Lead ${lead.id}: ${lead.status} → ${newStatus} (GHL stage: ${stageName})`);
         }
 
         // If GHL opportunity is lost but lead isn't marked yet
@@ -494,13 +496,13 @@ export async function syncGhlOpportunitiesToDb(): Promise<{ synced: number; erro
       }
     } catch (err: any) {
       errors++;
-      console.error(`[GhlSync] Error syncing company ${companyId}:`, err.message);
+      log.error(`[GhlSync] Error syncing company ${companyId}:`, err.message);
     }
   }
 
   if (synced > 0) {
     saveDb();
-    console.log(`[GhlSync] Synced ${synced} leads from GHL (${errors} errors)`);
+    log.info(`[GhlSync] Synced ${synced} leads from GHL (${errors} errors)`);
   }
   return { synced, errors };
 }

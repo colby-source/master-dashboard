@@ -2,6 +2,8 @@ import axios, { AxiosInstance } from 'axios';
 import { config } from '../config';
 import { queryOne, runSql } from '../db';
 import { trackApiCall } from './spend-tracker';
+import { createLogger } from '../utils/logger';
+const log = createLogger('pdl-client');
 
 export interface PdlPersonResult {
   id: string;
@@ -125,14 +127,14 @@ class PdlClient {
     } catch (err: any) {
       const status = err.response?.status;
       if (status === 404) {
-        console.log(`[PDL] No person found for ${email}`);
+        log.info(`[PDL] No person found for ${email}`);
         return null;
       }
       if (status === 402) {
-        console.error('[PDL] Credits exhausted');
+        log.error('[PDL] Credits exhausted');
         return null;
       }
-      console.error('[PDL] enrichPerson error:', err.message);
+      log.error('[PDL] enrichPerson error:', err.message);
       return null;
     }
   }
@@ -171,10 +173,10 @@ class PdlClient {
     } catch (err: any) {
       const status = err.response?.status;
       if (status === 404) {
-        console.log(`[PDL] No company found for ${domain}`);
+        log.info(`[PDL] No company found for ${domain}`);
         return null;
       }
-      console.error('[PDL] enrichCompany error:', err.message);
+      log.error('[PDL] enrichCompany error:', err.message);
       return null;
     }
   }
@@ -204,7 +206,7 @@ class PdlClient {
         [key, provider, JSON.stringify(data), expiresAt.toISOString()]
       );
     } catch (err: any) {
-      console.error('[PDL] Cache write error:', err.message);
+      log.error('[PDL] Cache write error:', err.message);
     }
   }
 }

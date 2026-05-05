@@ -1,8 +1,17 @@
 import fs from 'fs';
 import path from 'path';
 import { runSql, queryAll, saveDb } from './db';
+import { createLogger } from './utils/logger';
+const log = createLogger('db-migrate');
 
-const MIGRATIONS_DIR = path.join(__dirname, '../database/migrations');
+// Path resolution works in both dev (tsx run from repo root; __dirname = server/)
+// and production (node dist/server/index.js; __dirname = dist/server/). The first
+// existing candidate wins; we fall back to cwd as a last resort for unusual layouts.
+const MIGRATIONS_DIR = [
+  path.join(__dirname, '../database/migrations'),       // tsx dev mode
+  path.join(__dirname, '../../database/migrations'),    // compiled dist/server/ → repo/database/migrations
+  path.join(process.cwd(), 'database/migrations'),      // cwd fallback
+].find((p) => fs.existsSync(p)) ?? path.join(__dirname, '../database/migrations');
 
 /**
  * Ensures the schema_migrations tracking table exists.
@@ -30,7 +39,7 @@ function getAppliedMigrations(): Set<string> {
  */
 function getPendingMigrationFiles(applied: Set<string>): string[] {
   if (!fs.existsSync(MIGRATIONS_DIR)) {
-    console.log('[Migrations] No migrations directory found, skipping');
+    log.info('[Migrations] No migrations directory found, skipping');
     return [];
   }
 
@@ -63,7 +72,7 @@ export function runMigrations(): void {
         runSql('INSERT INTO schema_migrations (name) VALUES (?)', [fileName]);
       }
       saveDb();
-      console.log(`[Migrations] Fresh DB — marked ${allFiles.length} migration(s) as applied`);
+      log.info(`[Migrations] Fresh DB — marked ${allFiles.length} migration(s) as applied`);
       return;
     }
   }
@@ -71,11 +80,11 @@ export function runMigrations(): void {
   const pending = getPendingMigrationFiles(applied);
 
   if (pending.length === 0) {
-    console.log('[Migrations] All migrations already applied');
+    log.info('[Migrations] All migrations already applied');
     return;
   }
 
-  console.log(`[Migrations] ${pending.length} pending migration(s) to apply`);
+  log.info(`[Migrations] ${pending.length} pending migration(s) to apply`);
 
   for (const fileName of pending) {
     const filePath = path.join(MIGRATIONS_DIR, fileName);
@@ -91,27 +100,27 @@ export function runMigrations(): void {
 
     if (!hasStatements) {
       runSql('INSERT INTO schema_migrations (name) VALUES (?)', [fileName]);
-      console.log(`[Migrations] Recorded: ${fileName} (no-op)`);
+      log.info(`[Migrations] Recorded: ${fileName} (no-op)`);
       continue;
     }
 
     try {
       runSql(sql);
       runSql('INSERT INTO schema_migrations (name) VALUES (?)', [fileName]);
-      console.log(`[Migrations] Applied: ${fileName}`);
+      log.info(`[Migrations] Applied: ${fileName}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       // Tolerate duplicate-column errors (schema.sql may already define these columns)
       if (message.includes('duplicate column')) {
         runSql('INSERT INTO schema_migrations (name) VALUES (?)', [fileName]);
-        console.log(`[Migrations] Skipped (already in schema): ${fileName}`);
+        log.info(`[Migrations] Skipped (already in schema): ${fileName}`);
         continue;
       }
-      console.error(`[Migrations] FAILED: ${fileName} - ${message}`);
+      log.error(`[Migrations] FAILED: ${fileName} - ${message}`);
       throw error;
     }
   }
 
   saveDb();
-  console.log(`[Migrations] ${pending.length} migration(s) applied successfully`);
+  log.info(`[Migrations] ${pending.length} migration(s) applied successfully`);
 }

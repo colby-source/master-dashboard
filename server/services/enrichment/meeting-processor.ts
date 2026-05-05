@@ -4,6 +4,8 @@ import { ghlService } from '../ghl-service';
 import { config } from '../../config';
 import { wsServer } from '../../websocket/ws-server';
 import { logEvent } from './helpers';
+import { createLogger } from '../../utils/logger';
+const log = createLogger('meeting-processor');
 
 
 /**
@@ -12,7 +14,7 @@ import { logEvent } from './helpers';
 export async function processMeetingTranscript(transcriptId: number): Promise<void> {
   const transcript = queryOne('SELECT * FROM meeting_transcripts WHERE id = ?', [transcriptId]);
   if (!transcript) {
-    console.error(`[MeetingProcessor] Transcript ${transcriptId} not found`);
+    log.error(`[MeetingProcessor] Transcript ${transcriptId} not found`);
     return;
   }
 
@@ -24,7 +26,7 @@ export async function processMeetingTranscript(transcriptId: number): Promise<vo
   // Load playbook
   const playbook = queryOne('SELECT * FROM company_playbooks WHERE company_id = ?', [transcript.company_id]);
   if (!playbook) {
-    console.error(`[MeetingProcessor] No playbook for company ${transcript.company_id}`);
+    log.error(`[MeetingProcessor] No playbook for company ${transcript.company_id}`);
     return;
   }
 
@@ -53,7 +55,7 @@ export async function processMeetingTranscript(transcriptId: number): Promise<vo
   }
 
   // ── Step 1: Claude Analysis ──────────────────────────────
-  console.log(`[MeetingProcessor] Analyzing transcript ${transcriptId}...`);
+  log.info(`[MeetingProcessor] Analyzing transcript ${transcriptId}...`);
 
   const analysis = await claudeService.analyzeMeetingTranscript({
     transcriptText: transcript.transcript_text,
@@ -89,7 +91,7 @@ export async function processMeetingTranscript(transcriptId: number): Promise<vo
   );
   saveDb();
 
-  console.log(`[MeetingProcessor] Transcript ${transcriptId}: sentiment=${analysis.sentiment}, likelihood=${analysis.investment_likelihood}, sequence=${analysis.sequence_recommendation}`);
+  log.info(`[MeetingProcessor] Transcript ${transcriptId}: sentiment=${analysis.sentiment}, likelihood=${analysis.investment_likelihood}, sequence=${analysis.sequence_recommendation}`);
 
   // Log event
   if (lead) {
@@ -107,13 +109,13 @@ export async function processMeetingTranscript(transcriptId: number): Promise<vo
   // ── Step 3: GHL Sync ─────────────────────────────────────
   const ghlClient = ghlService.getClient(transcript.company_id);
   if (!ghlClient) {
-    console.log(`[MeetingProcessor] No GHL client for company ${transcript.company_id}, skipping sync`);
+    log.info(`[MeetingProcessor] No GHL client for company ${transcript.company_id}, skipping sync`);
     return;
   }
 
   const ghlContactId = transcript.ghl_contact_id || lead?.ghl_contact_id;
   if (!ghlContactId) {
-    console.log(`[MeetingProcessor] No GHL contact ID for transcript ${transcriptId}, skipping sync`);
+    log.info(`[MeetingProcessor] No GHL contact ID for transcript ${transcriptId}, skipping sync`);
     return;
   }
 
@@ -142,7 +144,7 @@ export async function processMeetingTranscript(transcriptId: number): Promise<vo
           );
           if (stage) {
             await ghlClient.updateOpportunityStage(opportunityId, stage.id);
-            console.log(`[MeetingProcessor] Moved existing opportunity ${opportunityId} → ${stage.name}`);
+            log.info(`[MeetingProcessor] Moved existing opportunity ${opportunityId} → ${stage.name}`);
           }
         }
       } else {
@@ -177,9 +179,9 @@ export async function processMeetingTranscript(transcriptId: number): Promise<vo
     runSql('UPDATE meeting_transcripts SET ghl_synced = 1 WHERE id = ?', [transcriptId]);
     saveDb();
 
-    console.log(`[MeetingProcessor] GHL sync complete for transcript ${transcriptId}`);
+    log.info(`[MeetingProcessor] GHL sync complete for transcript ${transcriptId}`);
   } catch (err: any) {
-    console.error(`[MeetingProcessor] GHL sync error for transcript ${transcriptId}:`, err.message);
+    log.error(`[MeetingProcessor] GHL sync error for transcript ${transcriptId}:`, err.message);
   }
 
   // ── Step 4: Post-Meeting Follow-Up Automation ──────────
@@ -300,7 +302,7 @@ async function schedulePostMeetingFollowUp(params: {
     scheduledAt,
   });
 
-  console.log(`[MeetingProcessor] Post-meeting follow-up scheduled: type=${followupType}, likelihood=${likelihood}, threadId=${threadId}, scheduledAt=${scheduledAt}`);
+  log.info(`[MeetingProcessor] Post-meeting follow-up scheduled: type=${followupType}, likelihood=${likelihood}, threadId=${threadId}, scheduledAt=${scheduledAt}`);
 }
 
 /**

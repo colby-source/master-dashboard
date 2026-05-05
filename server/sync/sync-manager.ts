@@ -10,13 +10,15 @@ import { warmupMonitor } from './warmup-monitor';
 import { wsServer } from '../websocket/ws-server';
 import { runSql } from '../db';
 import { config } from '../config';
+import { createLogger } from '../utils/logger';
+const log = createLogger('sync-manager');
 
 class SyncManager {
   private interval: ReturnType<typeof setInterval> | null = null;
   private running = false;
 
   start() {
-    console.log(`[Sync] Starting with ${config.syncIntervalMs}ms interval`);
+    log.info(`[Sync] Starting with ${config.syncIntervalMs}ms interval`);
     this.runAll();
     this.interval = setInterval(() => this.runAll(), config.syncIntervalMs);
   }
@@ -41,7 +43,7 @@ class SyncManager {
         syncs.push(openclawSync.sync());
         names.push('openclaw');
       } else {
-        console.log('[Sync] OpenClaw disabled via OPENCLAW_ENABLED=false, skipping');
+        log.info('[Sync] OpenClaw disabled via OPENCLAW_ENABLED=false, skipping');
       }
 
       syncs.push(
@@ -59,7 +61,7 @@ class SyncManager {
       try {
         await discoverySync.sync();
       } catch (e) {
-        console.error('[Sync:Discoveries] Error:', e);
+        log.error('[Sync:Discoveries] Error:', e);
       }
       results.forEach((r, i) => {
         const status = r.status === 'fulfilled' ? 'active' : 'error';
@@ -69,7 +71,7 @@ class SyncManager {
             `UPDATE integrations SET last_sync = datetime('now'), status = ?, last_error = ? WHERE name = ?`,
             [status, error, names[i]]
           );
-        } catch (e) {
+        } catch (_e) {
           // DB might not be ready yet
         }
       });

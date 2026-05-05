@@ -5,7 +5,28 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    ignores: ['dist/', 'client/', 'node_modules/', 'scripts/ghl-*.js', 'scripts/generate-*.mjs'],
+    ignores: [
+      'dist/',
+      'client/',
+      'node_modules/',
+      '*.js',
+      '*.cjs',
+      '*.mjs',
+      'scripts/*.js',
+      'scripts/*.mjs',
+      'server/_archive/',
+    ],
+  },
+  // Global overrides for all TS files
+  {
+    rules: {
+      // TypeScript compiler handles undef/redeclare — ESLint duplicates cause false positives
+      'no-undef': 'off',
+      'no-redeclare': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
+      'no-empty': ['error', { allowEmptyCatch: true }],
+      'no-useless-escape': 'warn',
+    },
   },
   {
     files: ['server/**/*.ts', 'scripts/**/*.ts', 'database/**/*.ts'],

@@ -14,6 +14,8 @@ import {
   buildDetailedSections,
   buildClosingSections,
 } from './system-overview-details';
+import { createLogger } from '../../utils/logger';
+const log = createLogger('system-overview-docx');
 
 const router = Router();
 
@@ -86,7 +88,7 @@ router.get('/system-overview.docx', async (_req: Request, res: Response) => {
     res.setHeader('Content-Disposition', 'attachment; filename=Master_Dashboard_System_Overview.docx');
     res.send(Buffer.from(buffer));
   } catch (err: any) {
-    console.error('[Exports] System overview generation error:', err.message, err.stack);
+    log.error('[Exports] System overview generation error: ' + err.message, err.stack);
     res.status(500).json({ error: 'Failed to generate system overview document', detail: err.message });
   }
 });

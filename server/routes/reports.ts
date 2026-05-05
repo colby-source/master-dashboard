@@ -3,6 +3,8 @@ import { queryAll, queryOne } from '../db';
 import { reportScheduler } from '../services/report-scheduler';
 import { reportDataService } from '../services/report-data-service';
 import { renderReportHtml } from '../services/report-renderer';
+import { createLogger } from '../utils/logger';
+const log = createLogger('reports');
 
 const router = Router();
 
@@ -25,7 +27,7 @@ router.get('/preview', async (req, res) => {
     const html = renderReportHtml(data);
     res.json({ data, html });
   } catch (err: any) {
-    console.error('[Reports] Preview failed:', err);
+    log.error('[Reports] Preview failed:', err);
     res.status(500).json({ error: err.message || 'Preview generation failed' });
   }
 });
@@ -37,7 +39,7 @@ router.post('/send-now', async (req, res) => {
     const result = await reportScheduler.run(type as 'morning' | 'evening');
     res.json({ success: true, reportId: result.id });
   } catch (err: any) {
-    console.error('[Reports] Manual send failed:', err);
+    log.error('[Reports] Manual send failed:', err);
     res.status(500).json({ error: err.message || 'Report generation failed' });
   }
 });

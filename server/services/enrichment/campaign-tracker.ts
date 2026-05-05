@@ -3,6 +3,8 @@ import { instantlyService } from '../instantly-service';
 import { claudeService } from '../claude-service';
 import { getCompanyConfig, logEvent } from './helpers';
 import { wsServer } from '../../websocket/ws-server';
+import { createLogger } from '../../utils/logger';
+const log = createLogger('campaign-tracker');
 
 export interface CampaignSnapshot {
   campaignId: string;
@@ -114,7 +116,7 @@ export async function captureCampaignSnapshot(campaignId: string, companyId: num
     saveDb();
     wsServer.broadcast({ type: 'campaign_snapshot', campaignId, snapshot });
 
-    console.log(
+    log.info(
       `[CampaignTracker] Snapshot: ${sent} sent, ${snapshot.openRate}% open, ` +
       `${snapshot.replyRate}% reply, ${snapshot.bounceRate}% bounce, ` +
       `${meetingsBooked} meetings`
@@ -122,7 +124,7 @@ export async function captureCampaignSnapshot(campaignId: string, companyId: num
 
     return snapshot;
   } catch (err: any) {
-    console.error(`[CampaignTracker] Snapshot error for ${campaignId}:`, err.message);
+    log.error(`[CampaignTracker] Snapshot error for ${campaignId}:`, err.message);
     return null;
   }
 }
@@ -160,7 +162,7 @@ function checkDeliverabilityHealth(snapshot: CampaignSnapshot, companyId: number
       },
     });
 
-    console.warn(`[CampaignTracker] Deliverability issues detected:\n${issues.map(i => `  - ${i}`).join('\n')}`);
+    log.warn(`[CampaignTracker] Deliverability issues detected:\n${issues.map(i => `  - ${i}`).join('\n')}`);
   }
 }
 

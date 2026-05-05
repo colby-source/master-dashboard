@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { queryAll, runSql } from '../db';
 import { saveDb } from '../db';
+import { createLogger } from '../utils/logger';
+const log = createLogger('alerts');
 
 const router = Router();
 
@@ -12,7 +14,7 @@ router.get('/', (req, res) => {
     sql += ' ORDER BY created_at DESC LIMIT 50';
     res.json(queryAll(sql));
   } catch (err: any) {
-    console.error('[Routes:Alerts] GET / error:', err.message);
+    log.error('[Routes:Alerts] GET / error:', err.message);
     res.status(500).json({ error: 'Failed to fetch alerts' });
   }
 });
@@ -23,7 +25,7 @@ router.post('/:id/acknowledge', (req, res) => {
     saveDb();
     res.json({ success: true });
   } catch (err: any) {
-    console.error('[Routes:Alerts] POST /:id/acknowledge error:', err.message);
+    log.error('[Routes:Alerts] POST /:id/acknowledge error:', err.message);
     res.status(500).json({ error: 'Failed to acknowledge alert' });
   }
 });
@@ -48,7 +50,7 @@ router.post('/bulk-acknowledge', (req, res) => {
     saveDb();
     res.json({ success: true });
   } catch (err: any) {
-    console.error('[Routes:Alerts] POST /bulk-acknowledge error:', err.message);
+    log.error('[Routes:Alerts] POST /bulk-acknowledge error:', err.message);
     res.status(500).json({ error: 'Failed to bulk acknowledge alerts' });
   }
 });

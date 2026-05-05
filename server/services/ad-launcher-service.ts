@@ -1,5 +1,7 @@
 import { metaAdsService } from './meta-ads-service';
 import { queryAll, queryOne, runSql, saveDb } from '../db';
+import { createLogger } from '../utils/logger';
+const log = createLogger('ad-launcher-service');
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -90,7 +92,7 @@ class AdLauncherService {
     const dailyBudget = options.dailyBudget ?? DEFAULT_DAILY_BUDGET;
     const campaignName = options.campaignName ?? `AI Creatives — ${new Date().toISOString().slice(0, 10)}`;
 
-    console.log(`${LOG_PREFIX} Launching campaign "${campaignName}" with ${creativeIds.length} creatives, budget: $${dailyBudget / 100}/day`);
+    log.info(`${LOG_PREFIX} Launching campaign "${campaignName}" with ${creativeIds.length} creatives, budget: $${dailyBudget / 100}/day`);
 
     // Validate creatives exist and are approved
     const creatives = queryAll(
@@ -117,7 +119,7 @@ class AdLauncherService {
     });
 
     const campaignId = campaignResult.id;
-    console.log(`${LOG_PREFIX} Created campaign: ${campaignId}`);
+    log.info(`${LOG_PREFIX} Created campaign: ${campaignId}`);
 
     // 2. Create ad set with national targeting
     const adSetResult = await metaAdsService.createAdSet({
@@ -131,7 +133,7 @@ class AdLauncherService {
     });
 
     const adSetId = adSetResult.id;
-    console.log(`${LOG_PREFIX} Created ad set: ${adSetId}`);
+    log.info(`${LOG_PREFIX} Created ad set: ${adSetId}`);
 
     // 3. Create individual ads from each creative
     const result: LaunchResult = {
@@ -170,16 +172,16 @@ class AdLauncherService {
           metaCreativeId: metaCreative.id,
         });
 
-        console.log(`${LOG_PREFIX} Created ad ${ad.id} for creative #${creative.id} "${creative.title}"`);
+        log.info(`${LOG_PREFIX} Created ad ${ad.id} for creative #${creative.id} "${creative.title}"`);
       } catch (err: any) {
         const errorMsg = err.response?.data?.error?.message || err.message;
-        console.error(`${LOG_PREFIX} Failed to create ad for creative #${creative.id}: ${errorMsg}`);
+        log.error(`${LOG_PREFIX} Failed to create ad for creative #${creative.id}: ${errorMsg}`);
         result.errors.push({ creativeId: creative.id, error: errorMsg });
       }
     }
 
     saveDb();
-    console.log(`${LOG_PREFIX} Campaign launch complete. ${result.ads.length} ads created, ${result.errors.length} errors.`);
+    log.info(`${LOG_PREFIX} Campaign launch complete. ${result.ads.length} ads created, ${result.errors.length} errors.`);
     return result;
   }
 
@@ -188,14 +190,14 @@ class AdLauncherService {
    * Auto-flags winners (CTR > 2%) and underperformers (CTR < 0.5% after 3+ days and $10+ spend).
    */
   async monitorPerformance(): Promise<PerformanceReport> {
-    console.log(`${LOG_PREFIX} Monitoring performance for launched creatives...`);
+    log.info(`${LOG_PREFIX} Monitoring performance for launched creatives...`);
 
     const launchedCreatives = queryAll(
       `SELECT * FROM generated_ad_creatives WHERE status = 'launched' AND meta_ad_id IS NOT NULL`
     );
 
     if (launchedCreatives.length === 0) {
-      console.log(`${LOG_PREFIX} No launched creatives to monitor.`);
+      log.info(`${LOG_PREFIX} No launched creatives to monitor.`);
       return {
         totalAds: 0,
         activeAds: 0,
@@ -295,7 +297,7 @@ class AdLauncherService {
         }
       } catch (err: any) {
         const errorMsg = err.response?.data?.error?.message || err.message;
-        console.error(`${LOG_PREFIX} Failed to fetch insights for ad ${creative.meta_ad_id}: ${errorMsg}`);
+        log.error(`${LOG_PREFIX} Failed to fetch insights for ad ${creative.meta_ad_id}: ${errorMsg}`);
         report.errors.push({ metaAdId: creative.meta_ad_id, error: errorMsg });
       }
     }
@@ -303,7 +305,7 @@ class AdLauncherService {
     report.avgCtr = report.activeAds > 0 ? totalCtr / report.activeAds : 0;
 
     saveDb();
-    console.log(
+    log.info(
       `${LOG_PREFIX} Performance report: ${report.activeAds} active, ${report.winners.length} winners, ${report.underperformers.length} underperformers, $${report.totalSpend.toFixed(2)} total spend`
     );
     return report;
@@ -313,12 +315,12 @@ class AdLauncherService {
    * Scale winning ad sets by increasing daily budget by 20%, up to a configurable max.
    */
   async scaleWinners(maxDailyBudget: number = DEFAULT_MAX_DAILY_BUDGET): Promise<void> {
-    console.log(`${LOG_PREFIX} Scaling winners (max budget: $${maxDailyBudget / 100}/day)...`);
+    log.info(`${LOG_PREFIX} Scaling winners (max budget: $${maxDailyBudget / 100}/day)...`);
 
     const report = await this.monitorPerformance();
 
     if (report.winners.length === 0) {
-      console.log(`${LOG_PREFIX} No winners to scale.`);
+      log.info(`${LOG_PREFIX} No winners to scale.`);
       return;
     }
 
@@ -341,7 +343,7 @@ class AdLauncherService {
         for (const adSet of adSets) {
           const currentBudget = parseInt(adSet.daily_budget || '0', 10);
           if (currentBudget >= maxDailyBudget) {
-            console.log(`${LOG_PREFIX} Ad set ${adSet.id} already at max budget ($${currentBudget / 100}/day). Skipping.`);
+            log.info(`${LOG_PREFIX} Ad set ${adSet.id} already at max budget ($${currentBudget / 100}/day). Skipping.`);
             continue;
           }
 
@@ -351,11 +353,11 @@ class AdLauncherService {
           );
 
           await metaAdsService.updateAdSet(adSet.id, { daily_budget: newBudget });
-          console.log(`${LOG_PREFIX} Scaled ad set ${adSet.id} budget: $${currentBudget / 100} -> $${newBudget / 100}/day`);
+          log.info(`${LOG_PREFIX} Scaled ad set ${adSet.id} budget: $${currentBudget / 100} -> $${newBudget / 100}/day`);
         }
       } catch (err: any) {
         const errorMsg = err.response?.data?.error?.message || err.message;
-        console.error(`${LOG_PREFIX} Failed to scale ad sets for campaign ${campaignId}: ${errorMsg}`);
+        log.error(`${LOG_PREFIX} Failed to scale ad sets for campaign ${campaignId}: ${errorMsg}`);
       }
     }
   }
@@ -369,7 +371,7 @@ class AdLauncherService {
     minSpend: number = UNDERPERFORMER_MIN_SPEND,
     minCtr: number = UNDERPERFORMER_CTR_THRESHOLD
   ): Promise<void> {
-    console.log(`${LOG_PREFIX} Checking for underperformers (CTR < ${minCtr}%, ${minDays}+ days, $${minSpend}+ spend)...`);
+    log.info(`${LOG_PREFIX} Checking for underperformers (CTR < ${minCtr}%, ${minDays}+ days, $${minSpend}+ spend)...`);
 
     const launchedCreatives = queryAll(
       `SELECT * FROM generated_ad_creatives WHERE status = 'launched' AND meta_ad_id IS NOT NULL AND performance_json IS NOT NULL`
@@ -390,18 +392,18 @@ class AdLauncherService {
         ) {
           await metaAdsService.updateAd(creative.meta_ad_id, { status: 'PAUSED' });
 
-          console.log(
+          log.info(
             `${LOG_PREFIX} Paused ad ${creative.meta_ad_id} (creative #${creative.id} "${creative.title}") — CTR: ${performance.ctr.toFixed(2)}%, Spend: $${performance.spend.toFixed(2)}, Days: ${daysSinceLaunch.toFixed(1)}`
           );
           pausedCount++;
         }
       } catch (err: any) {
         const errorMsg = err.response?.data?.error?.message || err.message;
-        console.error(`${LOG_PREFIX} Failed to pause ad ${creative.meta_ad_id}: ${errorMsg}`);
+        log.error(`${LOG_PREFIX} Failed to pause ad ${creative.meta_ad_id}: ${errorMsg}`);
       }
     }
 
-    console.log(`${LOG_PREFIX} Paused ${pausedCount} underperforming ads.`);
+    log.info(`${LOG_PREFIX} Paused ${pausedCount} underperforming ads.`);
   }
 
   /**

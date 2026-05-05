@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { queryOne, queryAll, runSql, saveDb } from '../db';
 import { enrichmentService } from '../services/enrichment-service';
 import { wsServer } from '../websocket/ws-server';
+import { createLogger } from '../utils/logger';
+const log = createLogger('bulk-upload');
 
 const router = Router();
 
@@ -105,7 +107,7 @@ router.post('/', async (req, res) => {
     // Start background processing if requested
     if (auto_process && insertedIds.length > 0) {
       enrichmentService.bulkProcessImport(importId, insertedIds, target_campaign_id).catch(err => {
-        console.error('[BulkUpload] Background processing error:', err.message);
+        log.error('[BulkUpload] Background processing error:', err.message);
       });
     }
 
@@ -118,7 +120,7 @@ router.post('/', async (req, res) => {
       lead_ids: insertedIds,
     });
   } catch (err: any) {
-    console.error('[BulkUpload] Error:', err);
+    log.error('[BulkUpload] Error:', err);
     res.status(500).json({ error: err.message });
   }
 });

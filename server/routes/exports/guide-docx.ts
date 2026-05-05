@@ -9,6 +9,8 @@ import {
 } from 'docx';
 import { guideSections } from '../../data/guide-sections';
 import { heading, bodyText, bulletPoint, numberedStep } from './docx-helpers';
+import { createLogger } from '../../utils/logger';
+const log = createLogger('guide-docx');
 
 const router = Router();
 
@@ -66,7 +68,7 @@ router.get('/guide.docx', async (_req: Request, res: Response) => {
     res.setHeader('Content-Disposition', 'attachment; filename=Master_Dashboard_Guide.docx');
     res.send(Buffer.from(buffer));
   } catch (err: any) {
-    console.error('[Exports] Guide generation error:', err.message);
+    log.error('[Exports] Guide generation error:', err.message);
     res.status(500).json({ error: 'Failed to generate guide document' });
   }
 });

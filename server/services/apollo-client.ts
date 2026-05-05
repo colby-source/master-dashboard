@@ -2,6 +2,8 @@ import axios, { AxiosInstance } from 'axios';
 import { config } from '../config';
 import { queryOne, runSql } from '../db';
 import { trackApiCall } from './spend-tracker';
+import { createLogger } from '../utils/logger';
+const log = createLogger('apollo-client');
 
 export interface ApolloPersonResult {
   id: string;
@@ -130,14 +132,14 @@ class ApolloClient {
     } catch (err: any) {
       const status = err.response?.status;
       if (status === 404 || status === 422) {
-        console.log(`[Apollo] No person match for ${JSON.stringify(params)}`);
+        log.info(`[Apollo] No person match for ${JSON.stringify(params)}`);
         return null;
       }
       if (status === 429) {
-        console.warn('[Apollo] Rate limited — 600 calls/hour max');
+        log.warn('[Apollo] Rate limited — 600 calls/hour max');
         return null;
       }
-      console.error('[Apollo] enrichPerson error:', err.message);
+      log.error('[Apollo] enrichPerson error:', err.message);
       return null;
     }
   }
@@ -181,14 +183,14 @@ class ApolloClient {
     } catch (err: any) {
       const status = err.response?.status;
       if (status === 404 || status === 422) {
-        console.log(`[Apollo] No org match for ${JSON.stringify(params)}`);
+        log.info(`[Apollo] No org match for ${JSON.stringify(params)}`);
         return null;
       }
       if (status === 429) {
-        console.warn('[Apollo] Rate limited — 600 calls/hour max');
+        log.warn('[Apollo] Rate limited — 600 calls/hour max');
         return null;
       }
-      console.error('[Apollo] enrichOrganization error:', err.message);
+      log.error('[Apollo] enrichOrganization error:', err.message);
       return null;
     }
   }
@@ -215,7 +217,7 @@ class ApolloClient {
         [key, provider, JSON.stringify(data), expiresAt.toISOString()]
       );
     } catch (err: any) {
-      console.error('[Apollo] Cache write error:', err.message);
+      log.error('[Apollo] Cache write error:', err.message);
     }
   }
 }

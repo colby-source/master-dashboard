@@ -13,5 +13,5 @@
     "types": ["vitest/globals"]
   },
   "include": ["server/**/*", "database/**/*"],
-  "exclude": ["node_modules", "client", "dist"]
+  "exclude": ["node_modules", "client", "dist", "server/_archive/**"]
 }

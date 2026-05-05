@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { claudeService } from '../services/claude-service';
 import { queryAll, queryOne, runSql } from '../db';
 import { saveDb } from '../db';
+import { createLogger } from '../utils/logger';
+const log = createLogger('ai');
 
 const router = Router();
 
@@ -28,7 +30,7 @@ router.post('/campaign-writer', async (req, res) => {
 
     res.json(result);
   } catch (err: any) {
-    console.error('[AI] campaign-writer error:', err.message);
+    log.error('[AI] campaign-writer error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -71,7 +73,7 @@ router.post('/query', async (req, res) => {
 
     res.json({ answer });
   } catch (err: any) {
-    console.error('[AI] query error:', err.message);
+    log.error('[AI] query error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

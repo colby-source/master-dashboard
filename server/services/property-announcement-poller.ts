@@ -7,6 +7,8 @@ import fs from 'fs';
 import path from 'path';
 import { ghlService } from './ghl-service';
 import { handlePropertyAnnouncementReply } from './property-announcement-reply-handler';
+import { createLogger } from '../utils/logger';
+const log = createLogger('property-announcement-poller');
 
 const GPC_COMPANY_ID = 1;
 const POLL_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
@@ -38,7 +40,7 @@ function saveSeenMessages(): void {
     const trimmed = arr.slice(-5000);
     fs.writeFileSync(SEEN_FILE, JSON.stringify(trimmed, null, 2), 'utf-8');
   } catch (err: any) {
-    console.error('[PropertyAnnouncementPoller] Error saving seen messages:', err.message);
+    log.error('[PropertyAnnouncementPoller] Error saving seen messages:', err.message);
   }
 }
 
@@ -95,14 +97,14 @@ export async function pollPropertyAnnouncementReplies(): Promise<number> {
 
           if (result.processed) {
             processed++;
-            console.log(
+            log.info(
               `[PropertyAnnouncementPoller] Processed reply from ${contactId}: ${result.classification}`,
             );
           }
           // If not processed (missing tag, etc), that's fine — still marked as seen
         }
       } catch (err: any) {
-        console.error(
+        log.error(
           `[PropertyAnnouncementPoller] Error processing conversation ${convo.id}:`,
           err.message,
         );
@@ -111,12 +113,12 @@ export async function pollPropertyAnnouncementReplies(): Promise<number> {
 
     if (processed > 0) {
       saveSeenMessages();
-      console.log(`[PropertyAnnouncementPoller] Processed ${processed} new replies`);
+      log.info(`[PropertyAnnouncementPoller] Processed ${processed} new replies`);
     }
 
     return processed;
   } catch (err: any) {
-    console.error('[PropertyAnnouncementPoller] Poll error:', err.message);
+    log.error('[PropertyAnnouncementPoller] Poll error:', err.message);
     return 0;
   }
 }
@@ -125,21 +127,21 @@ export async function pollPropertyAnnouncementReplies(): Promise<number> {
 
 export function startPropertyAnnouncementPoller(): void {
   loadSeenMessages();
-  console.log(
+  log.info(
     `[PropertyAnnouncementPoller] Starting (interval: ${POLL_INTERVAL_MS / 1000}s, ${seenMessageIds.size} seen messages loaded)`,
   );
 
   // Poll every 2 minutes
   setInterval(() => {
     pollPropertyAnnouncementReplies().catch((err: any) => {
-      console.error('[PropertyAnnouncementPoller] Interval error:', err.message);
+      log.error('[PropertyAnnouncementPoller] Interval error:', err.message);
     });
   }, POLL_INTERVAL_MS);
 
   // First poll 15 seconds after startup (stagger from other pollers)
   setTimeout(() => {
     pollPropertyAnnouncementReplies().catch((err: any) => {
-      console.error('[PropertyAnnouncementPoller] Initial poll error:', err.message);
+      log.error('[PropertyAnnouncementPoller] Initial poll error:', err.message);
     });
   }, 15_000);
 }

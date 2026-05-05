@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { queryAll, runSql } from '../db';
 import { saveDb } from '../db';
+import { createLogger } from '../utils/logger';
+const log = createLogger('ai-discoveries');
 
 const router = Router();
 
@@ -9,7 +11,7 @@ router.get('/', (req, res) => {
     const discoveries = queryAll('SELECT * FROM ai_discoveries ORDER BY discovered_at DESC LIMIT 50');
     res.json(discoveries);
   } catch (err: any) {
-    console.error('[Routes:AIDiscoveries] GET / error:', err.message);
+    log.error('[Routes:AIDiscoveries] GET / error:', err.message);
     res.status(500).json({ error: 'Failed to fetch discoveries' });
   }
 });
@@ -20,7 +22,7 @@ router.post('/:id/save', (req, res) => {
     saveDb();
     res.json({ success: true });
   } catch (err: any) {
-    console.error('[Routes:AIDiscoveries] POST /:id/save error:', err.message);
+    log.error('[Routes:AIDiscoveries] POST /:id/save error:', err.message);
     res.status(500).json({ error: 'Failed to save discovery' });
   }
 });
@@ -31,7 +33,7 @@ router.delete('/:id', (req, res) => {
     saveDb();
     res.json({ success: true });
   } catch (err: any) {
-    console.error('[Routes:AIDiscoveries] DELETE /:id error:', err.message);
+    log.error('[Routes:AIDiscoveries] DELETE /:id error:', err.message);
     res.status(500).json({ error: 'Failed to delete discovery' });
   }
 });

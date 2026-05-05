@@ -12,6 +12,14 @@ import { EnrichmentLead } from './types';
 import { getCompanyConfig, updateLead, logEvent } from './helpers';
 import { prefilterEmail } from './email-prefilter';
 import { BMN_COMPANY_ID } from '../bmn/config';
+import { createLogger } from '../../utils/logger';
+import { classifySegment } from './segment-router';
+import { runTier05DomainIntel } from './tier-05-domain-intel';
+import { computeScoreHint, minScoreHintForTier2 } from './score-hint';
+import { inGlobalSuppression, inHnwSuppression } from './tier-0-gates';
+import { logCostEvent } from './cost-ledger';
+import { cacheGet, cacheSet } from './cache-layer';
+const log = createLogger('lead-enrichment');
 
 export async function enrichLead(leadId: number): Promise<boolean> {
   const lead = queryOne('SELECT * FROM enrichment_leads WHERE id = ?', [leadId]) as EnrichmentLead | null;
@@ -20,21 +28,68 @@ export async function enrichLead(leadId: number): Promise<boolean> {
   // BMN NEVER runs through enrichment — creators use personal
   // emails and don't need B2B enrichment/scoring. They flow: Instantly → GHL directly.
   if (lead.company_id === BMN_COMPANY_ID) {
-    console.log(`[Enrichment] Skipping enrichment for BMN lead ${leadId} (${lead.email})`);
+    log.info(`[Enrichment] Skipping enrichment for BMN lead ${leadId} (${lead.email})`);
     return false;
   }
 
+  // ── Segment router: classify every lead into a single segment tag ──
+  // Drives PDL gate, auto-approval, stale TTL, and personal-email tolerance.
+  const segment = classifySegment(lead);
+  if (!lead.segment || lead.segment !== segment) {
+    updateLead(leadId, { segment });
+  }
+
   updateLead(leadId, { status: 'enriching' });
-  logEvent(leadId, lead.company_id, 'enrichment_started', null);
+  logEvent(leadId, lead.company_id, 'enrichment_started', { segment });
 
   try {
     const enrichmentData: any = {};
     const existingEnrichment = lead.enrichment_data ? (() => { try { return JSON.parse(lead.enrichment_data); } catch { return {}; } })() : {};
 
-    // ── Tier 0: Free pre-filter (MX check + personal domain block) ──
+    // ── Global + HNW suppression check (free) ──
+    // Moved AHEAD of paid enrichment so known-bad leads never cost a cent.
+    // FIX M-5: single exclusion helper — replaces two near-identical mark-excluded blocks.
+    // Note: we do NOT route through runTier0Gates here because the upstream prefilterEmail
+    // call below does different work (personal-domain gate with company-specific rules).
+    // Suppression is strictly a pre-paid-work gate; everything else stays in prefilter.
+    const markExcluded = (scope: 'global' | 'hnw'): void => {
+      updateLead(leadId, {
+        status: 'enriched',
+        instantly_push_status: 'excluded',
+        enrichment_completeness: 5,
+        enriched_at: new Date().toISOString(),
+      });
+      logEvent(leadId, lead.company_id, 'suppression_rejected', { scope });
+      saveDb();
+    };
     if (lead.email) {
-      const prefilter = await prefilterEmail(lead.email, { companyId: lead.company_id });
+      const domain = lead.email.split('@')[1]?.toLowerCase() ?? null;
+      if (inGlobalSuppression(lead.email, domain)) {
+        markExcluded('global');
+        return true;
+      }
+      if ((segment === 'FAMILY_OFFICE' || segment === 'HNW_INDIVIDUAL')
+          && inHnwSuppression({
+            first_name: lead.first_name,
+            last_name: lead.last_name,
+            firm: (existingEnrichment as any).apollo_org?.name ?? null,
+          })) {
+        markExcluded('hnw');
+        return true;
+      }
+    }
+
+    // ── Tier 0: Free pre-filter (MX check + personal domain block) ──
+    // NOTE: For FAMILY_OFFICE / HNW_INDIVIDUAL, personal emails are NOT hard-rejected —
+    // they route to Tier P (manual approval + LI + firm confirm). We skip the personal-email
+    // block for those segments by passing companyId=BMN (which bypasses the check in prefilter).
+    if (lead.email) {
+      const prefilterOpts = (segment === 'FAMILY_OFFICE' || segment === 'HNW_INDIVIDUAL')
+        ? { companyId: BMN_COMPANY_ID }
+        : { companyId: lead.company_id };
+      const prefilter = await prefilterEmail(lead.email, prefilterOpts);
       enrichmentData.prefilter = prefilter;
+      enrichmentData.segment = segment;
 
       if (!prefilter.passed) {
         // Still mark as enriched but flag why it was filtered
@@ -48,6 +103,7 @@ export async function enrichLead(leadId: number): Promise<boolean> {
         logEvent(leadId, lead.company_id, 'prefilter_rejected', {
           reason: prefilter.reason,
           domain: prefilter.domain,
+          segment,
         });
         saveDb();
         wsServer.broadcast({ type: 'enrichment_update', leadId, status: 'enriched' });
@@ -55,70 +111,123 @@ export async function enrichLead(leadId: number): Promise<boolean> {
       }
     }
 
-    // ── Tier 1: Cheap enrichment (Apollo + MillionVerifier) ──
-    // Apollo person + org enrichment replaces PDL ($0 vs $0.38/lead)
-    // MillionVerifier replaces Hunter+AMF ($0.0003 vs $0.038/lead)
-    const wave1: Promise<void>[] = [];
-
-    // Apollo person enrichment (free — 10K credits/mo)
-    if (lead.email && apolloClient.available) {
-      wave1.push(
-        apolloClient.enrichPerson({ email: lead.email }).then(apolloPerson => {
-          if (apolloPerson) {
-            enrichmentData.apollo_person = apolloPerson;
-            if (!lead.first_name && apolloPerson.first_name) {
-              updateLead(leadId, { first_name: apolloPerson.first_name });
-            }
-            if (!lead.last_name && apolloPerson.last_name) {
-              updateLead(leadId, { last_name: apolloPerson.last_name });
-            }
-          }
-        }).catch(err => { console.warn(`[Enrichment] Apollo person failed:`, err.message); })
-      );
-    }
-
-    // Apollo org enrichment (free — from email domain)
-    if (lead.email && apolloClient.available) {
-      const domain = lead.email.split('@')[1];
-      if (domain) {
-        wave1.push(
-          apolloClient.enrichOrganization({ domain }).then(apolloOrg => {
-            if (apolloOrg) enrichmentData.apollo_org = apolloOrg;
-          }).catch(err => { console.warn(`[Enrichment] Apollo org failed:`, err.message); })
-        );
+    // ── Tier 0.5: Free domain intelligence (WHOIS, DMARC, MX provider, firm regex) ──
+    if (lead.email) {
+      try {
+        const domainIntel = await runTier05DomainIntel({
+          email: lead.email,
+          firm: (existingEnrichment as any).apollo_org?.name ?? null,
+        });
+        enrichmentData.domain_intel = domainIntel;
+        updateLead(leadId, { domain_intel: JSON.stringify(domainIntel) });
+      } catch (err: any) {
+        log.warn(`[Enrichment] Tier 0.5 domain intel failed: ${err.message}`);
       }
     }
 
-    // MillionVerifier email verification ($0.0003/email)
-    if (lead.email && millionverifierClient.available) {
-      wave1.push(
-        millionverifierClient.verifyEmail(lead.email).then(mvResult => {
-          if (mvResult) enrichmentData.email_verify = mvResult;
-        }).catch(err => { console.warn(`[Enrichment] MillionVerifier failed:`, err.message); })
-      );
+    // ── Tier 1: Cheap enrichment (Apollo + conditional MillionVerifier) ──
+    // Apollo person + org enrichment replaces PDL ($0 vs $0.38/lead).
+    // MV now only fires when Apollo did NOT stamp email as verified — saves ~30-50% of MV cost.
+    const domain = lead.email?.split('@')[1] ?? null;
+    const [apolloPersonResult, apolloOrgResult] = await Promise.all([
+      (lead.email && apolloClient.available)
+        ? apolloClient.enrichPerson({ email: lead.email }).catch((err: any) => { log.warn(`[Enrichment] Apollo person failed:`, err.message); return null; })
+        : Promise.resolve(null),
+      (domain && apolloClient.available)
+        ? apolloClient.enrichOrganization({ domain }).catch((err: any) => { log.warn(`[Enrichment] Apollo org failed:`, err.message); return null; })
+        : Promise.resolve(null),
+    ]);
+
+    if (apolloPersonResult) {
+      enrichmentData.apollo_person = apolloPersonResult;
+      if (!lead.first_name && apolloPersonResult.first_name) {
+        updateLead(leadId, { first_name: apolloPersonResult.first_name });
+      }
+      if (!lead.last_name && apolloPersonResult.last_name) {
+        updateLead(leadId, { last_name: apolloPersonResult.last_name });
+      }
+      logCostEvent({
+        lead_id: leadId, tier: '1', vendor: 'apollo', endpoint: 'enrichPerson',
+        cost_usd: 0, result_status: 'hit',
+      });
+    } else if (lead.email && apolloClient.available) {
+      logCostEvent({
+        lead_id: leadId, tier: '1', vendor: 'apollo', endpoint: 'enrichPerson',
+        cost_usd: 0, result_status: 'miss',
+      });
+    }
+    if (apolloOrgResult) {
+      enrichmentData.apollo_org = apolloOrgResult;
+      logCostEvent({
+        lead_id: leadId, tier: '1', vendor: 'apollo', endpoint: 'enrichOrganization',
+        cost_usd: 0, result_status: 'hit',
+      });
     }
 
-    await Promise.all(wave1);
+    // MV short-circuit: if Apollo already stamped verified, skip MV entirely ($0.0003 saved per hit).
+    const apolloVerified = apolloPersonResult?.email_status === 'verified';
+    if (lead.email && millionverifierClient.available && !apolloVerified) {
+      try {
+        const mvResult = await millionverifierClient.verifyEmail(lead.email);
+        if (mvResult) enrichmentData.email_verify = mvResult;
+        logCostEvent({
+          lead_id: leadId, tier: '1', vendor: 'millionverifier', endpoint: 'verify',
+          cost_usd: 0.0003, result_status: mvResult ? 'hit' : 'miss',
+        });
+      } catch (err: any) {
+        log.warn(`[Enrichment] MillionVerifier failed:`, err.message);
+        logCostEvent({
+          lead_id: leadId, tier: '1', vendor: 'millionverifier', endpoint: 'verify',
+          cost_usd: 0, result_status: 'error', error_message: err.message,
+        });
+      }
+    } else if (apolloVerified) {
+      // Mirror Apollo's verification so downstream code sees a consistent shape.
+      enrichmentData.email_verify = { result: 'ok', source: 'apollo_verified_passthrough' };
+      logCostEvent({
+        lead_id: leadId, tier: '1', vendor: 'millionverifier', endpoint: 'verify',
+        cost_usd: 0, result_status: 'skipped', error_message: 'apollo_verified',
+      });
+    }
+
+    // ── Compute deterministic score_hint (free) — gates Tier 2 LinkedIn scrape ──
+    const scoreHint = computeScoreHint({
+      segment,
+      domain_intel: enrichmentData.domain_intel ?? {
+        is_freemail: false, is_role: false, whois_age_days: null,
+        mx_provider: 'other', has_dmarc: false, has_spf: false,
+        tranco_rank: null, firm_name_signal_match: false, email_company_match: null,
+      },
+      title: apolloPersonResult?.title ?? null,
+      apollo_person_has_title: !!apolloPersonResult?.title,
+      linkedin_url_present: !!apolloPersonResult?.linkedin_url,
+    });
+    enrichmentData.score_hint = scoreHint;
+    updateLead(leadId, { score_hint: scoreHint });
 
     // ── Tier 2: LinkedIn scrape (depends on Apollo/PDL for linkedin_url) ──
+    // GATED: score_hint ≥ minimum for segment (typically 60). Saves ~50-70% of Apify LI cost.
     const linkedInUrl = enrichmentData.apollo_person?.linkedin_url
       || enrichmentData.pdl_person?.linkedin_url
       || existingEnrichment.linkedin_url;
-    if (linkedInUrl) {
+    const tier2GatePass = scoreHint >= minScoreHintForTier2(segment);
+    if (linkedInUrl && !tier2GatePass) {
+      log.info(`[Enrichment] Skipping Tier 2 LinkedIn for lead ${leadId} — score_hint ${scoreHint} < min for ${segment}`);
+      logCostEvent({
+        lead_id: leadId, tier: '2', vendor: 'apify_linkedin', endpoint: 'profile_scrape',
+        cost_usd: 0, result_status: 'skipped', error_message: `score_hint:${scoreHint}`,
+      });
+    }
+    if (linkedInUrl && tier2GatePass) {
       try {
-        // Check cache first (90-day TTL)
-        const liCacheKey = `linkedin:${linkedInUrl}`;
-        const cachedLi = queryOne(
-          `SELECT response_data FROM enrichment_cache WHERE cache_key = ? AND created_at > datetime('now', '-90 days')`,
-          [liCacheKey]
-        );
-
-        if (cachedLi?.response_data) {
-          // Use cached LinkedIn profile
-          enrichmentData.linkedin_profile = JSON.parse(cachedLi.response_data);
-          console.log(`[Enrichment] LinkedIn cache hit for ${linkedInUrl}`);
+        // FIX H-7: route through unified cache-layer. Previous raw queryOne bypassed
+        // expires_at (used created_at) and the namespaced key format, diverging from
+        // every other vendor and making cache-hit metrics unreliable.
+        const cachedLi = cacheGet<NonNullable<typeof enrichmentData.linkedin_profile>>('linkedin', linkedInUrl);
+        if (cachedLi) {
+          enrichmentData.linkedin_profile = cachedLi;
+          log.info(`[Enrichment] LinkedIn cache hit for ${linkedInUrl}`);
         } else {
-          // Scrape fresh and cache the result
           const profiles = await linkedInService.scrapeProfiles([linkedInUrl], 1);
           if (profiles?.length > 0) {
             const liProfile = profiles[0];
@@ -136,14 +245,7 @@ export async function enrichLead(leadId: number): Promise<boolean> {
                 likes: p.likeCount || p.numLikes || 0,
               })),
             };
-
-            // Store in enrichment_cache
-            const expiresAt = new Date();
-            expiresAt.setDate(expiresAt.getDate() + 90);
-            runSql(
-              `INSERT OR REPLACE INTO enrichment_cache (cache_key, provider, response_data, expires_at) VALUES (?, ?, ?, ?)`,
-              [liCacheKey, 'linkedin', JSON.stringify(enrichmentData.linkedin_profile), expiresAt.toISOString()]
-            );
+            cacheSet('linkedin', linkedInUrl, enrichmentData.linkedin_profile);
           }
         }
 
@@ -158,7 +260,7 @@ export async function enrichLead(leadId: number): Promise<boolean> {
           }
         }
       } catch (liErr: any) {
-        console.warn(`[Enrichment] LinkedIn scrape failed for ${linkedInUrl}:`, liErr.message);
+        log.warn(`[Enrichment] LinkedIn scrape failed for ${linkedInUrl}:`, liErr.message);
       }
     }
 
@@ -232,7 +334,7 @@ export async function enrichLead(leadId: number): Promise<boolean> {
     wsServer.broadcast({ type: 'enrichment_update', leadId, status: 'enriched' });
     return true;
   } catch (err: any) {
-    console.error(`[Enrichment] enrichLead(${leadId}) error:`, err.message);
+    log.error(`[Enrichment] enrichLead(${leadId}) error:`, err.message);
     updateLead(leadId, {
       status: 'failed',
       error_message: err.message,
@@ -263,7 +365,7 @@ export async function deepEnrichWithPdl(leadId: number): Promise<boolean> {
       deepWaves.push(
         pdlClient.enrichPerson(lead.email).then(pdlPerson => {
           if (pdlPerson) enrichmentData.pdl_person = pdlPerson;
-        }).catch(err => { console.warn(`[DeepEnrich] PDL person failed:`, err.message); })
+        }).catch(err => { log.warn(`[DeepEnrich] PDL person failed:`, err.message); })
       );
 
       const domain = lead.email.split('@')[1];
@@ -271,7 +373,7 @@ export async function deepEnrichWithPdl(leadId: number): Promise<boolean> {
         deepWaves.push(
           pdlClient.enrichCompany(domain).then(pdlCompany => {
             if (pdlCompany) enrichmentData.pdl_company = pdlCompany;
-          }).catch(err => { console.warn(`[DeepEnrich] PDL company failed:`, err.message); })
+          }).catch(err => { log.warn(`[DeepEnrich] PDL company failed:`, err.message); })
         );
       }
     }
@@ -288,7 +390,7 @@ export async function deepEnrichWithPdl(leadId: number): Promise<boolean> {
     saveDb();
     return true;
   } catch (err: any) {
-    console.error(`[DeepEnrich] deepEnrichWithPdl(${leadId}) error:`, err.message);
+    log.error(`[DeepEnrich] deepEnrichWithPdl(${leadId}) error:`, err.message);
     return false;
   }
 }
@@ -403,7 +505,7 @@ export async function importKnownContactsFromGhl(companyId: number): Promise<num
   const ghlClient = ghlService.getClient(companyId);
   if (!ghlClient) return 0;
 
-  console.log(`[KnownContacts] Starting GHL import for company ${companyId}...`);
+  log.info(`[KnownContacts] Starting GHL import for company ${companyId}...`);
   const contacts = await ghlClient.getAllContacts();
   let imported = 0;
   let checked = 0;
@@ -425,12 +527,12 @@ export async function importKnownContactsFromGhl(companyId: number): Promise<num
     imported++;
 
     if (imported % 100 === 0) {
-      console.log(`[KnownContacts] Progress: ${imported} new contacts imported (${checked} checked so far)`);
+      log.info(`[KnownContacts] Progress: ${imported} new contacts imported (${checked} checked so far)`);
     }
   }
 
   if (imported > 0) saveDb();
-  console.log(`[KnownContacts] Imported ${imported} new known contacts from GHL (${checked} total checked)`);
+  log.info(`[KnownContacts] Imported ${imported} new known contacts from GHL (${checked} total checked)`);
   return imported;
 }
 

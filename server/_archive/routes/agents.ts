@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { queryAll } from '../db';
+import { createLogger } from '../utils/logger';
+const log = createLogger('agents');
 
 const router = Router();
 
@@ -12,7 +14,7 @@ router.get('/', (req, res) => {
     sql += ' ORDER BY a.name';
     res.json(queryAll(sql, params));
   } catch (err: any) {
-    console.error('[Routes:Agents] GET / error:', err.message);
+    log.error('[Routes:Agents] GET / error:', err.message);
     res.status(500).json({ error: 'Failed to fetch agents' });
   }
 });
@@ -26,7 +28,7 @@ router.get('/runs', (req, res) => {
     sql += ' ORDER BY started_at DESC LIMIT 50';
     res.json(queryAll(sql, params));
   } catch (err: any) {
-    console.error('[Routes:Agents] GET /runs error:', err.message);
+    log.error('[Routes:Agents] GET /runs error:', err.message);
     res.status(500).json({ error: 'Failed to fetch agent runs' });
   }
 });

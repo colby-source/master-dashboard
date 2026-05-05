@@ -1,5 +1,7 @@
 import { config } from '../config';
 import { instantlyService } from './instantly-service';
+import { createLogger } from '../utils/logger';
+const log = createLogger('email-service');
 
 class EmailService {
   get available(): boolean {
@@ -8,7 +10,7 @@ class EmailService {
 
   async sendMail(to: string | string[], subject: string, html: string, from?: string): Promise<void> {
     if (!this.available) {
-      console.warn('[Email] Instantly API key not configured — skipping send');
+      log.warn('[Email] Instantly API key not configured — skipping send');
       return;
     }
 
@@ -23,9 +25,9 @@ class EmailService {
           subject,
           body: html,
         });
-        console.log(`[Email] Sent "${subject}" to ${recipient} via Instantly`);
+        log.info(`[Email] Sent "${subject}" to ${recipient} via Instantly`);
       } catch (err) {
-        console.error(`[Email] Failed to send to ${recipient}:`, err);
+        log.error(`[Email] Failed to send to ${recipient}:`, err);
         throw err;
       }
     }

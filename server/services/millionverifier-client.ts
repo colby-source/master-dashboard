@@ -2,6 +2,8 @@ import axios, { AxiosInstance } from 'axios';
 import { config } from '../config';
 import { queryOne, runSql } from '../db';
 import { trackApiCall } from './spend-tracker';
+import { createLogger } from '../utils/logger';
+const log = createLogger('millionverifier-client');
 
 export interface MillionVerifierResult {
   email: string;
@@ -61,14 +63,14 @@ class MillionVerifierClient {
       return result;
     } catch (err: any) {
       if (err.response?.status === 429) {
-        console.warn('[MillionVerifier] Rate limited — 160 req/sec max');
+        log.warn('[MillionVerifier] Rate limited — 160 req/sec max');
         return null;
       }
       if (err.response?.status === 401) {
-        console.error('[MillionVerifier] Invalid API key');
+        log.error('[MillionVerifier] Invalid API key');
         return null;
       }
-      console.error('[MillionVerifier] verifyEmail error:', err.message);
+      log.error('[MillionVerifier] verifyEmail error:', err.message);
       return null;
     }
   }
@@ -118,7 +120,7 @@ class MillionVerifierClient {
         [key, provider, JSON.stringify(data), expiresAt.toISOString()]
       );
     } catch (err: any) {
-      console.error('[MillionVerifier] Cache write error:', err.message);
+      log.error('[MillionVerifier] Cache write error:', err.message);
     }
   }
 }

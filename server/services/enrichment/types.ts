@@ -27,6 +27,20 @@ export interface EnrichmentLead {
   pushed_at: string | null;
   created_at: string;
   updated_at: string;
+  // ── Enrichment v2 (migration 019) ──
+  segment?: string | null;
+  score_hint?: number | null;
+  reachability_score?: number | null;
+  confidence_score?: number | null;
+  domain_intel?: string | null;
+  fo_signals?: string | null;
+  tier_p_result?: string | null;
+  total_cost_usd?: number | null;
+  last_enriched_tier?: string | null;
+  email_state?: string | null;
+  email_channel?: string | null;
+  batch_id?: string | null;
+  personalization_hook?: string | null;
 }
 
 export interface EnrichmentConfig {

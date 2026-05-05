@@ -14,6 +14,8 @@ import {
 } from 'docx';
 import { queryAll, queryOne } from '../../db';
 import { heading, bodyText, bulletPoint } from './docx-helpers';
+import { createLogger } from '../../utils/logger';
+const log = createLogger('executive-summary-docx');
 
 const router = Router();
 
@@ -233,7 +235,7 @@ router.get('/executive-summary.docx', async (_req: Request, res: Response) => {
     res.setHeader('Content-Disposition', 'attachment; filename=Executive_Summary.docx');
     res.send(Buffer.from(buffer));
   } catch (err: any) {
-    console.error('[Exports] Executive summary generation error:', err.message, err.stack);
+    log.error('[Exports] Executive summary generation error: ' + err.message, err.stack);
     res.status(500).json({ error: 'Failed to generate executive summary document', detail: err.message });
   }
 });

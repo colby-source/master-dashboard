@@ -10,6 +10,8 @@ import { ghlService } from './ghl-service';
 import { instantlyService } from './instantly-service';
 import { queryOne, queryAll, runSql, saveDb } from '../db';
 import { sendEmailToOperator } from './sms-notifications';
+import { createLogger } from '../utils/logger';
+const log = createLogger('bmn-followup-cadence');
 
 // ── Constants ────────────────────────────────────────────────
 const BMN_COMPANY_ID = 2;
@@ -65,7 +67,7 @@ export function migrateBmnFollowup(): void {
   } catch (err: any) {
     // Tables already exist — fine
     if (!err.message?.includes('already exists')) {
-      console.error('[BMN-Cadence] Migration error:', err.message);
+      log.error('[BMN-Cadence] Migration error:', err.message);
     }
   }
 }
@@ -91,7 +93,7 @@ interface FollowupCandidate {
 export async function discoverNewCandidates(): Promise<FollowupCandidate[]> {
   const ghl = ghlService.getClient(BMN_COMPANY_ID);
   if (!ghl) {
-    console.error('[BMN-Cadence] No GHL client for BMN');
+    log.error('[BMN-Cadence] No GHL client for BMN');
     return [];
   }
 
@@ -142,7 +144,7 @@ export async function discoverNewCandidates(): Promise<FollowupCandidate[]> {
           const nameUpdate: Record<string, string> = { firstName };
           if (lastName) nameUpdate.lastName = lastName;
           await ghl.updateContact(contactId, nameUpdate);
-          console.log(`[BMN-Cadence] Backfilled name for ${contact.email}: ${firstName} ${lastName || ''}`);
+          log.info(`[BMN-Cadence] Backfilled name for ${contact.email}: ${firstName} ${lastName || ''}`);
         }
       }
     }
@@ -180,7 +182,7 @@ async function getInstantlyConversation(email: string): Promise<string[]> {
       return `[${direction}] ${from} (${timestamp}):\n${typeof body === 'string' ? body.slice(0, 500) : String(body).slice(0, 500)}`;
     });
   } catch (err: any) {
-    console.error(`[BMN-Cadence] Error fetching Instantly emails for ${email}:`, err.message);
+    log.error(`[BMN-Cadence] Error fetching Instantly emails for ${email}:`, err.message);
     return [];
   }
 }
@@ -253,7 +255,7 @@ Only output the JSON array. No markdown, no explanation.`,
       delayHours: STEP_DELAYS_HOURS[i] || 0,
     }));
   } catch (err: any) {
-    console.error('[BMN-Cadence] Failed to parse Claude response:', err.message);
+    log.error('[BMN-Cadence] Failed to parse Claude response:', err.message);
     return [];
   }
 }
@@ -262,7 +264,7 @@ Only output the JSON array. No markdown, no explanation.`,
 async function createCadence(candidate: FollowupCandidate): Promise<number | null> {
   const emails = await generateCadence(candidate);
   if (emails.length === 0) {
-    console.error(`[BMN-Cadence] No emails generated for ${candidate.email}`);
+    log.error(`[BMN-Cadence] No emails generated for ${candidate.email}`);
     return null;
   }
 
@@ -292,7 +294,7 @@ async function createCadence(candidate: FollowupCandidate): Promise<number | nul
     [candidate.ghlContactId]
   );
 
-  console.log(`[BMN-Cadence] Created cadence for ${candidate.email} (${emails.length} emails)`);
+  log.info(`[BMN-Cadence] Created cadence for ${candidate.email} (${emails.length} emails)`);
   return cadence?.id || null;
 }
 
@@ -311,7 +313,7 @@ async function sendNextEmail(cadenceId: number): Promise<boolean> {
       [cadenceId]
     );
     saveDb();
-    console.log(`[BMN-Cadence] Cadence completed for ${cadence.email}`);
+    log.info(`[BMN-Cadence] Cadence completed for ${cadence.email}`);
     return false;
   }
 
@@ -333,7 +335,7 @@ async function sendNextEmail(cadenceId: number): Promise<boolean> {
   });
 
   if (!result) {
-    console.error(`[BMN-Cadence] Failed to send step ${step + 1} to ${cadence.email}`);
+    log.error(`[BMN-Cadence] Failed to send step ${step + 1} to ${cadence.email}`);
     return false;
   }
 
@@ -360,7 +362,7 @@ async function sendNextEmail(cadenceId: number): Promise<boolean> {
   );
   saveDb();
 
-  console.log(`[BMN-Cadence] Sent step ${step + 1}/${emails.length} to ${cadence.email}: "${email.subject}"`);
+  log.info(`[BMN-Cadence] Sent step ${step + 1}/${emails.length} to ${cadence.email}: "${email.subject}"`);
   return true;
 }
 
@@ -379,12 +381,12 @@ export async function processDueSends(): Promise<number> {
       const didSend = await sendNextEmail(row.id);
       if (didSend) sent++;
     } catch (err: any) {
-      console.error(`[BMN-Cadence] Error sending cadence ${row.id}:`, err.message);
+      log.error(`[BMN-Cadence] Error sending cadence ${row.id}:`, err.message);
     }
   }
 
   if (sent > 0) {
-    console.log(`[BMN-Cadence] Sent ${sent} follow-up emails`);
+    log.info(`[BMN-Cadence] Sent ${sent} follow-up emails`);
   }
   return sent;
 }
@@ -529,7 +531,7 @@ RULES:
       );
       saveDb();
 
-      console.log(`[BMN-Cadence] Auto-replied to ${cadence.email}: "${decision.reply_subject}"`);
+      log.info(`[BMN-Cadence] Auto-replied to ${cadence.email}: "${decision.reply_subject}"`);
     }
   }
 
@@ -594,17 +596,17 @@ export async function runFollowupCycle(): Promise<void> {
       try {
         await createCadence(candidate);
       } catch (err: any) {
-        console.error(`[BMN-Cadence] Error creating cadence for ${candidate.email}:`, err.message);
+        log.error(`[BMN-Cadence] Error creating cadence for ${candidate.email}:`, err.message);
       }
     }
     if (candidates.length > 0) {
-      console.log(`[BMN-Cadence] Created ${candidates.length} new cadences`);
+      log.info(`[BMN-Cadence] Created ${candidates.length} new cadences`);
     }
 
     // 2. Send due follow-up emails
     await processDueSends();
   } catch (err: any) {
-    console.error('[BMN-Cadence] Cycle error:', err.message);
+    log.error('[BMN-Cadence] Cycle error:', err.message);
   }
 }
 

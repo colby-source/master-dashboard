@@ -1,34 +1,28 @@
+import { useState } from "react"
 import { Link, useLocation } from "react-router-dom"
 import {
-  LayoutDashboard,
+  Activity,
+  Workflow,
   Users,
-  Mail,
   Send,
   Sparkles,
   Target,
   GitBranch,
-  Bot,
-  ListTodo,
   BarChart3,
   Settings,
   Megaphone,
-  PenTool,
-  Globe,
-  Instagram,
-  MessageSquare,
   Radar,
-  Search,
-  Presentation,
   Zap,
   ChevronDown,
+  ChevronRight,
   BookOpen,
   MessageCircle,
   ShieldCheck,
-  Eye,
-  SearchCheck,
-  FlaskConical,
   FileText,
   MailCheck,
+  Database,
+  Brain,
+  Plug,
 } from "lucide-react"
 
 import {
@@ -64,71 +58,137 @@ interface AppSidebarProps {
   companies: Company[]
 }
 
-const navGroups = [
+interface NavItem {
+  title: string
+  icon: React.ElementType
+  path: string
+}
+
+interface NavGroup {
+  label: string
+  icon: React.ElementType
+  items: NavItem[]
+}
+
+const navGroups: NavGroup[] = [
   {
-    label: "Overview",
+    label: "Engine",
+    icon: Activity,
     items: [
-      { title: "Dashboard", icon: LayoutDashboard, path: "/" },
-      { title: "AI Assistant", icon: MessageCircle, path: "/ai-assistant" },
-      { title: "Analytics", icon: BarChart3, path: "/analytics" },
-    ],
-  },
-  {
-    label: "Outreach",
-    items: [
-      { title: "Campaigns", icon: Mail, path: "/campaigns" },
-      { title: "Outbound Hub", icon: Send, path: "/outbound" },
-      { title: "Campaign Writer", icon: PenTool, path: "/writer" },
-      { title: "Domain Health", icon: ShieldCheck, path: "/domain-health" },
-      { title: "A/B Testing", icon: FlaskConical, path: "/ab-testing" },
-    ],
-  },
-  {
-    label: "CRM",
-    items: [
-      { title: "Contacts", icon: Users, path: "/contacts" },
-      { title: "Pipelines", icon: GitBranch, path: "/pipelines" },
-      { title: "Enrichment", icon: Sparkles, path: "/enrichment" },
+      { title: "Pipeline", icon: Workflow, path: "/" },
+      { title: "Campaigns", icon: Send, path: "/campaigns" },
       { title: "Reply Review", icon: MailCheck, path: "/reply-review" },
-      { title: "GHL Command", icon: Zap, path: "/ghl" },
-      { title: "Lookup", icon: SearchCheck, path: "/lookup" },
-      { title: "Transcripts", icon: FileText, path: "/meeting-transcripts" },
+      { title: "Domain Health", icon: ShieldCheck, path: "/domain-health" },
     ],
   },
   {
-    label: "Channels",
+    label: "Data",
+    icon: Database,
     items: [
-      { title: "Meta Ads", icon: Megaphone, path: "/meta-ads" },
-      { title: "LinkedIn", icon: Globe, path: "/linkedin" },
-      { title: "Instagram", icon: Instagram, path: "/instagram" },
-      { title: "WhatsApp", icon: MessageSquare, path: "/whatsapp" },
+      { title: "Inventory", icon: Database, path: "/data-inventory" },
+      { title: "Contacts", icon: Users, path: "/contacts" },
+      { title: "Enrichment", icon: Sparkles, path: "/enrichment" },
+      { title: "Pipelines (CRM)", icon: GitBranch, path: "/pipelines" },
     ],
   },
   {
     label: "Intelligence",
+    icon: Target,
     items: [
-      { title: "AI Discoveries", icon: Sparkles, path: "/discoveries" },
-      { title: "RB2B Visitors", icon: Eye, path: "/rb2b" },
-      { title: "Ad Intelligence", icon: Target, path: "/ad-intelligence" },
+      { title: "Ad Intel", icon: Megaphone, path: "/ad-intelligence" },
+      { title: "Meta Ads", icon: Megaphone, path: "/meta-ads" },
       { title: "Competitors", icon: Radar, path: "/competitors" },
-      { title: "Scraping", icon: Search, path: "/scraping" },
+      { title: "AI Discoveries", icon: Sparkles, path: "/discoveries" },
+    ],
+  },
+  {
+    label: "Learning",
+    icon: Brain,
+    items: [
+      { title: "Recommendations", icon: Sparkles, path: "/learning" },
+      { title: "Analytics", icon: BarChart3, path: "/analytics" },
+      { title: "AI Assistant", icon: MessageCircle, path: "/ai-assistant" },
     ],
   },
   {
     label: "Operations",
+    icon: Settings,
     items: [
-      { title: "Agents", icon: Bot, path: "/agents" },
-      { title: "Tasks", icon: ListTodo, path: "/tasks" },
-      { title: "OpenClaw", icon: Target, path: "/openclaw" },
-      { title: "BTR Conference", icon: Presentation, path: "/btr" },
+      { title: "GPF-II Ops", icon: Target, path: "/gpf2-ops" },
+      { title: "GPC Pipeline", icon: Database, path: "/gpc/pipeline" },
+      { title: "GHL Command", icon: Zap, path: "/ghl" },
+      { title: "Integrations", icon: Plug, path: "/integrations" },
     ],
   },
 ]
 
+// Only allow GPC and BMN in the company switcher. Filters by name match
+// (case-insensitive contains "granite", "gpc", "bmn", or "brand me now").
+const ALLOWED_COMPANY_PATTERNS = [/granite/i, /\bgpc\b/i, /\bbmn\b/i, /brand\s*me\s*now/i]
+
+function isAllowedCompany(name: string | undefined): boolean {
+  if (!name) return false
+  return ALLOWED_COMPANY_PATTERNS.some((re) => re.test(name))
+}
+
+function CollapsibleNavGroup({ group }: { group: NavGroup }) {
+  const location = useLocation()
+  const isGroupActive = group.items.some(item =>
+    item.path === "/"
+      ? location.pathname === "/"
+      : location.pathname.startsWith(item.path)
+  )
+  const [isOpen, setIsOpen] = useState(isGroupActive)
+
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel
+        className="cursor-pointer select-none flex items-center justify-between hover:text-foreground transition-colors"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span className="flex items-center gap-2">
+          <group.icon className="size-3.5" />
+          {group.label}
+        </span>
+        {isOpen
+          ? <ChevronDown className="size-3.5 opacity-50" />
+          : <ChevronRight className="size-3.5 opacity-50" />
+        }
+      </SidebarGroupLabel>
+      {isOpen && (
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {group.items.map((item) => {
+              const isActive =
+                item.path === "/"
+                  ? location.pathname === "/"
+                  : location.pathname.startsWith(item.path)
+              return (
+                <SidebarMenuItem key={item.path}>
+                  <SidebarMenuButton
+                    tooltip={item.title}
+                    isActive={isActive}
+                    render={<Link to={item.path} />}
+                  >
+                    <item.icon />
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )
+            })}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      )}
+    </SidebarGroup>
+  )
+}
+
 export function AppSidebar({ companyId, onCompanyChange, companies }: AppSidebarProps) {
   const location = useLocation()
-
-  const selectedCompany = companies.find((c) => c.id === companyId)
+  // Filter to only GPC + BMN at the consumer level, leaving the underlying
+  // hook untouched (other pages still see the full list).
+  const visibleCompanies = companies.filter((c) => isAllowedCompany(c.name))
+  const selectedCompany = visibleCompanies.find((c) => c.id === companyId)
 
   return (
     <Sidebar collapsible="icon">
@@ -175,7 +235,7 @@ export function AppSidebar({ companyId, onCompanyChange, companies }: AppSidebar
                     <span>All Companies</span>
                   </div>
                 </DropdownMenuItem>
-                {companies.map((company) => (
+                {visibleCompanies.map((company) => (
                   <DropdownMenuItem
                     key={company.id}
                     onClick={() => onCompanyChange(company.id)}
@@ -201,36 +261,22 @@ export function AppSidebar({ companyId, onCompanyChange, companies }: AppSidebar
 
       <SidebarContent>
         {navGroups.map((group) => (
-          <SidebarGroup key={group.label}>
-            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {group.items.map((item) => {
-                  const isActive =
-                    item.path === "/"
-                      ? location.pathname === "/"
-                      : location.pathname.startsWith(item.path)
-                  return (
-                    <SidebarMenuItem key={item.path}>
-                      <SidebarMenuButton
-                        tooltip={item.title}
-                        isActive={isActive}
-                        render={<Link to={item.path} />}
-                      >
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          <CollapsibleNavGroup key={group.label} group={group} />
         ))}
       </SidebarContent>
 
       <SidebarFooter>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Reports"
+              isActive={location.pathname.startsWith("/reports")}
+              render={<Link to="/reports" />}
+            >
+              <FileText />
+              <span>Reports</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Guide"

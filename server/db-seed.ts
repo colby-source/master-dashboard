@@ -1,4 +1,6 @@
 import { Database } from 'sql.js';
+import { createLogger } from './utils/logger';
+const log = createLogger('db-seed');
 
 /**
  * Seeds default data into the database if tables are empty.
@@ -28,7 +30,7 @@ function seedCompanies(db: Database): void {
     db.run(`INSERT INTO companies (name, type, color, ghl_location_id) VALUES ('Granite Park Capital', 'client', '#3b82f6', 'x8XBOACL6wOFcsQewWPw')`);
     db.run(`INSERT INTO companies (name, type, color, ghl_location_id) VALUES ('Brand Me Now', 'client', '#8b5cf6', 'xK1e5YGQ7gK6NjoyhyRI')`);
     db.run(`INSERT INTO companies (name, type, color, ghl_location_id) VALUES ('Tikkun', 'personal', '#10b981', 'EC0ziFgLtYbHvpLv1ymi')`);
-    console.log('[DB] Seeded default companies');
+    log.info('[DB] Seeded default companies');
   } else {
     // Ensure Tikkun exists
     const tikkunStmt = db.prepare("SELECT id FROM companies WHERE name = 'Tikkun'");
@@ -36,7 +38,7 @@ function seedCompanies(db: Database): void {
     tikkunStmt.free();
     if (!hasTikkun) {
       db.run(`INSERT INTO companies (name, type, color, ghl_location_id) VALUES ('Tikkun', 'personal', '#10b981', 'EC0ziFgLtYbHvpLv1ymi')`);
-      console.log('[DB] Added Tikkun company');
+      log.info('[DB] Added Tikkun company');
     }
   }
 }
@@ -54,7 +56,7 @@ function seedIntegrations(db: Database): void {
     db.run(`INSERT INTO integrations (name, type, status) VALUES ('meta_ads', 'advertising', 'pending')`);
     db.run(`INSERT INTO integrations (name, type, status) VALUES ('competitors', 'monitoring', 'active')`);
     db.run(`INSERT INTO integrations (name, type, status) VALUES ('enrichment', 'enrichment', 'active')`);
-    console.log('[DB] Seeded default integrations');
+    log.info('[DB] Seeded default integrations');
   }
 }
 
@@ -107,34 +109,69 @@ function seedCompanyPlaybooks(db: Database): void {
       3
     ]);
 
-    // Brand Me Now (companyId: 2)
+    // Brand Me Now (companyId: 2) — Creator Investment Fund positioning
     db.run(`INSERT INTO company_playbooks (company_id, company_name, sender_name, company_description, value_propositions, target_icp, tone, objection_handlers, conversation_goals, escalation_triggers, do_not_mention, compliance_rules, booking_url, max_auto_replies) VALUES (2, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
       'Brand Me Now',
       'Ryan',
-      'Brand Me Now is an AI-powered brand creation platform for influencers and creators. We handle everything — product development, manufacturing, fulfillment, and brand design. Creators get their own branded product line with zero inventory risk and earn industry-leading royalties on every sale.',
+      'Brand Me Now is a creator investment fund. We invest the capital to build fully custom product brands around creators — skincare, wellness, beauty, lifestyle. We handle product development, manufacturing, fulfillment, and customer service. The creator owns the brand, creates content, and earns royalties on every sale. We only partner with a handful of creators each quarter because every brand we build is a real investment.',
       JSON.stringify([
-        'Zero inventory risk — we handle manufacturing and fulfillment',
-        'Your own branded product line, not generic merch',
-        '200+ SKU catalog across beauty, wellness, lifestyle, and apparel',
-        'Industry-leading royalties on every sale — true passive income',
-        'AI-powered brand design tailored to your audience',
-        'Full-service: product development to customer shipping'
+        'We invest all the capital — product development, manufacturing, website, fulfillment, customer service. The creator puts up zero.',
+        'You own a brand with your name on it — custom products designed around your specific audience, not generic merch.',
+        'Industry-leading royalties on every sale, paid monthly with full transparency. This is recurring revenue, not a one-time brand deal.',
+        'We only make money when you make money — our incentives are 100% aligned. We invest because we believe in the creator.',
+        'Full legal compliance and product liability insurance — the creator is fully covered.',
+        'We are selective — we only take on a few creators per quarter because each brand is a real capital investment.'
       ]),
-      'Influencers and content creators with 10K+ followers across Instagram, TikTok, YouTube, or other platforms. Creators looking to monetize beyond sponsorships and ad revenue.',
-      'friendly',
+      'Skincare, beauty, wellness, and lifestyle creators with engaged audiences on Instagram, TikTok, or YouTube. Creators who are tired of one-off brand deals and want to own something. Audience engagement matters more than follower count.',
+      'authoritative',
       JSON.stringify({
-        'already_have_merch': 'We are different from merch — we create an actual branded product line (beauty, wellness, lifestyle) that reflects your personal brand. Think of it as launching your own brand, not just slapping a logo on a t-shirt.',
-        'too_busy': 'That is exactly why we built this — it is fully managed. We handle product development, manufacturing, and fulfillment. You just promote to your audience like you already do.',
-        'sounds_too_good': 'We make money when you make money — our model is built on the margin between manufacturing and retail. Your royalties are baked into every sale automatically, and the rates are extremely competitive compared to anything else in the creator space.',
-        'not_enough_followers': 'We have seen creators with engaged audiences of 10K+ do really well. It is about engagement quality, not just follower count.',
-        'not_interested': 'Totally understand! If you ever want to explore launching your own product line, we are here. No pressure at all.'
+        'whats_the_catch': 'There is no catch. We are investors — we put up the capital because we believe your audience will buy. We make money on the backend margin, you make money on royalties. Our incentives are completely aligned.',
+        'already_have_merch': 'Merch and this are completely different things. Merch is slapping a logo on a t-shirt. We are talking about building a real product brand — custom formulations, professional packaging, your own website. Think Kylie Cosmetics, not Teespring.',
+        'too_busy': 'That is exactly why this works. We run the entire business. You just keep creating content like you already do. The only difference is now your content is driving sales for a brand YOU own.',
+        'sounds_too_good': 'I get that. Here is the honest answer — we invest the capital because the model only works at scale. When your brand does well, we do well. That is why we are selective about who we partner with.',
+        'how_much_do_i_make': 'The royalty structure is extremely competitive — better than anything else in the creator space. I can walk you through the exact numbers on a quick call, but creators with engaged audiences are seeing significant monthly income within the first 90 days.',
+        'who_else': 'We have built brands across beauty, wellness, and lifestyle. I cannot share names without their permission, but creators with audiences similar to yours are doing $15-50K per month in royalties.',
+        'not_enough_followers': 'We care more about engagement quality than follower count. Creators with loyal, engaged audiences do incredibly well — even at 10-50K followers.',
+        'need_to_think': 'Take your time. The Brand Builder page walks through exactly how it works so you can see it at your own pace. No pressure at all.',
+        'not_interested': 'Totally respect that. If owning your own brand ever becomes a goal, we would love to talk. No pressure.'
       }),
-      JSON.stringify(['schedule_platform_demo', 'get_creator_social_handles', 'qualify_audience_size', 'send_case_studies']),
-      JSON.stringify(['specific_contract_terms', 'legal_questions', 'specific_date_time_meeting', 'complaint_or_threat']),
-      JSON.stringify(['specific_revenue_guarantees', 'other_creator_earnings', 'internal_margins', 'specific_royalty_percentages', '20%', 'twenty percent', 'exact_commission_rates']),
-      null, // no compliance rules for BMN
-      'https://api.leadconnectorhq.com/widget/bookings/brand-me-now-sales',
-      3
+      JSON.stringify([
+        'Qualify: confirm they create skincare/beauty/wellness content with an engaged audience',
+        'Frame: position BMN as an investor backing THEM — not a service selling to them',
+        'Excite: paint the picture of owning a brand vs doing brand deals forever',
+        'Convert: push to Brand Builder funnel — see what we would build for you'
+      ]),
+      JSON.stringify([
+        'specific_contract_terms',
+        'legal_questions_or_mentions_lawyer_agent_manager',
+        'specific_date_time_meeting',
+        'complaint_or_threat',
+        'creator_has_500k_plus_followers',
+        'asks_for_guaranteed_revenue_projections',
+        'asks_about_IP_ownership_or_exit_terms'
+      ]),
+      JSON.stringify([
+        'specific_revenue_guarantees',
+        'other_creator_names_or_earnings',
+        'internal_margins_or_cost_structure',
+        'specific_royalty_percentages',
+        '20%',
+        'twenty percent',
+        'exact_commission_rates',
+        'registered_investment_fund',
+        'SEC_or_securities_language'
+      ]),
+      JSON.stringify([
+        'Never guarantee specific revenue amounts — use "creators are seeing" not "you will earn"',
+        'Never mention specific royalty percentages — say "industry-leading" or "extremely competitive"',
+        'Never claim to be a registered investment fund or use SEC-regulated language',
+        'Never make promises about timeline to revenue — use "within the first 90 days" as a range, not a guarantee',
+        'Never name specific creators without their written permission',
+        'Always frame as "investment in the creator" not "financial investment product"',
+        'Never use "passive income" — say "recurring royalties" instead'
+      ]),
+      'https://apply.brandmenow.ai/influencer-video-funnel',
+      5
     ]);
 
     // Tikkun (companyId: 4)
@@ -167,7 +204,7 @@ function seedCompanyPlaybooks(db: Database): void {
       3
     ]);
 
-    console.log('[DB] Seeded company playbooks');
+    log.info('[DB] Seeded company playbooks');
   }
 }
 
@@ -183,7 +220,7 @@ function seedBmnEnrichmentConfig(db: Database): void {
           '542243a5-f75a-441a-b311-f5ff0dbf8e3e', // BMN Influencers campaign
         ]
       );
-      console.log('[DB] Enabled auto-reply for BMN (company_id=2)');
+      log.info('[DB] Enabled auto-reply for BMN (company_id=2)');
     }
   } else {
     // Create config row if it doesn't exist
@@ -194,7 +231,7 @@ function seedBmnEnrichmentConfig(db: Database): void {
         '542243a5-f75a-441a-b311-f5ff0dbf8e3e',
       ]
     );
-    console.log('[DB] Created enrichment_config for BMN (company_id=2) with auto-reply enabled');
+    log.info('[DB] Created enrichment_config for BMN (company_id=2) with auto-reply enabled');
   }
   bmnConfig.free();
 }
@@ -270,7 +307,7 @@ function seedBmnPipelines(db: Database): void {
       ]
     );
 
-    console.log('[DB] Seeded BMN company_pipelines (Creator Investment + Agency Partner + Influencer 2 funnels)');
+    log.info('[DB] Seeded BMN company_pipelines (Creator Investment + Agency Partner + Influencer 2 funnels)');
   }
 
   // Ensure Influencer 2 Campaign mapping exists (added after initial seed)
@@ -300,7 +337,7 @@ function seedBmnPipelines(db: Database): void {
         0,
       ]
     );
-    console.log('[DB] Added BMN Influencer 2 Campaign pipeline mapping');
+    log.info('[DB] Added BMN Influencer 2 Campaign pipeline mapping');
   }
 }
 
@@ -329,7 +366,7 @@ function seedGpcPipelines(db: Database): void {
         250000,
       ]
     );
-    console.log('[DB] Seeded GPC company_pipelines (Cold Email Response Pipeline)');
+    log.info('[DB] Seeded GPC company_pipelines (Cold Email Response Pipeline)');
   }
 }
 
@@ -379,6 +416,6 @@ function seedBmnAbTest(db: Database): void {
       ]
     );
 
-    console.log('[DB] Seeded BMN A/B test: Book a Call vs Brand Builder CTA');
+    log.info('[DB] Seeded BMN A/B test: Book a Call vs Brand Builder CTA');
   }
 }

@@ -1,5 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 import { config } from '../config';
+import { createLogger } from '../utils/logger';
+const log = createLogger('meta-ads-service');
 
 class MetaAdsService {
   private client: AxiosInstance;
@@ -32,7 +34,7 @@ class MetaAdsService {
       });
       return data;
     } catch (err: any) {
-      console.error('[Meta] getAdAccountInfo error:', err.response?.data?.error?.message || err.message);
+      log.error('[Meta] getAdAccountInfo error:', err.response?.data?.error?.message || err.message);
       return null;
     }
   }
@@ -50,7 +52,7 @@ class MetaAdsService {
       });
       return data?.data ?? [];
     } catch (err: any) {
-      console.error('[Meta] getCampaigns error:', err.response?.data?.error?.message || err.message);
+      log.error('[Meta] getCampaigns error:', err.response?.data?.error?.message || err.message);
       return [];
     }
   }
@@ -104,7 +106,7 @@ class MetaAdsService {
       });
       return data?.data?.[0] ?? null;
     } catch (err: any) {
-      console.error('[Meta] getCampaignInsights error:', err.response?.data?.error?.message || err.message);
+      log.error('[Meta] getCampaignInsights error:', err.response?.data?.error?.message || err.message);
       return null;
     }
   }
@@ -122,7 +124,7 @@ class MetaAdsService {
       });
       return data?.data?.[0] ?? null;
     } catch (err: any) {
-      console.error('[Meta] getAccountInsights error:', err.response?.data?.error?.message || err.message);
+      log.error('[Meta] getAccountInsights error:', err.response?.data?.error?.message || err.message);
       return null;
     }
   }
@@ -139,7 +141,7 @@ class MetaAdsService {
       });
       return data?.data ?? [];
     } catch (err: any) {
-      console.error('[Meta] getAccountInsightsBreakdown error:', err.response?.data?.error?.message || err.message);
+      log.error('[Meta] getAccountInsightsBreakdown error:', err.response?.data?.error?.message || err.message);
       return [];
     }
   }
@@ -156,7 +158,7 @@ class MetaAdsService {
       });
       return data?.data ?? [];
     } catch (err: any) {
-      console.error('[Meta] getAccountInsightsTimeSeries error:', err.response?.data?.error?.message || err.message);
+      log.error('[Meta] getAccountInsightsTimeSeries error:', err.response?.data?.error?.message || err.message);
       return [];
     }
   }
@@ -175,7 +177,7 @@ class MetaAdsService {
       });
       return data?.data ?? [];
     } catch (err: any) {
-      console.error('[Meta] getAdSets error:', err.response?.data?.error?.message || err.message);
+      log.error('[Meta] getAdSets error:', err.response?.data?.error?.message || err.message);
       return [];
     }
   }
@@ -230,7 +232,7 @@ class MetaAdsService {
       });
       return data?.data?.[0] ?? null;
     } catch (err: any) {
-      console.error('[Meta] getAdSetInsights error:', err.response?.data?.error?.message || err.message);
+      log.error('[Meta] getAdSetInsights error:', err.response?.data?.error?.message || err.message);
       return null;
     }
   }
@@ -249,7 +251,7 @@ class MetaAdsService {
       });
       return data?.data ?? [];
     } catch (err: any) {
-      console.error('[Meta] getAds error:', err.response?.data?.error?.message || err.message);
+      log.error('[Meta] getAds error:', err.response?.data?.error?.message || err.message);
       return [];
     }
   }
@@ -290,7 +292,7 @@ class MetaAdsService {
       });
       return data?.data?.[0] ?? null;
     } catch (err: any) {
-      console.error('[Meta] getAdInsights error:', err.response?.data?.error?.message || err.message);
+      log.error('[Meta] getAdInsights error:', err.response?.data?.error?.message || err.message);
       return null;
     }
   }
@@ -308,7 +310,7 @@ class MetaAdsService {
       });
       return data?.data ?? [];
     } catch (err: any) {
-      console.error('[Meta] getAdCreatives error:', err.response?.data?.error?.message || err.message);
+      log.error('[Meta] getAdCreatives error:', err.response?.data?.error?.message || err.message);
       return [];
     }
   }
@@ -348,7 +350,7 @@ class MetaAdsService {
       });
       return data?.data ?? [];
     } catch (err: any) {
-      console.error('[Meta] getCustomAudiences error:', err.response?.data?.error?.message || err.message);
+      log.error('[Meta] getCustomAudiences error:', err.response?.data?.error?.message || err.message);
       return [];
     }
   }
@@ -395,7 +397,7 @@ class MetaAdsService {
       });
       return data?.data ?? [];
     } catch (err: any) {
-      console.error('[Meta] getAdImages error:', err.response?.data?.error?.message || err.message);
+      log.error('[Meta] getAdImages error:', err.response?.data?.error?.message || err.message);
       return [];
     }
   }
@@ -413,7 +415,7 @@ class MetaAdsService {
       });
       return data?.data ?? [];
     } catch (err: any) {
-      console.error('[Meta] searchTargeting error:', err.response?.data?.error?.message || err.message);
+      log.error('[Meta] searchTargeting error:', err.response?.data?.error?.message || err.message);
       return [];
     }
   }
@@ -425,7 +427,7 @@ class MetaAdsService {
       });
       return data?.data ?? [];
     } catch (err: any) {
-      console.error('[Meta] getTargetingBrowse error:', err.response?.data?.error?.message || err.message);
+      log.error('[Meta] getTargetingBrowse error:', err.response?.data?.error?.message || err.message);
       return [];
     }
   }
@@ -440,7 +442,7 @@ class MetaAdsService {
       });
       return data?.data ?? null;
     } catch (err: any) {
-      console.error('[Meta] getReachEstimate error:', err.response?.data?.error?.message || err.message);
+      log.error('[Meta] getReachEstimate error:', err.response?.data?.error?.message || err.message);
       return null;
     }
   }

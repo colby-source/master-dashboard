@@ -1,6 +1,8 @@
 import axios, { AxiosInstance } from 'axios';
 import { config } from '../config';
 import { getDb, queryAll, queryOne, runSql, saveDb } from '../db';
+import { createLogger } from '../utils/logger';
+const log = createLogger('ad-library-service');
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -137,7 +139,7 @@ class AdLibraryService {
       return data?.data ?? [];
     } catch (err: any) {
       const msg = err.response?.data?.error?.message || err.message;
-      console.error('[AdLibrary] searchAds error:', msg);
+      log.error('[AdLibrary] searchAds error:', msg);
       throw new Error(`Ad Library search failed: ${msg}`, { cause: err });
     }
   }
@@ -176,7 +178,7 @@ class AdLibraryService {
         if (!nextUrl || ads.length === 0) break;
         page++;
       } catch (err: any) {
-        console.error('[AdLibrary] pagination error:', err.response?.data?.error?.message || err.message);
+        log.error('[AdLibrary] pagination error:', err.response?.data?.error?.message || err.message);
         break;
       }
     }
@@ -202,7 +204,7 @@ class AdLibraryService {
       });
       return data?.data ?? [];
     } catch (err: any) {
-      console.error('[AdLibrary] searchByPageIds error:', err.response?.data?.error?.message || err.message);
+      log.error('[AdLibrary] searchByPageIds error:', err.response?.data?.error?.message || err.message);
       throw new Error(`Page search failed: ${err.response?.data?.error?.message || err.message}`, { cause: err });
     }
   }

@@ -8,6 +8,8 @@ import { ghlService } from './ghl-service';
 import { queryOne, queryAll, runSql, saveDb } from '../db';
 import { wsServer } from '../websocket/ws-server';
 import { recordOutcome } from './enrichment/ab-testing';
+import { createLogger } from '../utils/logger';
+const log = createLogger('meeting-scheduler');
 
 interface MeetingSlot {
   start: string;   // ISO 8601
@@ -115,7 +117,7 @@ export async function getAvailableSlots(companyId = 1, maxSlots = 6): Promise<Me
 
   // SAFETY: Warn if a non-default company resolves to the GPC default calendar
   if (companyId !== 1 && calendarId === config.meetings.calendarId) {
-    console.error(`[MeetingScheduler] CALENDAR ISOLATION WARNING: Company ${companyId} has no dedicated calendar configured — falling back to GPC default (${config.meetings.calendarId}). Set GHL_CALENDAR_ID for this company in .env!`);
+    log.error(`[MeetingScheduler] CALENDAR ISOLATION WARNING: Company ${companyId} has no dedicated calendar configured — falling back to GPC default (${config.meetings.calendarId}). Set GHL_CALENDAR_ID for this company in .env!`);
   }
 
   const ghlClient = ghlService.getClient(companyId);
@@ -183,14 +185,14 @@ export async function getAvailableSlots(companyId = 1, maxSlots = 6): Promise<Me
         }
 
         if (available.length > 0) {
-          console.log(`[MeetingScheduler] Found ${available.length} free slots via GHL API`);
+          log.info(`[MeetingScheduler] Found ${available.length} free slots via GHL API`);
           return available;
         }
       }
 
-      console.warn('[MeetingScheduler] GHL free-slots returned empty, falling back to manual check');
+      log.warn('[MeetingScheduler] GHL free-slots returned empty, falling back to manual check');
     } catch (err: any) {
-      console.error('[MeetingScheduler] GHL free-slots API error, falling back:', err.message);
+      log.error('[MeetingScheduler] GHL free-slots API error, falling back:', err.message);
     }
   }
 
@@ -222,7 +224,7 @@ async function getAvailableSlotsFallback(companyId: number, maxSlots: number): P
         }
       }
     } catch (err: any) {
-      console.error('[MeetingScheduler] GHL calendar fetch error:', err.message);
+      log.error('[MeetingScheduler] GHL calendar fetch error:', err.message);
     }
   }
 
@@ -269,7 +271,7 @@ export async function bookMeeting(
 
     // SAFETY: Block booking if non-default company would land on GPC calendar
     if (companyId !== 1 && calendarId === config.meetings.calendarId) {
-      console.error(`[MeetingScheduler] BLOCKED: Company ${companyId} booking would go to GPC calendar. Set GHL_CALENDAR_ID for this company.`);
+      log.error(`[MeetingScheduler] BLOCKED: Company ${companyId} booking would go to GPC calendar. Set GHL_CALENDAR_ID for this company.`);
       return { success: false, error: `Calendar not configured for company ${companyId} — refusing to book on GPC calendar` };
     }
 
@@ -318,7 +320,7 @@ export async function bookMeeting(
 
       // Send confirmation email via GHL
       sendMeetingConfirmation(companyId, ghlContactId, slot).catch(err => {
-        console.error('[MeetingScheduler] Confirmation email failed:', err.message);
+        log.error('[MeetingScheduler] Confirmation email failed:', err.message);
       });
 
       // Email alert for meeting booked
@@ -332,12 +334,12 @@ export async function bookMeeting(
           `${slot.displayTime}`,
           lead?.score ? `Score: ${lead.score}` : '',
         ].filter(Boolean).join('\n');
-        sendSmsToOperator(companyId, msg).catch(err => console.error('[Notify] Meeting booked alert error:', err.message));
+        sendSmsToOperator(companyId, msg).catch(err => log.error('[Notify] Meeting booked alert error:', err.message));
       }).catch(() => {});
 
       // Schedule 24-hour and 1-hour reminders
       scheduleMeetingReminders(companyId, ghlContactId, leadId, slot).catch(err => {
-        console.error('[MeetingScheduler] Reminder scheduling failed:', err.message);
+        log.error('[MeetingScheduler] Reminder scheduling failed:', err.message);
       });
     }
 
@@ -347,7 +349,7 @@ export async function bookMeeting(
       slot,
     };
   } catch (err: any) {
-    console.error('[MeetingScheduler] bookMeeting error:', err.message);
+    log.error('[MeetingScheduler] bookMeeting error:', err.message);
     return { success: false, error: err.message };
   }
 }
@@ -382,7 +384,7 @@ async function sendMeetingConfirmation(
     html,
   });
 
-  console.log(`[MeetingScheduler] Confirmation email sent for ${slot.displayTime}`);
+  log.info(`[MeetingScheduler] Confirmation email sent for ${slot.displayTime}`);
 }
 
 /**
@@ -422,7 +424,7 @@ async function scheduleMeetingReminders(
   }
 
   saveDb();
-  console.log(`[MeetingScheduler] Reminders scheduled for meeting at ${slot.displayTime}`);
+  log.info(`[MeetingScheduler] Reminders scheduled for meeting at ${slot.displayTime}`);
 }
 
 /**
@@ -465,9 +467,9 @@ export async function processMeetingReminders(): Promise<number> {
         [event.id]
       );
       sent++;
-      console.log(`[MeetingScheduler] ${data.reminderType} reminder sent for lead ${event.enrichment_lead_id}`);
+      log.info(`[MeetingScheduler] ${data.reminderType} reminder sent for lead ${event.enrichment_lead_id}`);
     } catch (err: any) {
-      console.error(`[MeetingScheduler] Reminder send failed:`, err.message);
+      log.error(`[MeetingScheduler] Reminder send failed:`, err.message);
       runSql(
         `UPDATE enrichment_events SET event_data = json_set(event_data, '$.error', ?) WHERE id = ?`,
         [err.message, event.id]
@@ -483,5 +485,5 @@ export async function processMeetingReminders(): Promise<number> {
  * Initialize the meeting scheduler (call on server startup).
  */
 export async function initMeetingScheduler(): Promise<void> {
-  console.log(`[MeetingScheduler] Ready — calendar ${config.meetings.calendarId}, meetings on ${config.meetings.meetingDays.map(d => DAY_NAMES[d]).join(', ')}, ${config.meetings.meetingStartHour}:00-${config.meetings.meetingEndHour}:00 ET`);
+  log.info(`[MeetingScheduler] Ready — calendar ${config.meetings.calendarId}, meetings on ${config.meetings.meetingDays.map(d => DAY_NAMES[d]).join(', ')}, ${config.meetings.meetingStartHour}:00-${config.meetings.meetingEndHour}:00 ET`);
 }
