@@ -52,6 +52,7 @@ import learningRouter from './routes/learning';
 import dataInventoryRouter from './routes/data-inventory';
 import launchpadRouter from './routes/launchpad';
 import launchpadPublicRouter from './routes/launchpad-public';
+import gpcFormPublicRouter from './routes/gpc-form-public';
 import { createLogger } from './utils/logger';
 const log = createLogger('index');
 
@@ -121,6 +122,12 @@ async function main() {
 
   // Launchpad PUBLIC routes — mounted BEFORE apiKeyAuth. Magic-link tokens authenticate.
   app.use('/api/launchpad-public', launchpadPublicRouter);
+
+  // GPC public form intake — mounted BEFORE apiKeyAuth. HMAC-signed by the
+  // GPC marketing site (graniteparkcapitalfund.com) using GPC_FORM_SHARED_SECRET.
+  // Replaces the legacy direct-to-GHL pattern that leaked the GHL PIT into
+  // the client bundle via VITE_GHL_API_KEY.
+  app.use('/api/gpc-public', gpcFormPublicRouter);
 
   // API key auth — only enforced when DASHBOARD_API_KEY env var is set
   app.use('/api', apiKeyAuth);
